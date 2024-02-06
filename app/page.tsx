@@ -1,11 +1,14 @@
 "use client";
 import LoginButton from "@/components/boton";
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Image from "next/image";
+import Link from "next/link";
+
+const BearerContext = createContext('');
 
 export default function Home() {
-  const [accessToken, setAccessToken] = useState();
+  const [accessToken, setAccessToken] = useState('');
   const [projectIds, setProjectIds] = useState([]);
   const { user, error, isLoading } = useUser();
   const [empresa, setEmpresa] = useState();
@@ -75,6 +78,7 @@ export default function Home() {
   return (
     <>
       {user ? (
+        <BearerContext.Provider value={accessToken}>
         <div className="flex">
           <div
             id="default-sidebar"
@@ -166,22 +170,21 @@ export default function Home() {
             </div>
             <div className="bg-gray-200 w-64 h-64 rounded-lg mx-4 text-center p-10 justify-center flex flex-col">
               <div className="mt-2 mb-2">
-                <div>
+                <ul>
                   {projectsLoading ? (
-                    <div>Cargando...</div> // Muestra esto mientras 'isLoading' es true
+                    <li>Cargando...</li> // Muestra esto mientras 'isLoading' es true
                   ) : (
-                    projectIds.map(
-                      (
-                        projectIds: any // Mapea los projectIds
-                      ) => <div key={projectIds}>{projectIds}</div>
-                    )
+                    projectIds.map((projectId: any) => (
+                      <li key={projectId}><Link href={`/projects/${projectId}`}>{projectId}</Link></li>
+                    ))
                   )}
-                </div>
+                </ul>
                 <div>Proyectos</div>
               </div>
             </div>
           </div>
         </div>
+        </BearerContext.Provider>
       ) : (
         <LoginButton></LoginButton>
       )}

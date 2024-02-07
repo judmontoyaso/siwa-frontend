@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/components/Layout";
 import Loading from "@/components/loading";
+import Plot from "react-plotly.js";
 
 export default function Page({ params }: { params: { slug: string } }) {
   type OtuType = {
@@ -13,6 +14,9 @@ export default function Page({ params }: { params: { slug: string } }) {
   const { user, error, isLoading } = useUser();
   const [accessToken, setAccessToken] = useState();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [plotData, setPlotData] = useState<
+    { type: string; y: any; name: string }[]
+  >([]);
 
   const [otus, setOtus] = useState<OtuType | null>(null);
   useEffect(() => {
@@ -44,6 +48,34 @@ export default function Page({ params }: { params: { slug: string } }) {
         const result = await response.json();
         setOtus(result.data); // Si Data está en el nivel superior
         console.log(result.data);
+        const groupedData = result.data.data.reduce(
+          (acc: { [x: string]: { y: number[], text: string[] } }, item: string[]) => {
+            const location = item[3]; // Asume que 'samplelocation' está en esta posición
+            const alphaShannon = parseFloat(item[11]); // Asume que 'alphashannon' está en esta posición
+            const sampleId = item[2]; // 'sampleid'
+
+            if (!acc[location]) {
+              acc[location] = { y: [], text: [] };
+            }
+            acc[location].y.push(alphaShannon);
+            acc[location].text.push(`Sample ID: ${sampleId}`);
+
+            return acc;
+          },
+          {}
+        );
+
+        const plotData = Object.keys(groupedData).map((location) => {
+          return {
+            type: "box",
+            y: groupedData[location].y,
+            text: groupedData[location].text,
+            hoverinfo: 'y+text', // Configura la información que se muestra en el hover
+            name: location
+          };
+        });
+
+        setPlotData(plotData);
         setIsLoaded(true);
       } catch (error) {
         console.error("Error al obtener projectIds:", error);
@@ -58,27 +90,17 @@ export default function Page({ params }: { params: { slug: string } }) {
   return (
     <div>
       <Layout>
-        {isLoaded ? (
-          <div className="flex">
-            <div className="mt-28 w-full">
-
-            {otus?.index.map((indexValue, i) => (
-              <div key={indexValue}>
-                {indexValue}:{" "}
-                {
-                  otus.data[i].join(
-                    ", "
-                    ) /* Assuming you want to display the data points as a comma-separated string */
-                  }
-              </div>
-            ))}
-            </div>
-          </div>
-        ) : (
-          <div className="">
-            <Loading type="cylon" color="#0e253a" />
-          </div>
-        )}
+        <div>
+          <h2>Boxplot de Alpha Shannon por Ubicación de Muestra</h2>
+          <Plot
+            data={plotData.map((item) => ({ ...item, type: "box"}))}
+            layout={{
+              width: 800,
+              height: 600,
+              title: "Alpha Shannon por Ubicación",
+            }}
+          />
+        </div>
       </Layout>
     </div>
   );

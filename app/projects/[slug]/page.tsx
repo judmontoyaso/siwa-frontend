@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
+import Layout from "@/components/Layout";
 
 export default function Page({ params }: { params: { slug: string } }) {
   type OtuType = {
@@ -50,11 +51,14 @@ export default function Page({ params }: { params: { slug: string } }) {
     
   return (
 <div>
+  <Layout>
+
       {/* Map over the index array and use the index to reference the corresponding data point */}
       {otus?.index.map((indexValue, i) => (
         <div key={indexValue}>
           {indexValue}: {otus.data[i].join(", ")} {/* Assuming you want to display the data points as a comma-separated string */}
         </div>
       ))}
+      </Layout>
     </div>
   );}

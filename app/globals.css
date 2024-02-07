@@ -31,3 +31,15 @@ body {
     text-wrap: balance;
   }
 }
+
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px); /* Ajusta este valor según la distancia que quieras que el logo "baje" */
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

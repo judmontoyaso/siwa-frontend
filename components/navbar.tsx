@@ -11,8 +11,8 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="flex justify-end p-4 bg-gray-100">
-      <div className="mt-4 text-center mr-5">
-                  <h2 className="text-sm font-bold">{user?.name}</h2>
+      <div className="flex items-center text-center mr-5">
+                  <h2 className="text-sm font-bold text-slate-500">{user?.name}</h2>
                 </div>
       <div className="relative">
         <button onClick={() => setIsOpen(!isOpen)}>

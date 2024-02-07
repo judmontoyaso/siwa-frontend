@@ -3,6 +3,7 @@
 import React, { ReactNode } from 'react';
 import Navbar from "@/components/navbar";
 import Sidebar from "@/components/sidebar";
+import { SidebarProvider } from './context/sidebarContext';
 
 type LayoutProps = {
   children: ReactNode;
@@ -10,12 +11,14 @@ type LayoutProps = {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar></Navbar>
-      <div className="flex">
+    <div className="flex flex-row h-screen">
+         <SidebarProvider>
         <Sidebar />
-        <main className="flex-1 overflow-scroll h-screen text-center">{children}</main>
+      <div className="flex flex-col w-full">
+      <Navbar></Navbar>
+        <main className="overflow-auto text-center items-center justify-center flex">{children}</main>
       </div>
+         </SidebarProvider>
     </div>
   );
 };

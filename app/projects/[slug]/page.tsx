@@ -8,7 +8,6 @@ import SkeletonCard from "@/components/skeletoncard";
 import GraphicCard from "@/components/graphicCard";
 
 export default function Page({ params }: { params: { slug: string } }) {
-
   type OtuType = {
     index: string[];
     columns: string[];
@@ -23,6 +22,8 @@ export default function Page({ params }: { params: { slug: string } }) {
   >([]);
   const [otus, setOtus] = useState<OtuType | null>(null);
   const [scatterData, setScatterData] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -52,72 +53,98 @@ export default function Page({ params }: { params: { slug: string } }) {
           throw new Error("Respuesta no válida al obtener projectIds");
         }
         const result = await response.json();
+        const locations = new Set(
+          result.data.data.map((item: any[]) => item[3])
+        );
+        const uniqueLocations = Array.from(locations) as string[];
+
+        setAvailableLocations(uniqueLocations);
+        // Selecciona las primeras tres locaciones por defecto o menos si hay menos disponibles
+        // setSelectedLocations(uniqueLocations.slice(0, 3));
         setOtus(result.data); // Si Data está en el nivel superior
         console.log(result.data);
-        const groupedData = result.data.data.reduce(
-          (
-            acc: { [x: string]: { y: number[]; text: string[] } },
-            item: string[]
-          ) => {
-            const location = item[3]; // Asume que 'samplelocation' está en esta posición
-            const alphaShannon = parseFloat(item[11]); // Asume que 'alphashannon' está en esta posición
-            const sampleId = item[2]; // 'sampleid'
 
-            if (!acc[location]) {
-              acc[location] = { y: [], text: [] };
-            }
-            acc[location].y.push(alphaShannon);
-            acc[location].text.push(`Sample ID: ${sampleId}`);
+ // Filtrado y mapeo de datos para los gráficos...
+ const filteredData = result.data.data.filter((item: any[]) => selectedLocations.includes(item[3]));
 
-            return acc;
-          },
-          {}
-        );
 
-        const scatterPlotData = result.data.data.reduce(
+        const groupedData = filteredData.reduce(
           (
             acc: {
               [x: string]: {
                 y: any;
-                x: any;
                 text: string[];
               };
             },
-            curr: [any, any, any, any]
+            item: any[]
           ) => {
-            const [PC1, PC2, sampleId, sampleLocation] = curr; // Asegúrate de que los índices coincidan con la estructura de tus datos
-            acc[sampleLocation] = acc[sampleLocation] || {
-              x: [],
-              y: [],
-              mode: "markers",
-              type: "scatter",
-              name: sampleLocation,
-              text: [],
-              marker: { size: 8 },
-            };
+            const location = item[3];
+            const alphaShannon = parseFloat(item[11]);
+            const sampleId = item[2];
 
-            acc[sampleLocation].x.push(PC1);
-            acc[sampleLocation].y.push(PC2);
-            acc[sampleLocation].text.push(`Sample ID: ${sampleId}`); // Añade el sampleId al texto que se mostrará en el tooltip
+            // Verifica si la locación actual debe ser incluida
+            if (selectedLocations.includes(location)) {
+              if (!acc[location]) {
+                acc[location] = { y: [], text: [] };
+              }
+              acc[location].y.push(alphaShannon);
+              acc[location].text.push(`Sample ID: ${sampleId}`);
+            }
 
             return acc;
           },
           {}
         );
 
-        setScatterData(Object.values(scatterPlotData));
-
-        const plotData = Object.keys(groupedData).map((location) => {
-          return {
+        
+        const scatterPlotData = result.data.data.reduce(
+          (acc: { [x: string]: {
+            y: any;
+            x: any; text: string[]; 
+            mode :  any; type: any; name: any; marker: { size: number; }; }; }, item: [any, any, any, any]) => {
+            const [PC1, PC2, sampleId, sampleLocation] = item;
+        
+            // Inicializa el objeto para esta locación si aún no existe
+            if (!acc[sampleLocation]) {
+              acc[sampleLocation] = {
+                x: [], // Add 'x' property and initialize as an empty array
+                y: [],
+                mode: 'markers' as const, // Add 'mode' property with value 'markers'
+                type: 'scatter',
+                name: sampleLocation,
+                text: [],
+                marker: { size: 8 },
+              };
+            }
+        
+            // Agrega los datos al objeto de esta locación
+            acc[sampleLocation].x.push(PC1);
+            acc[sampleLocation].y.push(PC2);
+            acc[sampleLocation].text.push(`Sample ID: ${sampleId}`);
+        
+            return acc;
+          },
+          {} // Asegura que el valor inicial del acumulador es un objeto
+        );
+        
+        setScatterData(Object.values(scatterPlotData)); // Ahora scatterPlotData es garantizado como un objeto
+            const plotData = Object.keys(groupedData)
+        .filter((location: string) => selectedLocations.includes(location))
+        .map((location: string) => ({
+          type: "box",
+          y: groupedData[location].y,
+          text: groupedData[location].text,
+          hoverinfo: "y+text",
+          name: location,
+        }));
+      
+        setPlotData(Object.keys(groupedData).map(location => ({
+            ...groupedData[location],
             type: "box",
-            y: groupedData[location].y,
-            text: groupedData[location].text,
-            hoverinfo: "y+text", // Configura la información que se muestra en el hover
             name: location,
-          };
-        });
+          }))
+        );
 
-        setPlotData(plotData);
         setIsLoaded(true);
       } catch (error) {
         console.error("Error al obtener projectIds:", error);
@@ -127,7 +154,18 @@ export default function Page({ params }: { params: { slug: string } }) {
     fetchToken().then((token) => {
       fetchProjectIds(token);
     });
-  }, [params.slug]);
+  }, [params.slug, selectedLocations]);
+
+  const handleLocationChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSelections = Array.from(event.target.selectedOptions, option => option.value);
+    setSelectedLocations(newSelections);
+  };
+
+  const resetLocation = () => {
+    setSelectedLocations(['cecum', 'feces', 'ileum']);
+  };
+
+  
 
   return (
     <div>
@@ -135,6 +173,14 @@ export default function Page({ params }: { params: { slug: string } }) {
         {isLoaded ? (
           <>
             <div className="flex justify-evenly w-full flex-wrap">
+<select multiple value={selectedLocations} onChange={handleLocationChange}>
+
+  {availableLocations.map(location => (
+    <option key={location} value={location}>{location}</option>
+    ))}
+</select>
+    <button onClick={resetLocation as unknown as React.MouseEventHandler<HTMLButtonElement>}> remove filter </button>
+
               <GraphicCard>
                 {plotData.length > 0 ? (
                   <Plot

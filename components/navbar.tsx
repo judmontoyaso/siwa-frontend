@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
   const { user, error, isLoading } = useUser();
 
   return (
-    <nav className="flex justify-end p-4 bg-gray-100">
+    <nav className="flex justify-end p-4 bg-gray-50">
       <div className="flex items-center text-center mr-5">
                   <h2 className="text-sm font-bold text-slate-500">{user?.name}</h2>
                 </div>

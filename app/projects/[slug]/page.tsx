@@ -4,21 +4,26 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/components/Layout";
 import Loading from "@/components/loading";
 import Plot from "react-plotly.js";
+import SkeletonCard from "@/components/skeletoncard";
+import GraphicCard from "@/components/graphicCard";
 
 export default function Page({ params }: { params: { slug: string } }) {
+
   type OtuType = {
     index: string[];
     columns: string[];
     data: number[][];
   };
+
   const { user, error, isLoading } = useUser();
   const [accessToken, setAccessToken] = useState();
   const [isLoaded, setIsLoaded] = useState(false);
   const [plotData, setPlotData] = useState<
     { type: string; y: any; name: string }[]
   >([]);
-
   const [otus, setOtus] = useState<OtuType | null>(null);
+  const [scatterData, setScatterData] = useState([]);
+
   useEffect(() => {
     const fetchToken = async () => {
       try {
@@ -31,6 +36,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         console.error("Error al obtener token:", error);
       }
     };
+
     const fetchProjectIds = async (token: any) => {
       // Usa el token pasado como argumento
       try {
@@ -49,7 +55,10 @@ export default function Page({ params }: { params: { slug: string } }) {
         setOtus(result.data); // Si Data está en el nivel superior
         console.log(result.data);
         const groupedData = result.data.data.reduce(
-          (acc: { [x: string]: { y: number[], text: string[] } }, item: string[]) => {
+          (
+            acc: { [x: string]: { y: number[]; text: string[] } },
+            item: string[]
+          ) => {
             const location = item[3]; // Asume que 'samplelocation' está en esta posición
             const alphaShannon = parseFloat(item[11]); // Asume que 'alphashannon' está en esta posición
             const sampleId = item[2]; // 'sampleid'
@@ -65,13 +74,46 @@ export default function Page({ params }: { params: { slug: string } }) {
           {}
         );
 
+        const scatterPlotData = result.data.data.reduce(
+          (
+            acc: {
+              [x: string]: {
+                y: any;
+                x: any;
+                text: string[];
+              };
+            },
+            curr: [any, any, any, any]
+          ) => {
+            const [PC1, PC2, sampleId, sampleLocation] = curr; // Asegúrate de que los índices coincidan con la estructura de tus datos
+            acc[sampleLocation] = acc[sampleLocation] || {
+              x: [],
+              y: [],
+              mode: "markers",
+              type: "scatter",
+              name: sampleLocation,
+              text: [],
+              marker: { size: 8 },
+            };
+
+            acc[sampleLocation].x.push(PC1);
+            acc[sampleLocation].y.push(PC2);
+            acc[sampleLocation].text.push(`Sample ID: ${sampleId}`); // Añade el sampleId al texto que se mostrará en el tooltip
+
+            return acc;
+          },
+          {}
+        );
+
+        setScatterData(Object.values(scatterPlotData));
+
         const plotData = Object.keys(groupedData).map((location) => {
           return {
             type: "box",
             y: groupedData[location].y,
             text: groupedData[location].text,
-            hoverinfo: 'y+text', // Configura la información que se muestra en el hover
-            name: location
+            hoverinfo: "y+text", // Configura la información que se muestra en el hover
+            name: location,
           };
         });
 
@@ -90,17 +132,45 @@ export default function Page({ params }: { params: { slug: string } }) {
   return (
     <div>
       <Layout>
-        <div>
-          <h2>Boxplot de Alpha Shannon por Ubicación de Muestra</h2>
-          <Plot
-            data={plotData.map((item) => ({ ...item, type: "box"}))}
-            layout={{
-              width: 800,
-              height: 600,
-              title: "Alpha Shannon por Ubicación",
-            }}
-          />
-        </div>
+        {isLoaded ? (
+          <>
+            <div className="flex justify-evenly w-full flex-wrap">
+              <GraphicCard>
+                {plotData.length > 0 ? (
+                  <Plot
+                    data={plotData.map((item) => ({ ...item, type: "box" }))}
+                    layout={{
+                      width: 500,
+                      height: 270,
+                      title: "Alpha Shannon por Ubicación",
+                    }}
+                  />
+                ) : (
+                  <SkeletonCard />
+                )}
+              </GraphicCard>
+
+              <GraphicCard>
+                {scatterData.length > 0 ? (
+                  <Plot
+                    data={scatterData} // Pasa directamente scatterData sin mapearlo nuevamente
+                    layout={{
+                      width: 500,
+                      height: 270,
+                      title: "PC1 vs PC2 por Ubicación de Muestra",
+                      xaxis: { title: "PC1" },
+                      yaxis: { title: "PC2" },
+                    }}
+                  />
+                ) : (
+                  <SkeletonCard />
+                )}
+              </GraphicCard>
+            </div>
+          </>
+        ) : (
+          <Loading type="cylon" color="#0e253a" />
+        )}
       </Layout>
     </div>
   );

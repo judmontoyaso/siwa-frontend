@@ -22,7 +22,11 @@ export default function Page({ params }: { params: { slug: string } }) {
   >([]);
   const [otus, setOtus] = useState<OtuType | null>(null);
   const [scatterData, setScatterData] = useState([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([
+    "cecum",
+    "feces",
+    "ileum",
+  ]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
   useEffect(() => {
@@ -64,9 +68,10 @@ export default function Page({ params }: { params: { slug: string } }) {
         setOtus(result.data); // Si Data está en el nivel superior
         console.log(result.data);
 
- // Filtrado y mapeo de datos para los gráficos...
- const filteredData = result.data.data.filter((item: any[]) => selectedLocations.includes(item[3]));
-
+        // Filtrado y mapeo de datos para los gráficos...
+        const filteredData = result.data.data.filter((item: any[]) =>
+          selectedLocations.includes(item[3])
+        );
 
         const groupedData = filteredData.reduce(
           (
@@ -96,49 +101,59 @@ export default function Page({ params }: { params: { slug: string } }) {
           {}
         );
 
-        
-        const scatterPlotData = result.data.data.reduce(
-          (acc: { [x: string]: {
-            y: any;
-            x: any; text: string[]; 
-            mode :  any; type: any; name: any; marker: { size: number; }; }; }, item: [any, any, any, any]) => {
+        const scatterPlotData = filteredData.reduce(
+          (
+            acc: {
+              [x: string]: {
+                y: any;
+                x: any;
+                text: string[];
+                mode: any;
+                type: any;
+                name: any;
+                marker: { size: number };
+              };
+            },
+            item: [any, any, any, any]
+          ) => {
             const [PC1, PC2, sampleId, sampleLocation] = item;
-        
+
             // Inicializa el objeto para esta locación si aún no existe
             if (!acc[sampleLocation]) {
               acc[sampleLocation] = {
                 x: [], // Add 'x' property and initialize as an empty array
                 y: [],
-                mode: 'markers' as const, // Add 'mode' property with value 'markers'
-                type: 'scatter',
+                mode: "markers" as const, // Add 'mode' property with value 'markers'
+                type: "scatter",
                 name: sampleLocation,
                 text: [],
                 marker: { size: 8 },
               };
             }
-        
+
             // Agrega los datos al objeto de esta locación
             acc[sampleLocation].x.push(PC1);
             acc[sampleLocation].y.push(PC2);
             acc[sampleLocation].text.push(`Sample ID: ${sampleId}`);
-        
+
             return acc;
           },
           {} // Asegura que el valor inicial del acumulador es un objeto
         );
-        
+
         setScatterData(Object.values(scatterPlotData)); // Ahora scatterPlotData es garantizado como un objeto
-            const plotData = Object.keys(groupedData)
-        .filter((location: string) => selectedLocations.includes(location))
-        .map((location: string) => ({
-          type: "box",
-          y: groupedData[location].y,
-          text: groupedData[location].text,
-          hoverinfo: "y+text",
-          name: location,
-        }));
-      
-        setPlotData(Object.keys(groupedData).map(location => ({
+        const plotData = Object.keys(groupedData)
+          .filter((location: string) => selectedLocations.includes(location))
+          .map((location: string) => ({
+            type: "box",
+            y: groupedData[location].y,
+            text: groupedData[location].text,
+            hoverinfo: "y+text",
+            name: location,
+          }));
+
+        setPlotData(
+          Object.keys(groupedData).map((location) => ({
             ...groupedData[location],
             type: "box",
             name: location,
@@ -156,31 +171,61 @@ export default function Page({ params }: { params: { slug: string } }) {
     });
   }, [params.slug, selectedLocations]);
 
-  const handleLocationChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSelections = Array.from(event.target.selectedOptions, option => option.value);
-    setSelectedLocations(newSelections);
-  };
+  // Cambio en el manejador para checkboxes
+  const handleLocationChange = (location: string, isChecked: boolean) => {
+    if (isChecked) {
+      setSelectedLocations(prevLocations => [...prevLocations, location]);
+    } else {
+      setSelectedLocations(prevLocations => prevLocations.filter(loc => loc !== location));
+    }}
 
   const resetLocation = () => {
-    setSelectedLocations(['cecum', 'feces', 'ileum']);
+    setSelectedLocations(["cecum", "feces", "ileum"]);
   };
 
-  
-
+  // Función para aplicar los filtros seleccionados
+  const applyFilters = () => {
+    // Aquí podrías llamar a una función para actualizar las gráficas basándose en selectedLocations
+    // Por ahora, simplemente logueamos las locaciones seleccionadas para verificar
+    console.log(selectedLocations);
+  };
   return (
     <div>
       <Layout>
         {isLoaded ? (
           <>
-            <div className="flex justify-evenly w-full flex-wrap">
-<select multiple value={selectedLocations} onChange={handleLocationChange}>
-
-  {availableLocations.map(location => (
-    <option key={location} value={location}>{location}</option>
+          <div className="space-y-4 space-x-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {availableLocations.map((location) => (
+      <label key={location} className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          checked={selectedLocations.includes(location)}
+          onChange={(e) => handleLocationChange(location, e.target.checked)}
+          className="form-checkbox rounded text-blue-500 focus:ring-blue-400 focus:outline-none"
+        />
+        <span>{location}</span>
+      </label>
     ))}
-</select>
-    <button onClick={resetLocation as unknown as React.MouseEventHandler<HTMLButtonElement>}> remove filter </button>
+  </div>
+  <div className="flex justify-start space-x-4">
+    <button
+      onClick={applyFilters}
+      className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-all duration-150"
+    >
+      Apply Filters
+    </button>
+    <button
+      onClick={resetLocation as unknown as React.MouseEventHandler<HTMLButtonElement>}
+      className="px-4 py-2 bg-red-300 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 transition-all duration-150"
+    >
+      Remove Filter
+    </button>
+  </div>
+</div>
 
+            <div className="flex justify-evenly w-full flex-wrap">
+         
               <GraphicCard>
                 {plotData.length > 0 ? (
                   <Plot
@@ -192,7 +237,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     }}
                   />
                 ) : (
-                  <SkeletonCard />
+                  <SkeletonCard width={"500px"} height={"270px"} />
                 )}
               </GraphicCard>
 
@@ -209,7 +254,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     }}
                   />
                 ) : (
-                  <SkeletonCard />
+                  <SkeletonCard width={"500px"} height={"270px"} />
                 )}
               </GraphicCard>
             </div>

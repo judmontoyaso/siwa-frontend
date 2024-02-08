@@ -6,24 +6,23 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 import Layout from "@/components/Layout";
-import { useRouter } from 'next/router';
-
+import { useRouter } from "next/router";
+import SkeletonCard from "./skeletoncard";
 
 const Dashboard = () => {
-  const [accessToken, setAccessToken] = useState('');
+  const [accessToken, setAccessToken] = useState("");
   const [projectIds, setProjectIds] = useState([]);
   const { user, error, isLoading } = useUser();
   const [empresa, setEmpresa] = useState();
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [tokenObtenido, setTokenObtenido] = useState(false);
   const [path, setPath] = useState<string | null>(null);
-  
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setPath(window.location.pathname);
     }
 
-    
     const fetchToken = async () => {
       if (!user) {
         // Si no hay usuario autenticado, no hacer nada
@@ -85,47 +84,38 @@ const Dashboard = () => {
 
   return (
     <>
-         <div className="flex justify-center mt-28 content-center w-full">
-            <div className="bg-gray-200 w-64 h-64 rounded-lg mx-4 text-center p-10 justify-center flex flex-col">
-              <div className="mt-2 mb-2">
-                <div>
-                  {projectsLoading ? (
-                    <div>Cargando...</div> // Muestra esto mientras 'isLoading' es true
-                  ) : (
-                    projectIds.length
-                  )}
-                </div>
-                <div>Proyectos en curso</div>
-              </div>
-              <div className="mt-2 mb-2">
-                <div>
-                  {projectsLoading ? (
-                    <div>Cargando...</div> // Muestra esto mientras 'isLoading' es true
-                  ) : (
-                    empresa
-                  )}
-                </div>
-                <div>Empresa</div>
-              </div>
-            </div>
-            <div className="bg-gray-200 w-64 h-64 rounded-lg mx-4 text-center p-10 justify-center flex flex-col">
-              <div className="mt-2 mb-2">
-                <ul>
-                  {projectsLoading ? (
-                    <li>Cargando...</li> // Muestra esto mientras 'isLoading' es true
-                  ) : (
-                    projectIds.map((projectId: any) => (
-                      <li key={projectId}><Link href={`/projects/${projectId}`}>{projectId}</Link></li>
-                    ))
-                  )}
-                </ul>
-                <div>Proyectos</div>
-              </div>
-            </div>
+      <div className="flex justify-center mt-28 content-center w-full">
+        {!projectsLoading ? (
+          <div className="card bg-gradient-to-r from-gray-100 to-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out w-64 h-64 rounded-lg m-10 mx-4 p-6 flex flex-col justify-center items-center text-gray-600">
+            <div className="text-2xl font-semibold">{projectIds.length}</div>
+            <div className="text-lg mt-2">Proyectos en curso</div>
+            <div className="text-xl mt-4">{empresa}</div>
+            <div className="text-md">Empresa</div>
           </div>
+        ) : (
+          <SkeletonCard width={"256px"} height={"256px"} />
+        )}
+        {!projectsLoading ? (
+          <div className="card bg-gradient-to-r from-gray-100 to-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out w-64 h-64 rounded-lg m-10 mx-4 p-6 flex flex-col justify-center items-center text-gray-600">
+            <ul>
+              {projectIds.map((projectId) => (
+                <li key={projectId} className="mt-2">
+                  <Link href={`/projects/${projectId}`}>
+                    <span className="text-lg hover:text-gray-900 text-gray-600">
+                      {projectId}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="text-lg mt-4">Proyectos</div>
+          </div>
+        ) : (
+          <SkeletonCard width={"256px"} height={"256px"} />
+        )}
+      </div>
     </>
   );
-}
-
+};
 
 export default Dashboard;

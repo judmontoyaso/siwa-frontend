@@ -28,7 +28,9 @@ export default function Page({ params }: { params: { slug: string } }) {
     "ileum",
   ]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
-
+  const [selectedTreatment, setSelectedTreatment] = useState<string>('');
+  const [availableTreatments, setAvailableTreatments] = useState<string[]>([]);
+  
   useEffect(() => {
     const fetchToken = async () => {
       try {
@@ -61,7 +63,10 @@ export default function Page({ params }: { params: { slug: string } }) {
           result.data.data.map((item: any[]) => item[3])
         );
         const uniqueLocations = Array.from(locations) as string[];
-
+        const treatments = new Set(result.data.data.map((item: any[]) => item[23]));
+        const uniqueTreatments = Array.from(treatments) as string[];
+        setAvailableTreatments(uniqueTreatments);
+        
         setAvailableLocations(uniqueLocations);
         // Selecciona las primeras tres locaciones por defecto o menos si hay menos disponibles
         // setSelectedLocations(uniqueLocations.slice(0, 3));
@@ -70,8 +75,10 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Filtrado y mapeo de datos para los gráficos...
         const filteredData = result.data.data.filter((item: any[]) =>
-          selectedLocations.includes(item[3])
-        );
+        selectedLocations.includes(item[3]) && (selectedTreatment ? item[23] === selectedTreatment : true)
+      );
+      
+        
 
         const groupedData = filteredData.reduce(
           (
@@ -169,7 +176,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     fetchToken().then((token) => {
       fetchProjectIds(token);
     });
-  }, [params.slug, selectedLocations]);
+  }, [params.slug, selectedLocations, selectedTreatment]);
 
   // Cambio en el manejador para checkboxes
   const handleLocationChange = (location: string, isChecked: boolean) => {
@@ -208,13 +215,26 @@ export default function Page({ params }: { params: { slug: string } }) {
       </label>
     ))}
   </div>
+  
   <div className="flex justify-start space-x-4">
-    <button
+  {selectedLocations.length === 1 && (
+    <select
+      value={selectedTreatment}
+      onChange={(e) => setSelectedTreatment(e.target.value)}
+      className="form-select rounded text-gray-700"
+    >
+      <option value="">Select Treatment</option>
+      {availableTreatments.map((treatment) => (
+        <option key={treatment} value={treatment}>{treatment}</option>
+      ))}
+    </select>
+  )}
+    {/* <button
       onClick={applyFilters}
       className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-all duration-150"
     >
       Apply Filters
-    </button>
+    </button> */}
     <button
       onClick={resetLocation as unknown as React.MouseEventHandler<HTMLButtonElement>}
       className="px-4 py-2 bg-red-300 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 transition-all duration-150"

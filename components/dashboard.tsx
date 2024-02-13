@@ -40,37 +40,37 @@ const Dashboard = () => {
         console.error("Error al obtener token:", error);
       }
     };
-    fetchToken();
-    if (tokenObtenido) {
-      const fetchProjectIds = async (token: any) => {
-        // Usa el token pasado como argumento
-        try {
-          const response = await fetch("http://127.0.0.1:8000/projects", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Respuesta no válida al obtener projectIds");
-          }
-          const result = await response.json();
-          console.log(result);
-          const ids = result.projects;
-          const empresa = result.empresa;
-          setEmpresa(empresa);
-          setProjectIds(ids);
-          setProjectsLoading(false);
-        } catch (error) {
-          console.error("Error al obtener projectIds:", error);
-        }
-      };
 
-      console.log(accessToken, tokenObtenido);
-      // Llama a fetchToken y luego a fetchProjectIds con el token obtenido
-      if (accessToken && tokenObtenido) {
+    const fetchProjectIds = async (token: any) => {
+      // Usa el token pasado como argumento
+      try {
+        const response = await fetch("http://127.0.0.1:8000/projects", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Respuesta no válida al obtener projectIds");
+        }
+        const result = await response.json();
+        console.log(result);
+        const ids = result.projects;
+        const empresa = result.empresa;
+        setEmpresa(empresa);
+        setProjectIds(ids);
+        setProjectsLoading(false);
+      } catch (error) {
+        console.error("Error al obtener projectIds:", error);
+      }
+    };
+
+    console.log("dddd", accessToken, tokenObtenido);
+    // Llama a fetchToken y luego a fetchProjectIds con el token obtenido
+    fetchToken().then((accessToken) => {
+      if (accessToken) {
         fetchProjectIds(accessToken);
       }
-    }
+    });
   }, [user, path]);
 
   if (isLoading) {

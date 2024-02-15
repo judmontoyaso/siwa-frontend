@@ -69,7 +69,7 @@ export default function Page({ params }: { params: { slug: string } }) {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(["sampleids"] )}  );
+            body: JSON.stringify([])}  );
         if (!response.ok) {
           throw new Error("Respuesta no válida al obtener projectIds");
         }
@@ -260,7 +260,6 @@ export default function Page({ params }: { params: { slug: string } }) {
           const uniqueTreatments = Array.from(treatments) as string[];
           setAvailableTreatments(uniqueTreatments);
           
-          setAvailableLocations(uniqueLocations);
           // Selecciona las primeras tres locaciones por defecto o menos si hay menos disponibles
           // setSelectedLocations(uniqueLocations.slice(0, 3));
           setOtus(result.data); // Si Data está en el nivel superior

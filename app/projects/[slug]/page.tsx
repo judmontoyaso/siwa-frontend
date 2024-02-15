@@ -64,11 +64,12 @@ export default function Page({ params }: { params: { slug: string } }) {
         const response = await fetch(
           `http://127.0.0.1:8000/projects/beta-diversity/${params.slug}`,
           {
+            method: 'POST',
             headers: {
+              'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-          }
-        );
+            body: JSON.stringify(["sampleids"] )}  );
         if (!response.ok) {
           throw new Error("Respuesta no válida al obtener projectIds");
         }
@@ -191,7 +192,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     fetchToken().then((token) => {
       fetchProjectIds(token);
     });
-  }, [params.slug, selectedLocations, selectedTreatment]);
+  }, [params.slug]);
 
   // Cambio en el manejador para checkboxes
   const handleLocationChange = (location: string, isChecked: boolean) => {
@@ -215,10 +216,170 @@ export default function Page({ params }: { params: { slug: string } }) {
 
   // Función para aplicar los filtros seleccionados
   const applyFilters = () => {
-    setSelectedLocations(filteredLocations);
+    
+    setSelectedLocations(filteredLocations)
     // Aquí podrías llamar a una función para actualizar las gráficas basándose en filteredLocations
     // Por ahora, simplemente logueamos las locaciones seleccionadas para verificar
-    console.log(filteredLocations);
+   
+      const fetchToken = async () => {
+        try {
+          const response = await fetch("http://localhost:3000/api/auth/token");
+          const { accessToken } = await response.json();
+          setAccessToken(accessToken);
+          console.log("Token obtenido:", accessToken);
+          return accessToken; // Retorna el token obtenido para su uso posterior
+        } catch (error) {
+          console.error("Error al obtener token:", error);
+        }
+      };
+  
+      const fetchProjectIds = async (token: any) => {
+       
+        // Usa el token pasado como argumento
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:8000/projects/beta-diversity/${params.slug}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(filteredLocations)            }
+          );
+          if (!response.ok) {
+            throw new Error("Respuesta no válida al obtener projectIds");
+          }
+          const result = await response.json();
+          console.log(result);
+          const locations = new Set(
+          result.data.data.map((item: any[]) => item[3])
+          );
+          const uniqueLocations = Array.from(locations) as string[];
+          const treatments = new Set(result.data.data.map((item: any[]) => item[23]));
+          const uniqueTreatments = Array.from(treatments) as string[];
+          setAvailableTreatments(uniqueTreatments);
+          
+          setAvailableLocations(uniqueLocations);
+          // Selecciona las primeras tres locaciones por defecto o menos si hay menos disponibles
+          // setSelectedLocations(uniqueLocations.slice(0, 3));
+          setOtus(result.data); // Si Data está en el nivel superior
+          console.log(result.data);
+  
+          // Filtrado y mapeo de datos para los gráficos...
+          const filteredData = result.data.data.filter((item: any[]) =>
+          filteredLocations.includes(item[3])
+        );
+        
+          
+  
+          const groupedData = filteredData.reduce(
+            (
+              acc: {
+                [x: string]: {
+                  y: any;
+                  text: string[];
+                };
+              },
+              item: any[]
+            ) => {
+              const location = item[3];
+              const alphaShannon = parseFloat(item[11]);
+              const sampleId = item[2];
+  
+              // Verifica si la locación actual debe ser incluida
+              if (selectedLocations.includes(location)) {
+                if (!acc[location]) {
+                  acc[location] = { y: [], text: [] };
+                }
+                acc[location].y.push(alphaShannon);
+                acc[location].text.push(`Sample ID: ${sampleId}`);
+              }
+  
+              return acc;
+            },
+            {}
+          );
+  
+          const scatterPlotData = filteredData.reduce(
+            (
+              acc: {
+                [x: string]: {
+                  y: any;
+                  x: any;
+                  text: string[];
+                  mode: any;
+                  type: any;
+                  name: any;
+                  marker: { size: number };
+                };
+              },
+              item: [any, any, any, any]
+            ) => {
+              const [PC1, PC2, sampleId, sampleLocation] = item;
+  
+              // Inicializa el objeto para esta locación si aún no existe
+              if (!acc[sampleLocation]) {
+                acc[sampleLocation] = {
+                  x: [], // Add 'x' property and initialize as an empty array
+                  y: [],
+                  mode: "markers" as const, // Add 'mode' property with value 'markers'
+                  type: "scatter",
+                  name: sampleLocation,
+                  text: [],
+                  marker: { size: 8 },
+                };
+              }
+  
+              // Agrega los datos al objeto de esta locación
+              acc[sampleLocation].x.push(PC1);
+              acc[sampleLocation].y.push(PC2);
+              acc[sampleLocation].text.push(`Sample ID: ${sampleId}`);
+  
+              return acc;
+            },
+            {} // Asegura que el valor inicial del acumulador es un objeto
+          );
+  
+          setScatterData(Object.values(scatterPlotData)); // Ahora scatterPlotData es garantizado como un objeto
+          const plotData = Object.keys(groupedData)
+            .filter((location: string) => selectedLocations.includes(location))
+            .map((location: string) => ({
+              type: "box",
+              y: groupedData[location].y,
+              text: groupedData[location].text,
+              hoverinfo: "y+text",
+              name: location,
+            }));
+  
+          setPlotData(
+            Object.keys(groupedData).map((location) => ({
+              ...groupedData[location],
+              type: "box",
+              name: location,
+            }))
+          );
+  
+          setIsLoaded(true);
+        } catch (error) {
+          console.error("Error al obtener projectIds:", error);
+        }
+      };
+  
+      function setLocations() {
+        setSelectedLocations(filteredLocations);
+        return Promise.resolve(filteredLocations); // Convert filteredLocations to a Promise
+      }
+
+      setLocations()
+        .then(() => {
+          fetchToken().then((token) => {
+            fetchProjectIds(token);
+          });
+        })
+     
+
+      console.log(filteredLocations);
   };
 
   return (

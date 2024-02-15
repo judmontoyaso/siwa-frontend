@@ -30,7 +30,21 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   const [selectedTreatment, setSelectedTreatment] = useState<string>('');
   const [availableTreatments, setAvailableTreatments] = useState<string[]>([]);
-  
+  const [filteredLocations, setFilteredLocations] = useState<string[]>(["cecum",
+  "feces",
+  "ileum"]);
+
+  {selectedLocations.length === 1 && (
+    // Cambio en el manejador para checkboxes
+    function handleLocationChange(location: string, isChecked: boolean) {
+      if (isChecked) {
+        setSelectedLocations(prevLocations => [...prevLocations, location]);
+      } else {
+        setSelectedLocations(prevLocations => prevLocations.filter(loc => loc !== location));
+      }
+    }
+  )}
+
   useEffect(() => {
     const fetchToken = async () => {
       try {
@@ -48,7 +62,7 @@ export default function Page({ params }: { params: { slug: string } }) {
       // Usa el token pasado como argumento
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/projects/${params.slug}`,
+          `http://127.0.0.1:8000/projects/beta-diversity/${params.slug}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -59,8 +73,9 @@ export default function Page({ params }: { params: { slug: string } }) {
           throw new Error("Respuesta no válida al obtener projectIds");
         }
         const result = await response.json();
+        console.log(result);
         const locations = new Set(
-          result.data.data.map((item: any[]) => item[3])
+        result.data.data.map((item: any[]) => item[3])
         );
         const uniqueLocations = Array.from(locations) as string[];
         const treatments = new Set(result.data.data.map((item: any[]) => item[23]));
@@ -75,7 +90,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Filtrado y mapeo de datos para los gráficos...
         const filteredData = result.data.data.filter((item: any[]) =>
-        selectedLocations.includes(item[3]) && (selectedTreatment ? item[23] === selectedTreatment : true)
+        selectedLocations.includes(item[3])
       );
       
         
@@ -180,69 +195,67 @@ export default function Page({ params }: { params: { slug: string } }) {
 
   // Cambio en el manejador para checkboxes
   const handleLocationChange = (location: string, isChecked: boolean) => {
+    let updatedLocations: string[] = []; // Initialize the 'updatedLocations' variable with an empty array
     if (isChecked) {
-      setSelectedLocations(prevLocations => [...prevLocations, location]);
-    } else {
-      setSelectedLocations(prevLocations => prevLocations.filter(loc => loc !== location));
-    }}
+      if (!filteredLocations.includes(location)) {
+        updatedLocations = [...filteredLocations, location];
+        setFilteredLocations(updatedLocations);
 
-  const resetLocation = () => {
-    setSelectedLocations(["cecum", "feces", "ileum"]);
+        console.log("1", updatedLocations);
+      } 
+    } else {
+      updatedLocations = filteredLocations.filter((loc) => loc !== location);
+      setFilteredLocations(updatedLocations);
+
+      console.log("3", updatedLocations);
+    }
+    console.log(filteredLocations);
   };
+
 
   // Función para aplicar los filtros seleccionados
   const applyFilters = () => {
-    // Aquí podrías llamar a una función para actualizar las gráficas basándose en selectedLocations
+    setSelectedLocations(filteredLocations);
+    // Aquí podrías llamar a una función para actualizar las gráficas basándose en filteredLocations
     // Por ahora, simplemente logueamos las locaciones seleccionadas para verificar
-    console.log(selectedLocations);
+    console.log(filteredLocations);
   };
+
   return (
     <div>
       <Layout>
         {isLoaded ? (
           <>
-          <div className="space-y-4 space-x-4">
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {availableLocations.map((location) => (
-      <label key={location} className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          checked={selectedLocations.includes(location)}
-          onChange={(e) => handleLocationChange(location, e.target.checked)}
-          className="form-checkbox rounded text-blue-500 focus:ring-blue-400 focus:outline-none"
-        />
-        <span>{location}</span>
-      </label>
-    ))}
-  </div>
-  
-  <div className="flex justify-start space-x-4">
-  {selectedLocations.length === 1 && (
-    <select
-      value={selectedTreatment}
-      onChange={(e) => setSelectedTreatment(e.target.value)}
-      className="form-select rounded text-gray-700"
-    >
-      <option value="">Select Treatment</option>
-      {availableTreatments.map((treatment) => (
-        <option key={treatment} value={treatment}>{treatment}</option>
-      ))}
-    </select>
-  )}
-    {/* <button
-      onClick={applyFilters}
-      className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-all duration-150"
-    >
-      Apply Filters
-    </button> */}
-    <button
-      onClick={resetLocation as unknown as React.MouseEventHandler<HTMLButtonElement>}
-      className="px-4 py-2 bg-red-300 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 transition-all duration-150"
-    >
-      Remove Filter
-    </button>
-  </div>
-</div>
+            <div className="space-y-4 space-x-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableLocations.map((location) => (
+                  <label key={location} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={filteredLocations.includes(location)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          handleLocationChange(location, true);
+                        } else {
+                          handleLocationChange(location, false);
+                        }
+                      }}
+                      className="form-checkbox rounded text-blue-500 focus:ring-blue-400 focus:outline-none"
+                    />
+                    <span>{location}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex justify-start space-x-4">
+                <button
+                  onClick={applyFilters}
+                  className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-all duration-150"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
 
             <div className="flex justify-evenly w-full flex-wrap">
          
@@ -280,9 +293,9 @@ export default function Page({ params }: { params: { slug: string } }) {
             </div>
           </>
         ) : (
-          <Loading type="cylon" color="#0e253a" />
+          <div>Loading...</div>
         )}
       </Layout>
     </div>
-  );
-}
+    );
+  } // Add a closing curly brace here

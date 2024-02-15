@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [tokenObtenido, setTokenObtenido] = useState(false);
   const [path, setPath] = useState<string | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -70,8 +71,30 @@ const Dashboard = () => {
       if (accessToken) {
         fetchProjectIds(accessToken);
       }
+    })}, [user, path]);
+
+  useEffect(() => {
+    const fetchProjectData = async (projectId: string) => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/projects/${projectId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Error al obtener datos del proyecto ${projectId}`);
+        }
+        const projectData = await response.json();
+        console.log(`Datos del proyecto ${projectId}:`, projectData);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    projectIds.forEach((projectId: string) => {
+      fetchProjectData(projectId);
     });
-  }, [user, path]);
+  }, [projectIds, accessToken]);
 
   if (isLoading) {
     return (

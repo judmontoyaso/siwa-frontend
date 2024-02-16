@@ -60,25 +60,16 @@ const Dashboard = () => {
         setEmpresa(empresa);
         setProjectIds(ids);
         setProjectsLoading(false);
+        return ids
       } catch (error) {
         console.error("Error al obtener projectIds:", error);
       }
     };
-
-    console.log("dddd", accessToken, tokenObtenido);
-    // Llama a fetchToken y luego a fetchProjectIds con el token obtenido
-    fetchToken().then((accessToken) => {
-      if (accessToken) {
-        fetchProjectIds(accessToken);
-      }
-    })}, [user, path]);
-
-  useEffect(() => {
-    const fetchProjectData = async (projectId: string) => {
+    const fetchProjectData = async (projectId: string, token: string) => {
       try {
         const response = await fetch(`http://127.0.0.1:8000/projects/${projectId}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         if (!response.ok) {
@@ -91,10 +82,16 @@ const Dashboard = () => {
       }
     };
 
-    projectIds.forEach((projectId: string) => {
-      fetchProjectData(projectId);
-    });
-  }, [projectIds, accessToken]);
+    console.log("dddd", accessToken, tokenObtenido);
+    // Llama a fetchToken y luego a fetchProjectIds con el token obtenido
+    fetchToken().then((accessToken) => {
+      if (accessToken) {
+        fetchProjectIds(accessToken).then((ids) => {ids.forEach((projectId: string) => {
+          fetchProjectData(projectId, accessToken);
+        })});
+      }
+    })}, [user, path]);
+
 
   if (isLoading) {
     return (

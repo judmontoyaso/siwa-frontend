@@ -10,7 +10,7 @@ import { useSidebar } from "./context/sidebarContext";
 
 const BearerContext = createContext('');
 
-export default function Home() {
+export default function Home({ slug }: { slug: string }) {
 
   const { user, error, isLoading } = useUser();
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
@@ -67,6 +67,14 @@ export default function Home() {
                   </a>
                 </li>
               </ul>
+              {slug && (
+                <ul>
+                  <li>Project {slug}</li>
+                  <li>Beta diversity</li>
+                  <li>Alpha diversity</li>
+                  <li>Taxonomy</li>
+                </ul>
+              )}
             </div>
           </div>
       

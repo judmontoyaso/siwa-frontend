@@ -9,11 +9,11 @@ type LayoutProps = {
   children: ReactNode;
 };
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps & { slug: string }> = ({ children, slug }) => {
   return (
     <div className="flex flex-row h-screen">
          <SidebarProvider>
-        <Sidebar />
+        <Sidebar slug={slug}/>
       <div className="flex flex-col w-full">
       <Navbar></Navbar>
         <main className="overflow-auto text-center items-center justify-center flex">{children}</main>

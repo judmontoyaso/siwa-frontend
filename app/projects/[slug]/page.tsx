@@ -6,6 +6,7 @@ import Loading from "@/components/loading";
 import Plot from "react-plotly.js";
 import SkeletonCard from "@/components/skeletoncard";
 import GraphicCard from "@/components/graphicCard";
+import { useRouter } from "next/router";
 
 export default function Page({ params }: { params: { slug: string } }) {
   type OtuType = {
@@ -13,6 +14,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     columns: string[];
     data: number[][];
   };
+
+
 
   const { user, error, isLoading } = useUser();
   const [accessToken, setAccessToken] = useState();
@@ -44,6 +47,8 @@ export default function Page({ params }: { params: { slug: string } }) {
       }
     }
   )}
+
+
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -381,12 +386,15 @@ export default function Page({ params }: { params: { slug: string } }) {
       console.log(filteredLocations);
   };
 
+
+
   return (
     <div>
-      <Layout>
+      <Layout slug={params.slug} >
         {isLoaded ? (
           <>
             <div className="space-y-4 space-x-4">
+          {params.slug}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableLocations.map((location) => (
                   <label key={location} className="flex items-center space-x-2">

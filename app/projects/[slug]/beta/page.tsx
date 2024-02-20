@@ -5,17 +5,16 @@ import Beta from "@/components/beta";
 
 
 import React from 'react';
-import Layout from "@/components/Layout";
 
 const page = ({ params }: { params: { slug: string } }) => {
-  const filterContent = ""; // Replace with the actual implementation of 'filterContent'
-  
   return (
-    <Layout slug={params.slug} filter={filterContent} >
-      <div>
-        {params.slug}
-      </div>
-    </Layout>
+    <div>
+      <Beta params={params}>
+
+     
+
+      </Beta>
+    </div>
   );
 };
 

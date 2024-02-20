@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <>
       {user ? (
-        <Layout>
+        <Layout slug={""} filter={undefined}>
           <Dashboard></Dashboard>
         </Layout>
       ) : (

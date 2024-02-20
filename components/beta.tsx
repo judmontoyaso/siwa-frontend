@@ -29,15 +29,13 @@ export default function Page({ params }: { params: { slug: string } }) {
     "ileum",
   ]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
-  const [selectedTreatment, setSelectedTreatment] = useState<string>('');
   const [availableTreatments, setAvailableTreatments] = useState<string[]>([]);
-  const [filteredLocations, setFilteredLocations] = useState<string[]>(["cecum",
-    "feces",
-    "ileum"]);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
-  const [isTreatmentSelectDisabled, setIsTreatmentSelectDisabled] = useState(true);
+  const [isColorByDisabled, setIsColorByDisabled] = useState(true);
   const [colorBy, setColorBy] = useState<string>('none');
   const [colorByOptions, setColorByOptions] = useState([]);
+  const [tittleVariable, SetTittleVariable] = useState<string>('location');
+  const [isTabFilterOpen, setIsTabFilterOpen] = useState(false);
 
 
   const fetchToken = async () => {
@@ -52,7 +50,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     }
   };
 
-  const fetchDropdownOptions = async (token: any) => {
+  const fetchConfigFile = async (token: any) => {
     try {
       const response = await fetch(`http://127.0.0.1:8000/projects/config/${params.slug}`, {
         method: 'GET',
@@ -66,327 +64,345 @@ export default function Page({ params }: { params: { slug: string } }) {
       }
       const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
       setColorByOptions(configfile.configFile.columns); // Actualiza el estado con las nuevas opciones
-      console.log(configfile.configFile.columns);
-      console.log(colorByOptions)
     } catch (error) {
       console.error("Error al cargar las opciones del dropdown:", error);
     }
   };
 
 
-
-  useEffect(() => {
-    fetchToken().then((token) => {
-      fetchDropdownOptions(token);
-    });
-  }, [params.slug]);
-
-
-
   const handleLocationChange = (event: any) => {
     if (event === 'all') {
       setSelectedLocations(["cecum", "feces", "ileum"]);
-      setIsTreatmentSelectDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
+      setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
     } else {
       setSelectedLocations([event]);
-      setIsTreatmentSelectDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una ubicación específica
+      setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
     }
   };
 
   const handleLocationChangeColorby = (event: any) => {
+    setColorBy(event.target.value);
+  };
 
-    setColorBy(event); // Ocultar el select de tratamiento si se selecciona 'All'
+  const fetchProjectIds = async (result: any) => {
+    const locations = new Set(
+      result.data.data.map((item: any[]) => item[3])
+    );
+    const uniqueLocations = Array.from(locations) as string[];
+    setAvailableLocations(uniqueLocations);
+    setOtus(result.data); // Actualiza el estado con los datos obtenidos
+    // Filtrado y mapeo de datos para los gráficos...
+    const filteredData = result.data.data.filter((item: any[]) =>
+      selectedLocations.includes(item[3])
+    );
 
+    const groupedData = filteredData.reduce(
+      (
+        acc: {
+          [x: string]: {
+            y: any;
+            text: string[];
+          };
+        },
+        item: any[]
+      ) => {
+        const location = item[3];
+        const sampleId = item[2];
 
-    console.log(event);
-    console.log(colorBy)
+        // Verifica si la locación actual debe ser incluida
+        if (selectedLocations.includes(location)) {
+          if (!acc[location]) {
+            acc[location] = { y: [], text: [] };
+          }
+          acc[location].text.push(`Sample ID: ${sampleId}`);
+        }
+
+        return acc;
+      },
+      {}
+    );
+
+    const scatterPlotData = filteredData.reduce(
+      (
+        acc: {
+          [x: string]: {
+            y: any;
+            x: any;
+            text: string[];
+            mode: any;
+            type: any;
+            name: any;
+            marker: { size: number };
+          };
+        },
+        item: [any, any, any, any]
+      ) => {
+        const [PC1, PC2, sampleId, sampleLocation] = item;
+
+        // Inicializa el objeto para esta locación si aún no existe
+        if (!acc[sampleLocation]) {
+          acc[sampleLocation] = {
+            x: [], // Add 'x' property and initialize as an empty array
+            y: [],
+            mode: "markers" as const, // Add 'mode' property with value 'markers'
+            type: "scatter",
+            name: sampleLocation,
+            text: [],
+            marker: { size: 8 },
+          };
+        }
+
+        // Agrega los datos al objeto de esta locación
+        acc[sampleLocation].x.push(PC1);
+        acc[sampleLocation].y.push(PC2);
+        acc[sampleLocation].text.push(`Sample ID: ${sampleId}`);
+
+        return acc;
+      },
+      {} // Asegura que el valor inicial del acumulador es un objeto
+    );
+
+    setScatterData(Object.values(scatterPlotData)); // Ahora scatterPlotData es garantizado como un objeto
+    const plotData = Object.keys(groupedData)
+      .filter((location: string) => selectedLocation.includes(location))
+      .map((location: string) => ({
+        type: "box",
+        y: groupedData[location].y,
+        text: groupedData[location].text,
+        hoverinfo: "y+text",
+        name: location,
+      }));
+
+    setPlotData(
+      Object.keys(groupedData).map((location) => ({
+        ...groupedData[location],
+        type: "box",
+        name: location,
+      }))
+    );
+
+    setIsLoaded(true);
+
+  }
+
+  // Definir una función genérica para realizar el fetch
+  const fetchBetaDiversityData = async (token: any) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/projects/beta-diversity/${params.slug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ "samplelocation": selectedLocations })
+      }
+      );
+
+      if (!response.ok) {
+        throw new Error("Respuesta no válida desde el servidor");
+      }
+
+      const result = await response.json();
+      console.log(result);
+      return result; // Devolver los datos obtenidos
+
+    } catch (error) {
+      console.error("Error al realizar el fetch:", error);
+      throw error; // Propagar el error para manejarlo más adelante
+    }
+  };
+
+  const fetchProjectIdsFilter = async (result: any) => {
+    try {
+
+      const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
+      // Determinar si "None" está seleccionado en "Color By"
+      colorBy === 'none';
+      const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+        const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
+        const colorValue = colorBy !== 'none' ? item[result.data.columns.indexOf(colorBy)] : sampleLocation;
+
+        let key = sampleLocation; // Por defecto, usa la locación como clave
+        let name = `${sampleLocation}`;
+        // Si "All" no está seleccionado en las locaciones y "Color By" no es "None", 
+        // usa el valor seleccionado en "Color By" para colorear
+        if (!isAllLocationsSelected && colorBy !== 'none') {
+          key = colorBy !== 'none' ? colorValue : sampleLocation;
+          name = colorBy !== 'none' ? `${colorValue}` : `Location: ${sampleLocation}`;
+        }
+
+        if (!acc[key]) {
+          acc[key] = {
+            x: [],
+            y: [],
+            mode: "markers",
+            type: "scatter",
+            name: name,
+            text: [],
+            marker: { size: 8 },
+          };
+        }
+
+        acc[key].x.push(PC1);
+        acc[key].y.push(PC2);
+        acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy === "none" ? "location" : colorBy}: ${colorValue}`);
+
+        return acc;
+      }, {});
+
+      setScatterData(Object.values(scatterPlotData));
+      setIsLoaded(true);
+    } catch (error) {
+      console.error("Error al obtener projectIds:", error);
+    }
   };
 
   useEffect(() => {
-    const fetchProjectIds = async (token: any) => {
-      // Usa el token pasado como argumento
-      try {
-        const response = await fetch(
-          `http://127.0.0.1:8000/projects/beta-diversity/${params.slug}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ "samplelocation": selectedLocations })
-          });
-        if (!response.ok) {
-          throw new Error("Respuesta no válida al obtener projectIds");
-        }
-        const result = await response.json();
-        console.log(result);
-        const locations = new Set(
-          result.data.data.map((item: any[]) => item[3])
-        );
-        const uniqueLocations = Array.from(locations) as string[];
-        const treatments = new Set(result.data.data.map((item: any[]) => item[23]));
-        const uniqueTreatments = Array.from(treatments) as string[];
-        setAvailableTreatments(uniqueTreatments);
-
-        setAvailableLocations(uniqueLocations);
-        // Selecciona las primeras tres locaciones por defecto o menos si hay menos disponibles
-        // setSelectedLocations(uniqueLocations.slice(0, 3));
-        setOtus(result.data); // Si Data está en el nivel superior
-        console.log(result.data);
-
-        // Filtrado y mapeo de datos para los gráficos...
-        const filteredData = result.data.data.filter((item: any[]) =>
-          selectedLocations.includes(item[3])
-        );
-
-
-
-        const groupedData = filteredData.reduce(
-          (
-            acc: {
-              [x: string]: {
-                y: any;
-                text: string[];
-              };
-            },
-            item: any[]
-          ) => {
-            const location = item[3];
-            const sampleId = item[2];
-
-            // Verifica si la locación actual debe ser incluida
-            if (selectedLocations.includes(location)) {
-              if (!acc[location]) {
-                acc[location] = { y: [], text: [] };
-              }
-              acc[location].text.push(`Sample ID: ${sampleId}`);
-            }
-
-            return acc;
-          },
-          {}
-        );
-
-        const scatterPlotData = filteredData.reduce(
-          (
-            acc: {
-              [x: string]: {
-                y: any;
-                x: any;
-                text: string[];
-                mode: any;
-                type: any;
-                name: any;
-                marker: { size: number };
-              };
-            },
-            item: [any, any, any, any]
-          ) => {
-            const [PC1, PC2, sampleId, sampleLocation] = item;
-
-            // Inicializa el objeto para esta locación si aún no existe
-            if (!acc[sampleLocation]) {
-              acc[sampleLocation] = {
-                x: [], // Add 'x' property and initialize as an empty array
-                y: [],
-                mode: "markers" as const, // Add 'mode' property with value 'markers'
-                type: "scatter",
-                name: sampleLocation,
-                text: [],
-                marker: { size: 8 },
-              };
-            }
-
-            // Agrega los datos al objeto de esta locación
-            acc[sampleLocation].x.push(PC1);
-            acc[sampleLocation].y.push(PC2);
-            acc[sampleLocation].text.push(`Sample ID: ${sampleId}`);
-
-            return acc;
-          },
-          {} // Asegura que el valor inicial del acumulador es un objeto
-        );
-
-        setScatterData(Object.values(scatterPlotData)); // Ahora scatterPlotData es garantizado como un objeto
-        const plotData = Object.keys(groupedData)
-          .filter((location: string) => selectedLocation.includes(location))
-          .map((location: string) => ({
-            type: "box",
-            y: groupedData[location].y,
-            text: groupedData[location].text,
-            hoverinfo: "y+text",
-            name: location,
-          }));
-
-        setPlotData(
-          Object.keys(groupedData).map((location) => ({
-            ...groupedData[location],
-            type: "box",
-            name: location,
-          }))
-        );
-
-        setIsLoaded(true);
-      } catch (error) {
-        console.error("Error al obtener projectIds:", error);
-      }
-    };
-
     fetchToken().then((token) => {
-      fetchProjectIds(token);
+      fetchConfigFile(token);
+      fetchBetaDiversityData(token).then((result) => { console.log(result); fetchProjectIds(result) })
     });
-  }, [params.slug]);
-
-
-
-
-
+  }
+    , [params.slug]);
 
   // Función para aplicar los filtros seleccionados
   const applyFilters = (event: any) => {
-    const fetchProjectIds = async (token: any) => {
-      try {
-        const response = await fetch(
-          `http://127.0.0.1:8000/projects/beta-diversity/${params.slug}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ "samplelocation": selectedLocations })
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Respuesta no válida al obtener projectIds");
-        }
-        const result = await response.json();
-        console.log("Result object:", result); // Add this line to inspect the structure
-        // Determinar si se seleccionó 'all' para colorear por ubicación
-        const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
-        // Determinar si "None" está seleccionado en "Color By"
-        colorBy === 'none';
-        const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
-          const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-          const colorValue = colorBy !== 'none' ? item[result.data.columns.indexOf(colorBy)] : sampleLocation;
-
-
-
-
-          let key = sampleLocation; // Por defecto, usa la locación como clave
-          let name = `${sampleLocation}`;
-          // Si "All" no está seleccionado en las locaciones y "Color By" no es "None", 
-          // usa el valor seleccionado en "Color By" para colorear
-          if (!isAllLocationsSelected && colorBy !== 'none') {
-            key = colorBy !== 'none' ? colorValue : sampleLocation;
-            name = colorBy !== 'none' ? `${colorBy}: ${colorValue}` : `Location: ${sampleLocation}`;
-          }
-
-          if (!acc[key]) {
-            acc[key] = {
-              x: [],
-              y: [],
-              mode: "markers",
-              type: "scatter",
-              name: name,
-              text: [],
-              marker: { size: 8 },
-            };
-          }
-
-          acc[key].x.push(PC1);
-          acc[key].y.push(PC2);
-          acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy}: ${colorValue}`);
-
-          return acc;
-        }, {});
-
-        setScatterData(Object.values(scatterPlotData));
-        setIsLoaded(true);
-      } catch (error) {
-        console.error("Error al obtener projectIds:", error);
-      }
-    };
-
-    fetchToken().then((token) => {
-      fetchProjectIds(token);
-    });
+    isColorByDisabled || colorBy === "none" ? SetTittleVariable('location') : SetTittleVariable(colorBy.replace('_', ' '));
+    fetchBetaDiversityData(accessToken).then(result => { fetchProjectIdsFilter(result) })
   };
 
 
 
+  const filterContent = (
+          <div className="flex flex-col  pb-4 bg-white rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center" >
+       <div className="flex p-4 pb-0 flex-row w-full text-center items-center justify-center" onClick={() => setIsTabFilterOpen(!isTabFilterOpen)}>
+       <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" fill="#737373" height="18px" width="18px" version="1.1" id="Layer_1" viewBox="0 0 300.906 300.906" xmlSpace="preserve">
+          <g>
+            <g>
+              <path d="M288.953,0h-277c-5.522,0-10,4.478-10,10v49.531c0,5.522,4.478,10,10,10h12.372l91.378,107.397v113.978    c0,3.688,2.03,7.076,5.281,8.816c1.479,0.792,3.101,1.184,4.718,1.184c1.94,0,3.875-0.564,5.548-1.68l49.5-33    c2.782-1.854,4.453-4.977,4.453-8.32v-80.978l91.378-107.397h12.372c5.522,0,10-4.478,10-10V10C298.953,4.478,294.476,0,288.953,0    z M167.587,166.77c-1.539,1.809-2.384,4.105-2.384,6.48v79.305l-29.5,19.666V173.25c0-2.375-0.845-4.672-2.384-6.48L50.585,69.531    h199.736L167.587,166.77z M278.953,49.531h-257V20h257V49.531z" />
+            </g>
+          </g>
+        </svg>
+        <span className="sm-2 text-gray-900 dark:text-white ml-2">Filters</span>
+       </div>
+{isTabFilterOpen && (
+       <div className={`flex flex-col w-full p-4 bg-white rounded-lg shadow-md dark:bg-gray-800`}>
+<div className={`tab-content `}>
 
 
 
+<div className="flex flex-col items-left space-x-2">
 
+  <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
+  <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    onChange={(e) => handleLocationChange(e.target.value)}
+  >
+    <option selected value="all">All Locations</option>
+    {availableLocations.map((location) => (
+      <option key={location} value={location}>
+        {location.charAt(0).toUpperCase() + location.slice(1)}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="mt-10">
+
+  <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+  <ul className="grid w-full gap-6 md:grid-cols-2">
+    <li>
+      <input type="radio" id="none" name="none" value="none" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'none'}
+        onChange={handleLocationChangeColorby}
+        disabled={isColorByDisabled} />
+      <label htmlFor="none" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+        <div className="block">
+          <div className="w-full text-center flex justify-center">Default</div>
+        </div>
+
+      </label>
+    </li>
+    <li>
+      <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'treatment'}
+        onChange={handleLocationChangeColorby}
+        disabled={isColorByDisabled} />
+      <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+        <div className="block">
+          <div className="w-full">Treatment</div>
+        </div>
+
+      </label>
+    </li>
+    <li>
+      <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'age'}
+        onChange={handleLocationChangeColorby} />
+      <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+        <div className="block">
+          <div className="w-full">Age</div>
+        </div>
+
+      </label>
+    </li>
+    {colorByOptions.map((option, index) => (
+      <li key={index}>
+        <input
+          type="radio"
+          id={option}
+          name={option}
+          className="hidden peer"
+          value={option}
+          checked={isColorByDisabled ? false : colorBy === option}
+          onChange={handleLocationChangeColorby}
+          disabled={isColorByDisabled}
+        />
+        <label
+          htmlFor={option}
+          className={`flex items-center justify-center ${isColorByDisabled
+              ? 'cursor-not-allowed'
+              : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
+            } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+        >
+          <div className="block">
+            <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
+          </div>
+        </label>
+      </li>
+    ))}
+  </ul>
+</div>
+<div className="flex w-full items-center margin-0 justify-center my-8">
+  <button
+    onClick={applyFilters}
+    className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
+  >
+    Apply Filters
+  </button>
+</div>
+</div>
+</div>)}
+      </div>
+)
 
   return (
     <div>
-      <Layout slug={params.slug} >
+      <Layout slug={params.slug} filter={filterContent} >
         {isLoaded ? (
           <>
-            <div className="space-y-4 space-x-4 w-1/6 beta">
-              <div className="">
-                <div className="flex flex-col items-center space-x-2">
-                  <label htmlFor="location" className="mb-2 px-2 text-sm font-medium text-gray-900 dark:text-white w-full text-left">Select an option</label>
-                  <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    onChange={(e) => handleLocationChange(e.target.value)}
-                  >
-                    <option selected value="all">All Locations</option>
-                    {availableLocations.map((location) => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="mt-4">
-                    <label htmlFor="colorbyFilter" className="mb-2 px-2 text-sm font-medium text-gray-900 dark:text-white w-full text-left">Color by</label>
-                    <select
-                      id="colorbyFilter"
-                      disabled={isTreatmentSelectDisabled}
-                      className={`bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${isTreatmentSelectDisabled ? 'cursor-not-allowed' : 'cursor-auto'} dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-                      onChange={(e) => handleLocationChangeColorby(e.target.value)}
-                      defaultValue="none"
-                    >
-                      <option value="none">Please select an option</option>
-                      <option key="treatment" value="treatment">  Treatment </option>
-                      <option key="age" value="age"> Age  </option>
-
-                      {colorByOptions?.map((option, index) => (
-                        <option key={index} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-
-                  </div>
-                </div>
-              </div>
-              <div className="flex w-full items-center margin-0 justify-center my-3">
-                <button
-                  onClick={applyFilters}
-                  className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-all duration-150"
-                >
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-evenly w-full flex-wrap">
+            <div className="inline-flex text-center justify-evenly w-full flex-wrap">
               <GraphicCard>
                 {scatterData.length > 0 ? (
                   <Plot
                     data={scatterData} // Pasa directamente scatterData sin mapearlo nuevamente
                     layout={{
-                      width: 500,
-                      height: 270,
-                      title: "PC1 vs PC2 por Ubicación de Muestra",
+                      width: 800,
+                      height: 400,
+                      title: `Pc1 vs pc2 by sample ${tittleVariable}`,
                       xaxis: { title: "PC1" },
                       yaxis: { title: "PC2" },
                     }}
                   />
                 ) : (
-                  <SkeletonCard width={"500px"} height={"270px"} />
+                  <SkeletonCard width={"800px"} height={"470px"} />
                 )}
               </GraphicCard>
             </div>

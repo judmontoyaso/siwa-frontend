@@ -7,13 +7,13 @@ type CardProps = {
 
 const GraphicCard: React.FC<CardProps> = ({ children, title }) => {
   return (
-    <div className="relative flex flex-col mt-6 bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-300 ease-in-out">
+    <div className="relative flex flex-col items-center mt-6 mx-10 bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-300 ease-in-out w-4/5">
       {title && (
         <div className="px-5 py-3 text-lg font-semibold text-gray-800 bg-gradient-to-r from-blue-100 to-cyan-100">
           {title}
         </div>
       )}
-      <div className="flex flex-col items-center justify-center p-5">
+      <div className="flex flex-col items-center justify-center p-5 w-5/6">
         {children}
       </div>
     </div>

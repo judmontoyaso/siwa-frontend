@@ -10,10 +10,12 @@ import { useSidebar } from "./context/sidebarContext";
 
 const BearerContext = createContext('');
 
-export default function Home({ slug }: { slug: string }) {
+export default function Home({ slug, filter }: { slug: string, filter: any }) {
 
   const { user, error, isLoading } = useUser();
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
+  const [isProjectOpen, setIsProjectOpen] = useState(false);
+
   
 <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
   {isSidebarOpen ? 'Ocultar' : 'Mostrar'}
@@ -33,7 +35,7 @@ export default function Home({ slug }: { slug: string }) {
 
         <><div
         id="default-sidebar"
-        className={`left-0 z-40 w-64 h-screen transition-transform ${
+        className={`left-0 z-40 w-1/4 h-screen transition-transform ${
           isSidebarOpen ? 'sm:translate-x-0 block' : '-translate-x-full hidden'
         } relative`}
         aria-label="Sidebar"
@@ -51,8 +53,8 @@ export default function Home({ slug }: { slug: string }) {
               </div>
               <ul className="space-y-2 font-medium">
                 <li>
-                  <a href="/"
-                    className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <div className="flex flex-row cursor-pointer my-4 p-4 bg-white rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center" onClick={() => window.location.href = "/"}>
+              
                     <svg
                       className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
                       aria-hidden="true"
@@ -64,17 +66,35 @@ export default function Home({ slug }: { slug: string }) {
                       <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
                     </svg>
                     <span className="ms-3">Dashboard</span>
-                  </a>
+                  
+                  </div>
                 </li>
               </ul>
               {slug && (
-                <ul>
-                  <li>Project {slug}</li>
-                  <li>Beta diversity</li>
-                  <li>Alpha diversity</li>
-                  <li>Taxonomy</li>
+                <ul className="font-medium">
+                       
+
+                  <li>
+
+
+
+                  <div className="flex flex-col cursor-pointer my-4 p-4 bg-white rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center"onClick={() => setIsProjectOpen(!isProjectOpen)}>
+                 <span className="ms-3">Project {slug}</span> 
+                          </div></li>
+                          {isProjectOpen && (
+  <ul>
+    <li><Link href={`/projects/${slug}`}>Summary</Link></li>
+  
+    <li><Link href={`/projects/${slug}/beta`}>Beta diversity</Link></li>
+    <li>Alpha diversity</li>
+    <li>Taxonomy</li>
+  </ul>
+)}
+                  <li className="cursor-pointer my-4"> {filter} </li>
                 </ul>
               )}
+
+
             </div>
           </div>
       

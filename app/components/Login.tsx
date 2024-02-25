@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import logoSiwa from '../public/LogoSIWA.png';
+import logoSiwa from '../../public/LogoSIWA.png';
 import Image from 'next/image';
 
 const Login = () => {

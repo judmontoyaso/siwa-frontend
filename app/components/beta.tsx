@@ -1,15 +1,17 @@
 "use client";
 import { SetStateAction, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import Layout from "@/components/Layout";
-import Loading from "@/components/loading";
+import Layout from "@/app/components/Layout";
+import Loading from "@/app/components/loading";
 import Plot from "react-plotly.js";
-import SkeletonCard from "@/components/skeletoncard";
-import GraphicCard from "@/components/graphicCard";
+import SkeletonCard from "@/app/components/skeletoncard";
+import GraphicCard from "@/app/components/graphicCard";
 import { useRouter } from "next/router";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { Result } from "postcss";
+const [scatterData, setScatterData] = useState([]);
+const [scatterColors, setScatterColors] = useState({});
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -45,7 +47,48 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [tittleVariable, SetTittleVariable] = useState<string>('location');
   const [isTabFilterOpen, setIsTabFilterOpen] = useState(false);
   const [dataResult, setDataResult] = useState<any>(null);
-
+  const colors = [
+    '#1f77b4', // azul metálico
+    '#ff7f0e', // naranja de seguridad
+    '#2ca02c', // verde cocodrilo
+    '#d62728', // rojo ladrillo
+    '#9467bd', // morado opaco
+    '#8c564b', // marrón cuero
+    '#e377c2', // rosa rasberry
+    '#7f7f7f', // gris medio
+    '#bcbd22', // verde siena
+    '#17becf', // cian claro
+    '#393b79', // azul medianoche
+    '#637939', // verde oliva
+    '#8c6d31', // marrón bambú
+    '#843c39', // rojo oscuro
+    '#7b4173', // morado orquídea
+    '#bd9e39', // dorado tierra
+    '#e7cb94', // amarillo vainilla
+    '#e7ba52', // amarillo dorado
+    '#cedb9c', // verde manzana
+    '#e7969c', // rosa salmón
+    '#a55194', // morado berenjena
+    '#b5cf6b', // lima brillante
+    '#9c9ede', // lavanda suave
+    '#cedb9c', // verde pastel
+    '#f7b6d2', // rosa pastel
+    '#ad494a', // rojo carmín
+    '#8ca252', // verde musgo
+    '#000000', // negro
+    '#5254a3', // azul índigo
+    '#ff9896', // rosa claro
+    '#98df8a', // verde menta
+    '#ffbb78', // naranja melocotón
+    '#aec7e8', // azul cielo
+    '#c5b0d5', // lila
+    '#c49c94', // marrón arena
+    '#f7b6d2', // rosa claro
+    '#c7c7c7', // gris claro
+    '#dbdb8d', // amarillo pastel
+    '#9edae5'  // turquesa claro
+  ];
+  
 
   const fetchToken = async () => {
     try {
@@ -311,7 +354,7 @@ console.log(Location)
         console.error("Error al obtener projectIds:", error);
       }
     };
-
+  let colorIndex = 0;
   const fetchProjectIdsFilter = async (result: any) => {
     try {
 
@@ -339,18 +382,21 @@ console.log(Location)
             type: "scatter",
             name: name,
             text: [],
-            marker: { size: 8 },
+            marker: { size: 8, color: colors[colorIndex % colors.length] }
           };
         }
 
         acc[key].x.push(PC1);
         acc[key].y.push(PC2);
         acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy === "none" ? "location" : colorBy}: ${colorValue}`);
-
+        scatterColors[key] = colors[colorIndex % colors.length] as string;
+        colorIndex++;
         return acc;
       }, {});
 
       setScatterData(Object.values(scatterPlotData));
+      setScatterData(Object.values(scatterPlotData));
+      setScatterColors(scatterColors);
       setIsLoaded(true);
     } catch (error) {
       console.error("Error al obtener projectIds:", error);
@@ -370,8 +416,6 @@ console.log(Location)
 const filter = (
   <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
   <div className={`tab-content `}>
-
-
 
            <div className="flex flex-col items-left space-x-2">
 
@@ -397,9 +441,7 @@ const filter = (
                Apply Filter
              </button>
            </div>
-
            <div className="mt-10">
-
              <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
              <ul className="grid w-full gap-6 md:grid-cols-2">
                <li>
@@ -410,7 +452,6 @@ const filter = (
                    <div className="block">
                      <div className="w-full text-center flex justify-center">Default</div>
                    </div>
-
                  </label>
                </li>
                <li>
@@ -421,7 +462,6 @@ const filter = (
                    <div className="block">
                      <div className="w-full">Treatment</div>
                    </div>
-
                  </label>
                </li>
                <li>
@@ -431,7 +471,6 @@ const filter = (
                    <div className="block">
                      <div className="w-full">Age</div>
                    </div>
-
                  </label>
                </li>
                {colorByOptions.map((option, index) => (
@@ -465,6 +504,35 @@ const filter = (
          </div>
        </div>);
 
+const CustomLegend = ({ scatterData, scatterColors }: { scatterData: any[], scatterColors: any }) => (
+  <div style={{ marginLeft: '20px' }}>
+    {scatterData.map((entry, index) => (
+      <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
+        <div>{entry.name}</div>
+      </div>
+    ))}
+  </div>
+);
+
+const MyPlotComponent = ({ scatterData }: { scatterData: any[] }) => (
+<div style={{ display: 'flex', alignItems: 'start' }}>
+  <Plot
+    data={scatterData}
+    layout={{
+      width: 800,
+      height: 400,
+      title: `Pc1 vs pc2 by sample ${tittleVariable} " by " ${colorBy}`,
+      xaxis: { title: 'PC1' },
+      yaxis: { title: 'PC2' },
+      showlegend: false, // Oculta la leyenda de Plotly
+    }}
+  />
+  <CustomLegend scatterData={scatterData} scatterColors={scatterColors}  />
+</div>
+
+);
+
   return (
     <div>
       <Layout slug={params.slug} filter={""} >
@@ -473,16 +541,9 @@ const filter = (
 
               <GraphicCard filter={filter}>
                 {scatterData.length > 0 ? (
-                  <Plot
-                    data={scatterData} // Pasa directamente scatterData sin mapearlo nuevamente
-                    layout={{
-                      width: 800,
-                      height: 400,
-                      title: `Pc1 vs pc2 by sample ${tittleVariable}`,
-                      xaxis: { title: "PC1" },
-                      yaxis: { title: "PC2" },
-                    }}
-                  />
+<MyPlotComponent scatterData={scatterData} />
+
+
                 ) : (
                   <SkeletonCard width={"800px"} height={"470px"} />
                 )}

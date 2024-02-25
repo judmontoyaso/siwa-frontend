@@ -1,13 +1,13 @@
 "use client";
 import { ReactNode, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import Beta from "@/components/beta";
+import Beta from "@/app/components/beta";
 import Image from "next/image";
 
 
 
 import React from 'react';
-import Layout from "@/components/Layout";
+import Layout from "@/app/components/Layout";
 
 const page = ({ params }: { params: { slug: string } }) => {
   const filterContent = ""; // Replace with the actual implementation of 'filterContent'

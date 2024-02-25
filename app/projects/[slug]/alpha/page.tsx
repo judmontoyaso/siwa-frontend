@@ -1,11 +1,11 @@
 "use client";
 import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import Layout from "@/components/Layout";
-import Loading from "@/components/loading";
+import Layout from "@/app/components/Layout";
+import Loading from "@/app/components/loading";
 import Plot from "react-plotly.js";
-import SkeletonCard from "@/components/skeletoncard";
-import GraphicCard from "@/components/graphicCard";
+import SkeletonCard from "@/app/components/skeletoncard";
+import GraphicCard from "@/app/components/graphicCard";
 import { Bounce, toast } from "react-toastify";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -284,96 +284,96 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-const filter = (
-    <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
-    <div className={`tab-content `}>
-  
-  
-  
-             <div className="flex flex-col items-left space-x-2">
-  
-               <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
-               <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    value={currentLocation === "all" ? currentLocation : selectedLocations}
-                                    onChange={(e) => handleLocationChange(e.target.value)}>
-                                    <option selected value="all">All Locations</option>
-                                    {availableLocations.map((location) => (
-                                        <option key={location} value={location}>
-                                            {location.charAt(0).toUpperCase() + location.slice(1)}
-                                        </option>
-                                    ))}
-                                </select>
-             </div>
-  
-      
-             </div>
-  
-             <div className="mt-10">
-  
-               <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-               <ul className="grid gap-6 md:grid-cols-2">
-                                    <li>
-                                        <input type="radio" id="none" name="none" value="none" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
-                                            onChange={handleLocationChangeColorby}
-                                            disabled={isColorByDisabled} />
-                                        <label htmlFor="none" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500 cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                            <div className="block">
-                                                <div className="w-full text-center flex justify-center">Default</div>
-                                            </div>
+    const filter = (
+        <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
+            <div className={`tab-content `}>
 
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
-                                            onChange={handleLocationChangeColorby}
-                                            disabled={isColorByDisabled} />
-                                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                            <div className="block">
-                                                <div className="w-full">Treatment</div>
-                                            </div>
 
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
-                                            onChange={handleLocationChangeColorby} />
-                                        <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                            <div className="block">
-                                                <div className="w-full">Age</div>
-                                            </div>
 
-                                        </label>
-                                    </li>
-                                    {colorByOptions.map((option, index) => (
-                                        <li key={index}>
-                                            <input
-                                                type="radio"
-                                                id={option}
-                                                name={option}
-                                                className="hidden peer"
-                                                value={option}
-                                                checked={isColorByDisabled ? false : selectedColumn === option}
-                                                onChange={handleLocationChangeColorby}
-                                                disabled={isColorByDisabled}
-                                            />
-                                            <label
-                                                htmlFor={option}
-                                                className={`flex items-center justify-center ${isColorByDisabled
-                                                    ? 'cursor-not-allowed'
-                                                    : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                                            >
-                                                <div className="block">
-                                                    <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-                                                </div>
-                                            </label>
-                                        </li>
-                                    ))}
-                                </ul>
-             </div>
-  
-           </div>
-       );
+                <div className="flex flex-col items-left space-x-2">
+
+                    <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
+                    <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        value={currentLocation === "all" ? currentLocation : selectedLocations}
+                        onChange={(e) => handleLocationChange(e.target.value)}>
+                        <option selected value="all">All Locations</option>
+                        {availableLocations.map((location) => (
+                            <option key={location} value={location}>
+                                {location.charAt(0).toUpperCase() + location.slice(1)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+
+            </div>
+
+            <div className="mt-10">
+
+                <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+                <ul className="grid gap-6 md:grid-cols-2">
+                    <li>
+                        <input type="radio" id="none" name="none" value="none" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
+                            onChange={handleLocationChangeColorby}
+                            disabled={isColorByDisabled} />
+                        <label htmlFor="none" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500 cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <div className="block">
+                                <div className="w-full text-center flex justify-center">Default</div>
+                            </div>
+
+                        </label>
+                    </li>
+                    <li>
+                        <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
+                            onChange={handleLocationChangeColorby}
+                            disabled={isColorByDisabled} />
+                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <div className="block">
+                                <div className="w-full">Treatment</div>
+                            </div>
+
+                        </label>
+                    </li>
+                    <li>
+                        <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
+                            onChange={handleLocationChangeColorby} />
+                        <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <div className="block">
+                                <div className="w-full">Age</div>
+                            </div>
+
+                        </label>
+                    </li>
+                    {colorByOptions.map((option, index) => (
+                        <li key={index}>
+                            <input
+                                type="radio"
+                                id={option}
+                                name={option}
+                                className="hidden peer"
+                                value={option}
+                                checked={isColorByDisabled ? false : selectedColumn === option}
+                                onChange={handleLocationChangeColorby}
+                                disabled={isColorByDisabled}
+                            />
+                            <label
+                                htmlFor={option}
+                                className={`flex items-center justify-center ${isColorByDisabled
+                                    ? 'cursor-not-allowed'
+                                    : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
+                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                            >
+                                <div className="block">
+                                    <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
+                                </div>
+                            </label>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+        </div>
+    );
 
 
     return (
@@ -385,14 +385,14 @@ const filter = (
 
 
 
-                            
+
 
                             <div className={`transition-all ease-in-out duration-300 ${isFilterCardVisible ? 'max-w-xs' : 'w-0'} overflow-hidden`}>
                                 {/* Contenido de la tarjeta de filtros */}
-                               
-                              
+
+
                             </div>
-                            
+
 
 
                             <div className="flex-grow">

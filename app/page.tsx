@@ -1,12 +1,12 @@
 "use client";
-import LoginButton from "@/components/Login";
+import LoginButton from "@/app/components/Login";
 import { createContext, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Image from "next/image";
 import Link from "next/link";
-import Navbar from "@/components/navbar";
-import Layout from "@/components/Layout";
-import Dashboard from "@/components/dashboard";
+import Navbar from "@/app/components/navbar";
+import Layout from "@/app/components/Layout";
+import Dashboard from "@/app/components/dashboard";
 import { useRouter } from "next/router";
 
 export default function Home() {

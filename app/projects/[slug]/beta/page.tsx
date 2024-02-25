@@ -48,7 +48,11 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
   const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
-  
+  const colorsLocation = [
+    '#1f77b4', // azul metálico
+    '#ff7f0e', // naranja de seguridad
+    '#2ca02c', // verde cocodrilo
+  ];
   const colors = [
     '#1f77b4', // azul metálico
     '#ff7f0e', // naranja de seguridad
@@ -207,6 +211,8 @@ console.log(Location)
     };
   
     const fetchProjectIds = async (result: any) => {
+      console.log(newScatterColors)
+      console.log(scatterColors)
     
       const locations = new Set(
         result?.data?.data?.map((item: any[]) => item[3])
@@ -271,10 +277,10 @@ console.log(Location)
               type: "scatter",
               name: sampleLocation,
               text: [],
-              marker: { size: 8, color: colors[colorIndex % colors.length] }
+              marker: { size: 8, color: colors[colorIndex % colorsLocation.length] }
             };
               const key = sampleLocation; // Declare 'key' variable
-              newScatterColors[key] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
+              newScatterColors[key] = colorsLocation[colorIndex % colorsLocation.length]; // Actualiza la copia con el nuevo color
               colorIndex++;
           }
   
@@ -312,6 +318,8 @@ console.log(Location)
     }
     
     const fetchProjectIdsFiltercolor = async (result: any, color:any) => {
+      console.log(newScatterColors)
+      console.log(scatterColors)
       try {
   
         const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
@@ -360,6 +368,7 @@ console.log(Location)
       }
     };
     const fetchProjectIdsFilter = async (result: any) => {
+
     const newScatterColors = { ...scatterColors }; // Crea una copia del estado actual
     try {
 
@@ -402,6 +411,8 @@ console.log(Location)
       
       setScatterColors(prevColors => ({ ...prevColors, ...newScatterColors }));
       setScatterData(Object.values(scatterPlotData));
+      console.log(newScatterColors)
+      console.log(scatterColors)
       setIsLoaded(true);
     } catch (error) {
       console.error("Error al obtener projectIds:", error);

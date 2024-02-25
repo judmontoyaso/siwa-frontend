@@ -30,14 +30,58 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
     const [selectedColumn, setSelectedColumn] = useState("");
-    const [shannonData, setShannonData] = useState({});
+    const [shannonData, setShannonData] = useState([]);
     const [observedData, setObservedData] = useState({});
     const [currentLocation, setCurrentLocation] = useState('');
     const [colorByOptions, setColorByOptions] = useState([]);
     const [colorBy, setColorBy] = useState<string>('none');
     const [isFilterCardVisible, setIsFilterCardVisible] = useState(false);
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
-
+    const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
+    const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
+    let colorIndex = 0;
+    
+    const colors = [
+      '#1f77b4', // azul metálico
+      '#ff7f0e', // naranja de seguridad
+      '#2ca02c', // verde cocodrilo
+      '#d62728', // rojo ladrillo
+      '#9467bd', // morado opaco
+      '#8c564b', // marrón cuero
+      '#e377c2', // rosa rasberry
+      '#7f7f7f', // gris medio
+      '#bcbd22', // verde siena
+      '#17becf', // cian claro
+      '#393b79', // azul medianoche
+      '#637939', // verde oliva
+      '#8c6d31', // marrón bambú
+      '#843c39', // rojo oscuro
+      '#7b4173', // morado orquídea
+      '#bd9e39', // dorado tierra
+      '#e7cb94', // amarillo vainilla
+      '#e7ba52', // amarillo dorado
+      '#cedb9c', // verde manzana
+      '#e7969c', // rosa salmón
+      '#a55194', // morado berenjena
+      '#b5cf6b', // lima brillante
+      '#9c9ede', // lavanda suave
+      '#cedb9c', // verde pastel
+      '#f7b6d2', // rosa pastel
+      '#ad494a', // rojo carmín
+      '#8ca252', // verde musgo
+      '#000000', // negro
+      '#5254a3', // azul índigo
+      '#ff9896', // rosa claro
+      '#98df8a', // verde menta
+      '#ffbb78', // naranja melocotón
+      '#aec7e8', // azul cielo
+      '#c5b0d5', // lila
+      '#c49c94', // marrón arena
+      '#f7b6d2', // rosa claro
+      '#c7c7c7', // gris claro
+      '#dbdb8d', // amarillo pastel
+      '#9edae5'  // turquesa claro
+    ];
     const fetchToken = async () => {
         try {
             const response = await fetch("http://localhost:3000/api/auth/token");
@@ -118,6 +162,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
     const fetchProjectIds = async (result: any, columnIndex: number | undefined) => {
+        
         // Usa el token pasado como argumento
         try {
             const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
@@ -131,6 +176,8 @@ export default function Page({ params }: { params: { slug: string } }) {
                         [x: string]: {
                             y: any;
                             text: string[];
+                            marker: { color: string};
+
                         };
                     },
                     item: any[]
@@ -141,7 +188,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                     // Verifica si la locación actual debe ser incluida
                     if (selectedLocations.includes(location)) {
                         if (!acc[location]) {
-                            acc[location] = { y: [], text: [] };
+                            acc[location] = { y: [], text: [], marker: { color: colors[colorIndex % colors.length] }
+                        };
+                        console.log(location)
+                          newScatterColors[location] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
+                          colorIndex++; 
                         }
                         acc[location].y.push(alphaShannon);
                         acc[location].text.push(`Sample ID: ${sampleId}`);
@@ -151,6 +202,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 },
                 {}
             );
+            setScatterColors(newScatterColors);
 
             const groupedDataObserved = filteredData.reduce(
                 (
@@ -179,9 +231,9 @@ export default function Page({ params }: { params: { slug: string } }) {
                 {}
             );
 
-            const shannonData = processData(filteredData, columnIndex || 1);
+            const shannonData: any[] = processData(filteredData, columnIndex || 1);
             const observedData = processData(filteredData, (columnIndex || 1) + 1);
-            setShannonData(shannonData);
+            setShannonData(shannonData as never[]);
             setObservedData(observedData);
 
             setPlotData(
@@ -209,26 +261,36 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-    const processData = (data: any, index: number) => {
+    const processData = (data: any[], index: number): any[] => {
+
         if (!Array.isArray(data)) {
             console.error('Expected an array for data, received:', data);
-            return {};
+            return [];
         }
-
-        return (data || []).reduce((acc: { [x: string]: { y: any[]; text: string[]; name: string }; }, item: any[]) => {
+    
+        const result = data.reduce((acc, item) => {
             const location = item[1];
-            const value = item[index]; // Valor de la columna seleccionada
-            const key = `${location}-${value}`; // Clave única para agrupar
-
+            const value = item[index];
+            const key = `${location}-${value}`;
+    
             if (!acc[key]) {
-                acc[key] = { y: [], text: [], name: `${value === undefined ? location : value}` };
+                acc[key] = { y: [], text: [], name: `${value === undefined ? location : value}`, marker: {color: colors[colorIndex % colors.length] }
+            };
+              newScatterColors[value] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
+              colorIndex++;
             }
-            acc[key].y.push(item[9]);
+    
+            acc[key].y.push(item[9]); // Asumiendo que el valor de interés está en el índice 9
             acc[key].text.push(`Sample ID: ${item[0]}`);
-
+    
             return acc;
         }, {});
+        setScatterColors(newScatterColors);
+
+        // Convertir el objeto resultante en un arreglo de sus valores
+        return Object.values(result);
     };
+    
 
     useEffect(() => {
 
@@ -280,6 +342,8 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const handleLocationChangeColorby = (event: any) => {
         setSelectedColumn(event.target.value);
+        console.log(newScatterColors)
+        console.log(scatterColors)
     };
 
 
@@ -376,6 +440,59 @@ export default function Page({ params }: { params: { slug: string } }) {
     );
 
 
+
+
+type ShannonData = {
+    name: string;
+    // Add other properties as needed
+  };
+  
+  type ScatterColors = {
+    [key: string]: string;
+    // Add other properties as needed
+  };
+  
+// Componente de leyenda modificado para usar scatterColors para asignar colores consistentemente
+const CustomLegend = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
+    <div style={{ marginLeft: '20px' }}>
+        {shannonData.map((entry, index) => ({
+            ...entry,
+            color: scatterColors[entry.name],
+        })).map((entry, index) => (
+            // Agregar un div para mostrar el color
+            <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
+                <div>{entry.name}</div>
+            </div>
+        ))}
+     
+    </div>
+);
+
+  
+  
+  
+const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
+  <div className="flex fle items-start w-full">
+    <div className="w-3/5 contents">
+    <Plot
+ data={Object.values(shannonData).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] }}))}      layout={{
+        width: 800,
+        height: 400,
+        title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumn === "" || selectedColumn === "none" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
+        showlegend: false, // Oculta la leyenda de Plotly
+      }}
+    />
+    </div>
+<div className="w-2/5">
+    <CustomLegend shannonData={shannonData} scatterColors={scatterColors}  />
+</div>
+  </div>
+  
+  );
+  
+
+
     return (
         <div>
             <Layout slug={params.slug} filter={""} >
@@ -385,27 +502,10 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-
-
-                            <div className={`transition-all ease-in-out duration-300 ${isFilterCardVisible ? 'max-w-xs' : 'w-0'} overflow-hidden`}>
-                                {/* Contenido de la tarjeta de filtros */}
-
-
-                            </div>
-
-
-
                             <div className="flex-grow">
                                 <GraphicCard filter={filter}>
-                                    {plotData.length > 0 ? (
-                                        <Plot
-                                            data={Object.values(shannonData).map(item => ({ ...(item as object), type: "box" }))}
-                                            layout={{
-                                                width: 800,
-                                                height: 270,
-                                                title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumn === "" || selectedColumn === "none" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
-                                            }}
-                                        />
+                                    {shannonData.length > 0 ? (
+                                        <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
                                     ) : (
                                         <SkeletonCard width={"500px"} height={"270px"} />
                                     )}

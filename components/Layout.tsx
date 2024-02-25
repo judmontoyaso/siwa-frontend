@@ -1,5 +1,5 @@
 // components/Layout.tsx o layouts/Layout.tsx
-
+"use client";
 import React, { ReactNode } from 'react';
 import Navbar from "@/components/navbar";
 import Sidebar from "@/components/sidebar";

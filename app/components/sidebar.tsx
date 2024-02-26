@@ -22,7 +22,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isMicrobiomeOpen, setIsMicrobiomeOpen] = useState(true);
   const router = usePathname();
- 
+
 
   <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
     {isSidebarOpen ? 'Ocultar' : 'Mostrar'}
@@ -61,7 +61,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
           <li>
             <div className={`flex hover:bg-navy-600 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/" ? "bg-navy-600 text-white" : "bg-white text-gray-500"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`} onClick={() => window.location.href = "/"}>
 
-            <RiDashboardFill />
+              <RiDashboardFill />
               <span className="ms-3">Dashboard</span>
 
             </div>
@@ -76,60 +76,61 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
 
 
               <div className={`flex  hover:bg-navy-600 hover:text-white flex-row cursor-pointer my-4 p-4  ${router !== `/` ? "bg-navy-600 text-white" : "bg-white"} rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`} onClick={() => setIsProjectOpen(!isProjectOpen)}>
-              <IoIosAnalytics /><span className="ms-3 ">Project {slug}</span>
+                <IoIosAnalytics /><span className="ms-3 ">Project {slug}</span>
               </div></li>
             {isProjectOpen && (
               <li>
                 <div>
-                <ul>
-                <li>
+                  <ul>
+                    <li>
 
 
-                <Link aria-disabled={true} href={`/projects/${slug}`} className="block px-1 ">
-<div className={`flex flex-row cursor-pointer mt-4  hover:bg-navy-600 hover:text-white mb-2 p-4  ${router === `/projects/${slug}` ? "bg-navy-500 text-white" : "bg-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
-<CgFileDocument /><span className="ms-3">Summary</span>
-</div></Link></li>
-                <li>
-                <div className="block px-1 ">
+                      <Link aria-disabled={true} href={`/projects/${slug}`} className="block px-1 ">
+                        <div className={`flex flex-row cursor-pointer mt-4  hover:bg-navy-600 hover:text-white mb-2 p-4  ${router === `/projects/${slug}` ? "bg-navy-500 text-white" : "bg-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
+                          <CgFileDocument /><span className="ms-3">Summary</span>
+                        </div></Link></li>
+                    <li>
+                      <div className="block px-1 ">
 
-                  <div className={`flex flex-row cursor-pointer mt-4  hover:bg-navy-600 hover:text-white mb-2 p-4  ${router === `/projects/${slug}/beta` || router === `/projects/${slug}/alpha`  ? "bg-navy-500 text-white" : "bg-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`} onClick={() => setIsMicrobiomeOpen(!isMicrobiomeOpen)}>
-                  <FaBacteria />  <span className="ms-3">Microbiome</span>
-                  </div>
-                  </div></li>
-                {isMicrobiomeOpen && (
-                  <li>                                <div className="block px-3 ">
+                        <div className={`flex flex-row cursor-pointer mt-4  hover:bg-navy-600 hover:text-white mb-2 p-4  ${router === `/projects/${slug}/beta` || router === `/projects/${slug}/alpha` ? "bg-navy-500 text-white" : "bg-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`} onClick={() => setIsMicrobiomeOpen(!isMicrobiomeOpen)}>
+                          <FaBacteria />  <span className="ms-3">Microbiome</span>
+                        </div>
+                      </div></li>
+                    {isMicrobiomeOpen && (
+                      <li>                                <div className="block px-3 ">
 
-                  <ul className="divide-y divide-gray-300">
+                        <ul className="divide-y divide-gray-300">
 
-                    <li className={`py-2 ${router === `/projects/${slug}/alpha` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
-                    <Link href={`/projects/${slug}/alpha`} className="block px-3 hover:text-gray-60">Alpha diversity</Link>
-                    </li>
-                    <li className={`py-2 ${router === `/projects/${slug}/beta` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
-                      <Link href={`/projects/${slug}/beta`} className="block px-3 ">              
-Beta diversity</Link>
-                    </li>
-                    <li className="py-2 my-1 border border-gray-300 w-11/12 rounded-lg bg-gray-200 cursor-not-allowed ">
-                      <span className="block px-4">Taxonomy</span>
-                    </li>
+                          <li className={`py-2 ${router === `/projects/${slug}/alpha` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
+                            <Link href={`/projects/${slug}/alpha`} className="block px-3 hover:text-gray-60">Alpha diversity</Link>
+                          </li>
+                          <li className={`py-2 ${router === `/projects/${slug}/beta` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
+                            <Link href={`/projects/${slug}/beta`} className="block px-3 ">
+                              Beta diversity</Link>
+                          </li>
+                          <li className={`py-2 ${router === `/projects/${slug}/taxonomy` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
+                            <Link href={`/projects/${slug}/taxonomy`} className="block px-3 ">
+                              Taxonomy</Link>
+                          </li>
+                        </ul>
+                      </div></li>
+
+                    )}
+
+                    <li>
+
+                      <div className="block px-1 ">
+
+
+                        <div className="bg-gray-200 cursor-not-allowed flex flex-col hover:text-gray-600 my-4 p-4 rounded-lg rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center">
+                          <span className="ms-3 text-gray-500 hover:text-gray-600">Histopathology</span>
+                        </div></div></li>
+
+
                   </ul>
-                  </div></li>
-
-)}
-
-                <li>
-
-                <div className="block px-1 ">
-
-
-                  <div className="bg-gray-200 cursor-not-allowed flex flex-col hover:text-gray-600 my-4 p-4 rounded-lg rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center">
-                    <span className="ms-3 text-gray-500 hover:text-gray-600">Histopathology</span>
-                  </div></div></li>
-
-
-              </ul>
                 </div>
               </li>
-         
+
             )}
             <li className="cursor-pointer my-4 hover:bg-gray-50 text-gray-500 hover:text-gray-600 "> {filter} </li>
           </ul>

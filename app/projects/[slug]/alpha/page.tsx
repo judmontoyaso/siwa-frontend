@@ -144,6 +144,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 throw new Error("Respuesta no válida desde el servidor");
             }
             const result = await response.json();
+            console.log(result);
             const locations = new Set(
                 result.data.data.map((item: any[]) => item[1])
             );
@@ -231,7 +232,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 {}
             );
 
-            const shannonData: any[] = processData(filteredData, columnIndex || 1);
+            const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), columnIndex || 1);
             const observedData = processData(filteredData, (columnIndex || 1) + 1);
             setShannonData(shannonData as never[]);
             setObservedData(observedData);
@@ -267,10 +268,11 @@ export default function Page({ params }: { params: { slug: string } }) {
             console.error('Expected an array for data, received:', data);
             return [];
         }
-    
+        data = data.filter(item => item[index] !== null) 
         const result = data.reduce((acc, item) => {
             const location = item[1];
             const value = item[index];
+            if (value !== null) {
             const key = `${location}-${value}`;
     
             if (!acc[key]) {
@@ -282,7 +284,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     
             acc[key].y.push(item[9]); // Asumiendo que el valor de interés está en el índice 9
             acc[key].text.push(`Sample ID: ${item[0]}`);
-    
+        }
             return acc;
         }, {});
         setScatterColors(newScatterColors);
@@ -455,19 +457,21 @@ type ShannonData = {
 // Componente de leyenda modificado para usar scatterColors para asignar colores consistentemente
 const CustomLegend = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
     <div style={{ marginLeft: '20px' }}>
-        {shannonData.map((entry, index) => ({
-            ...entry,
-            color: scatterColors[entry.name],
-        })).map((entry, index) => (
-            // Agregar un div para mostrar el color
-            <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
-                <div>{entry.name}</div>
-            </div>
-        ))}
-     
+        {shannonData
+          .filter(entry => entry.name !== "null") // Filtra las entradas donde name no es null
+          .map((entry, index) => ({
+              ...entry,
+              color: scatterColors[entry.name],
+          }))
+          .map((entry, index) => (
+              <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
+                  <div>{entry.name}</div>
+              </div>
+          ))}
     </div>
 );
+
 
   
   
@@ -476,7 +480,7 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
   <div className="flex fle items-start w-full">
     <div className="w-3/5 contents">
     <Plot
- data={Object.values(shannonData).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] }}))}      layout={{
+ data={Object.values(shannonData.filter(entry => entry.name !== "null")).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] }}))}      layout={{
         width: 800,
         height: 400,
         title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumn === "" || selectedColumn === "none" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,

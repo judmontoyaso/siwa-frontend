@@ -110,7 +110,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/taxonomy` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
                             <Link href={`/projects/${slug}/taxonomy`} className="block px-3 ">
-                              Taxonomy</Link>
+                              Taxonomy Composition</Link>
                           </li>
                         </ul>
                       </div></li>

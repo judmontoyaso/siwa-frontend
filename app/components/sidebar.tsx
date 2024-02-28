@@ -12,6 +12,7 @@ import { RiDashboardFill } from "react-icons/ri";
 import { IoIosAnalytics } from "react-icons/io";
 import { FaBacteria } from "react-icons/fa";
 import { CgFileDocument } from "react-icons/cg";
+import { GrUserAdmin } from "react-icons/gr";
 
 const BearerContext = createContext('');
 
@@ -23,12 +24,12 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
   const [isMicrobiomeOpen, setIsMicrobiomeOpen] = useState(true);
   const router = usePathname();
 
-
   <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
     {isSidebarOpen ? 'Ocultar' : 'Mostrar'}
   </button>
 
 
+console.log(user)
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -67,6 +68,23 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
             </div>
           </li>
         </ul>
+        {user?.nickname === "juandavidsolorzano73" ? (
+
+
+        <ul className="space-y-2 font-medium">
+          <li>
+          <Link aria-disabled={true} href={`/admin`} className="block px-1 ">
+
+            <div className={`flex hover:bg-navy-600 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/Admin" ? "bg-navy-600 text-white" : "bg-white text-gray-500"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`}>
+
+              <GrUserAdmin />
+              <span className="ms-3">Admin</span>
+            </div>
+          </Link>
+          </li>
+        </ul>
+        ) : ""}
+
         {slug && (
           <ul className="font-medium">
 
@@ -109,7 +127,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
                               Beta diversity</Link>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/taxonomy` ? "bg-navy-400 text-white" : "bg-white text-gray-500"} my-1 border border-gray-400 w-11/12 rounded-lg  hover:bg-navy-600 hover:text-white`}>
-                            <Link href={`/projects/${slug}/taxonomy`} className="block px-3 ">
+                            <Link href={`/projects/${slug}/taxonomy/composition`} className="block px-3 ">
                               Taxonomy Composition</Link>
                           </li>
                         </ul>

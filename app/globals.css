@@ -49,3 +49,8 @@ body {
   margin-left: 0!important;
   margin-right: 0!important;
 }
+
+.column-text {
+  column-count: 2;
+  column-gap: 2rem; /* Ajusta según necesites */
+}

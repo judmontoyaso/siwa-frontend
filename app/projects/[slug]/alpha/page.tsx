@@ -1,5 +1,5 @@
 "use client";
-import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, useEffect, useState } from "react";
+import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Loading from "@/app/components/loading";
@@ -39,6 +39,10 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
+    const [configFile, setconfigFile] = useState({} as any);
+    const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
+    const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
+    const [loaded, setLoaded] = useState(false);
     let colorIndex = 0;
     
     const colors = [
@@ -96,6 +100,28 @@ export default function Page({ params }: { params: { slug: string } }) {
     const toggleFilterCardVisibility = () => {
         setIsFilterCardVisible(!isFilterCardVisible);
     };
+
+    useEffect(() => {
+        // Función para actualizar el ancho del gráfico con un pequeño retraso
+        const updatePlotWidth = () => {
+          setTimeout(() => {
+            if (plotContainerRef.current) {
+              setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
+              setLoaded(true)
+            }
+          }, 800); // Retraso de 10 ms
+        };
+    
+        updatePlotWidth(); // Establece el ancho inicial
+    
+        window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
+    
+        return () => {
+          window.removeEventListener('resize', updatePlotWidth);
+        };
+      }, [params.slug, plotData]);
+
+
     const fetchConfigFile = async (token: any) => {
         try {
             const response = await fetch(`http://127.0.0.1:8000/projects/config/${params.slug}`, {
@@ -109,6 +135,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 throw new Error("Network response was not ok");
             }
             const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
+            setconfigFile(configfile.configFile);
             setColorByOptions(configfile.configFile.columns); // Actualiza el estado con las nuevas opciones
         } catch (error) {
             console.error("Error al cargar las opciones del dropdown:", error);
@@ -477,19 +504,22 @@ const CustomLegend = ({ shannonData, scatterColors }: { shannonData: ShannonData
   
   
 const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
-  <div className="flex fle items-start w-full">
-    <div className="w-3/5 contents">
+    <div className="flex flex-row w-full items-start">
+      <div className="w-9/12 flex " ref={plotContainerRef}>
+    {loaded && (
     <Plot
  data={Object.values(shannonData.filter(entry => entry.name !== "null")).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] }}))}      layout={{
-        width: 800,
-        height: 400,
+    width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
+    height: 600,
         title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumn === "" || selectedColumn === "none" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
         showlegend: false, // Oculta la leyenda de Plotly
       }}
     />
+    )}
     </div>
-<div className="w-2/5">
-    <CustomLegend shannonData={shannonData} scatterColors={scatterColors}  />
+    <div className="w-3/12 flex flex-col  border border-gray-100 rounded-3xl p-5 overflow-auto max-h-full">
+        <h2 className="mb-3 text-xl ">{colorBy === "none" ? "Sample location" : colorBy}</h2>
+            <CustomLegend shannonData={shannonData} scatterColors={scatterColors}  />
 </div>
   </div>
   
@@ -499,14 +529,28 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
 
     return (
         <div>
-            <Layout slug={params.slug} filter={""} >
-                {isLoaded ? (
-                    <>
-                        <div className="flex flex-row justify-evenly w-full items-center">
-
-
-
-                            <div className="flex-grow">
+        <Layout slug={params.slug} filter={""} >
+          {isLoaded ? (
+  <div className="flex flex-col w-full">
+  
+  <h1 className="text-3xl my-5">Beta diversity</h1>
+    <div className="px-6 py-8">
+    <div className="prose column-text">
+        
+    {configFile?.betadiversity?.text ? (
+      Object.entries(configFile.betadiversity.text)
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+        .map(([key, value]) => (
+          <p key={key} className="text-gray-700 text-justify text-xl">
+            {value as ReactNode}
+          </p>
+        ))
+    ) : (
+      <p>No data available</p> 
+    )}
+      </div>
+    </div>
+    <div className="flex">
                                 <GraphicCard filter={filter}>
                                     {shannonData.length > 0 ? (
                                         <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
@@ -514,15 +558,33 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
                                         <SkeletonCard width={"500px"} height={"270px"} />
                                     )}
                                 </GraphicCard>
-                            </div>
+                                </div>
+  <div className="px-6 py-8" >
+  <div className="grid grid-cols-2 gap-10">
+  {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
+    key === "samplelocation" && (selectedLocations.length > 1) && (
+      <div key={key}>
+        <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
+      </div>
+    )
+  ))}
+</div>
 
+    <div className="prose flex flex-row flex-wrap">
+      {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
+        key === selectedColumn && key !== "samplelocation" && (
+          <div className="w-1/2" key={key}>
+            <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
+          </div>
+        )
+      ))}
+    </div>
+  </div>
+</div>
 
-
-                        </div>
-                    </>
-                ) : (
-                    <Loading type="cylon" color="#0e253a" />
-                )}
+        ) : (
+          <div>Loading...</div>
+        )}
             </Layout>
         </div>
     );

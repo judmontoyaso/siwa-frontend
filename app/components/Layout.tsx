@@ -18,7 +18,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter:any }> = ({ children
         <Sidebar slug={slug} filter={filter}/>
       <div className={`flex flex-col ${isSidebarOpen ? "w-full" : "w-3/4"}`}>
       <Navbar></Navbar>
-        <main className="overflow-auto text-center items-start justify-center flex h-screen">{children}</main>
+        <main className="overflow-auto text-center items-start justify-center flex h-screen bg-white p-5">{children}</main>
       </div>
          </SidebarProvider>
     </div>

@@ -24,9 +24,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
   const [isMicrobiomeOpen, setIsMicrobiomeOpen] = useState(true);
   const router = usePathname();
 
-  <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-    {isSidebarOpen ? 'Ocultar' : 'Mostrar'}
-  </button>
+
 
 
 console.log(user)
@@ -63,7 +61,7 @@ console.log(user)
             <div className={`flex hover:bg-navy-600 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/" ? "bg-navy-600 text-white" : "bg-white text-gray-500"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`} onClick={() => window.location.href = "/"}>
 
               <RiDashboardFill />
-              <span className="ms-3">Dashboard</span>
+              <span className="ms-3">Home</span>
 
             </div>
           </li>
@@ -75,7 +73,7 @@ console.log(user)
           <li>
           <Link aria-disabled={true} href={`/admin`} className="block px-1 ">
 
-            <div className={`flex hover:bg-navy-600 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/Admin" ? "bg-navy-600 text-white" : "bg-white text-gray-500"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`}>
+            <div className={`flex hover:bg-navy-600 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/admin" ? "bg-navy-600 text-white" : "bg-white text-gray-500"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`}>
 
               <GrUserAdmin />
               <span className="ms-3">Admin</span>

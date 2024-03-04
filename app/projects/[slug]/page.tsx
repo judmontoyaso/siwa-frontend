@@ -8,12 +8,12 @@ import Image from "next/image";
 import React from 'react';
 import Layout from "@/app/components/Layout";
 
-const page = ({ params }: { params: { slug: string } }) => {
+const Page = ({ params }: { params: { slug: string } }) => {
   const filterContent = ""; // Replace with the actual implementation of 'filterContent'
   const [accessToken, setAccessToken] = useState();
-  const [summarytittle, setSummaryTittle] = useState("");
+  const [summaryTittle, setSummaryTittle] = useState("");
   const [summaryText, setSummaryText] = useState({} as any);
-  const [configFile, setconfigFile] = useState({} as any);
+  const [configFile, setConfigFile] = useState({} as any);
 
 
   const fetchToken = async () => {
@@ -40,7 +40,7 @@ const page = ({ params }: { params: { slug: string } }) => {
         throw new Error("Network response was not ok");
       }
       const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
-      setconfigFile(configfile.configFile);
+      setConfigFile(configfile.configFile);
       setSummaryText(configfile.configFile.summary);
       console.log(configfile);
       setSummaryTittle(configfile.configFile.summary.title); // Actualiza el estado con las nuevas opciones
@@ -86,4 +86,4 @@ const page = ({ params }: { params: { slug: string } }) => {
   );
 };
 
-export default page;
+export default Page;

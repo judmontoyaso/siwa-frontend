@@ -30,6 +30,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedValue, setSelectedValue] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [valueOptions, setValueOptions] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [selectedLocation, setSelectedLocation] = useState<string>('');
+    const newScatterColors: { [key: string]: string } = {};
 
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
@@ -44,7 +45,6 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [isFilterCardVisible, setIsFilterCardVisible] = useState(false);
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
-    const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
     const [selectedLocations, setSelectedLocations] = useState<string[]>([
         "cecum",
         "feces",
@@ -346,11 +346,17 @@ export default function Page({ params }: { params: { slug: string } }) {
     //     const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
     //     fetchToken().then((token) => { fetchConfigFile(token); fetchData(token); });
     // }, [selectedGroup]);
-
+    interface DataItem {
+        // Asumiendo que todos los elementos tienen este formato
+        0: string; // Para el label
+        1: number; // Para el valor de X
+        3: number; // Para el valor de Y
+        // Agrega más propiedades según sea necesario
+      }
     useEffect(() => {
+        
         if (otus && otus.data) {
             const traces: SetStateAction<any[]> = [];
-            const newScatterColors = {};
             const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
     
             labels.forEach(label => {
@@ -367,7 +373,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     marker: { color: color },
                 });
     
-                newScatterColors[label] = color;
+                newScatterColors[label as string] = color;
             });
     
             setPlotData(traces);

@@ -157,7 +157,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   };
 
   const handleLocationChange = (event: any) => {
-
+console.log(colorBy)
     if (event === 'all') {
       setSelectedLocations(["cecum", "feces", "ileum"]);
     } else {
@@ -171,6 +171,7 @@ export default function Page({ params }: { params: { slug: string } }) {
       console.log(Location)
       fetchProjectIdsFiltercolor(dataResult, event.target.value);
     }
+    console.log(event.target.value)
 
   };
 
@@ -628,16 +629,17 @@ export default function Page({ params }: { params: { slug: string } }) {
         {isLoaded ? (
 <div className="flex flex-col w-full">
 
-<h1 className="text-3xl my-5">Alpha diversity</h1>
-  <div className="px-6 py-8">
-  <div className="prose column-text">
-            {Object.entries(configFile?.betadiversity?.text).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
-        <p key={key} className="text-gray-700 text-justify text-xl">
-          {value as ReactNode}
-        </p>
-      ))}
-    </div>
+<h1 className="text-3xl my-5">Beta diversity</h1>
+    <div className="px-6 py-8">
+    <div className={`prose ${Object.keys(configFile?.betadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
+    {Object.entries(configFile?.betadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
+      <p key={key} className="text-gray-700 text-justify text-xl">
+        {value as React.ReactNode}
+      </p>
+    ))}
   </div>
+
+    </div>
   <div className="flex">
     <GraphicCard filter={filter}>
       {scatterData.length > 0 ? (
@@ -647,27 +649,54 @@ export default function Page({ params }: { params: { slug: string } }) {
       )}
     </GraphicCard>
   </div>
-  <div className="px-6 py-8" >
-  <div className="grid grid-cols-2 gap-10">
-  {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
-    key === "samplelocation" && (Location.length > 1) && (
-      <div key={key}>
-        <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
-      </div>
-    )
-  ))}
+  <div className="px-6 py-8">
+  <div>
+  {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
+    if (key === "samplelocation" && Location.length > 1 && typeof value === 'object' && value !== null) {
+      const entries = Object.entries(value);
+      const isSingleParagraph = entries.length === 1;
+
+      return (
+        <div key={key} className={`grid gap-10 ${isSingleParagraph ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {entries.map(([subKey, subValue]) => (
+            <div key={subKey}>
+              <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  })}
 </div>
 
-    <div className="prose flex flex-row flex-wrap">
-      {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
-        key === colorBy && key !== "samplelocation" && (
-          <div className="w-1/2" key={key}>
-            <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
-          </div>
-        )
-      ))}
-    </div>
-  </div>
+
+  <div className={Object.entries(configFile?.taxonomy?.graph || {}).length === 1 && colorBy !== "samplelocation" && Location.length !== 3 ? "prose flex flex-row" : "prose flex flex-row flex-wrap"}>
+    {Object.entries(configFile?.taxonomy?.graph || {}).map(([key, value]) => {
+        if (key === colorBy && key !== "samplelocation" && Location.length !== 3 && typeof value === 'object' && value !== null) {
+            // Verificamos si 'value' es una cadena y lo renderizamos directamente si es así
+            if (typeof value === 'string') {
+                return (
+                    <div key={key} className="w-full">
+                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                    </div>
+                );
+            }
+            // Add a null check before calling Object.entries(value)
+            else if (typeof value === 'object' && value !== null) {
+                return Object.entries(value).map(([subKey, subValue]) => (
+                    <div key={subKey} className="w-full">
+                        <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
+                    </div>
+                ));
+            }
+        }
+        return null;
+    })}
+</div>
+
+</div>
+
 </div>
 
         ) : (

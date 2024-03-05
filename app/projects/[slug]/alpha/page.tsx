@@ -533,22 +533,15 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
           {isLoaded ? (
   <div className="flex flex-col w-full">
   
-  <h1 className="text-3xl my-5">Beta diversity</h1>
+  <h1 className="text-3xl my-5">Alpha diversity</h1>
     <div className="px-6 py-8">
-    <div className="prose column-text">
-        
-    {configFile?.betadiversity?.text ? (
-      Object.entries(configFile.betadiversity.text)
-        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-        .map(([key, value]) => (
-          <p key={key} className="text-gray-700 text-justify text-xl">
-            {value as ReactNode}
-          </p>
-        ))
-    ) : (
-      <p>No data available</p> 
-    )}
-      </div>
+    <div className={`prose ${Object.keys(configFile?.alphadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
+    {Object.entries(configFile?.alphadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
+      <p key={key} className="text-gray-700 text-justify text-xl">
+        {value as React.ReactNode}
+      </p>
+    ))}
+  </div>
     </div>
     <div className="flex">
                                 <GraphicCard filter={filter}>
@@ -560,25 +553,56 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
                                 </GraphicCard>
                                 </div>
   <div className="px-6 py-8" >
-  <div className="grid grid-cols-2 gap-10">
-  {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
-    key === "samplelocation" && (selectedLocations.length > 1) && (
-      <div key={key}>
-        <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
-      </div>
-    )
-  ))}
+  <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
+  {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
+    if (key === "samplelocation" && selectedLocations.length > 1 && typeof value === 'object' && value !== null) {
+      const entries = Object.entries(value);
+      const isSingleEntry = entries.length === 1;  // Verificar si solo hay una entrada
+
+      return entries.map(([subKey, subValue]) => (
+        <div key={subKey} className={isSingleEntry ? "col-span-2" : ""}>  
+          <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
+        </div>
+      ));
+    } else if (typeof value === 'string') {
+      return (
+        <div key={key} className="col-span-2">  
+          <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+        </div>
+      );
+    }
+    return null;  // No renderizar nada si no se cumplen las condiciones
+  })}
 </div>
 
-    <div className="prose flex flex-row flex-wrap">
-      {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
-        key === selectedColumn && key !== "samplelocation" && (
-          <div className="w-1/2" key={key}>
-            <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
+
+
+<div className="prose flex flex-row flex-wrap">
+  {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
+    if (key === selectedColumn && key !== "samplelocation") {
+      if (typeof value === 'object' && value !== null) {
+        const entries = Object.entries(value);
+        const isSingleEntry = entries.length === 1; // Verificar si hay una sola entrada
+
+        return entries.map(([subKey, subValue]) => (
+          <div key={subKey} className={isSingleEntry ? "w-full" : "w-1/2"}> 
+            <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
           </div>
-        )
-      ))}
-    </div>
+        ));
+      } else if (typeof value === 'string') {
+        // Las cadenas siempre ocupan la mitad de la columna, pero puedes cambiar esto si lo deseas
+        return (
+          <div className="w-full" key={key}> 
+            <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+          </div>
+        );
+      }
+    }
+    return null;
+  })}
+</div>
+
+
   </div>
 </div>
 

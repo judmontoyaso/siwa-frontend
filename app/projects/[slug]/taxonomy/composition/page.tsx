@@ -476,7 +476,6 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 const filter = (
     <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
-    <div className={`tab-content `}>
   
              <div className="flex flex-col items-left space-x-2">
   
@@ -523,7 +522,7 @@ const filter = (
                                     onClick={applyFilters}
                                     className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
                                 >
-                                    Apply Filter
+                                    Apply
                                 </button>
                             </div>
                       
@@ -538,7 +537,7 @@ const filter = (
                                     </option>
                                 ))}
                             </select>
-  </div>
+ 
            </div>
          </div>);
   
@@ -553,19 +552,19 @@ const filter = (
 
 <h1 className="text-3xl my-5">Taxonomy composition</h1>
 <div className="px-6 py-8">
-  <div className="prose column-text">
-    {configFile?.betadiversity?.text ? (
-      Object.entries(configFile.betadiversity.text)
-        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-        .map(([key, value]) => (
-          <p key={key} className="text-gray-700 text-justify text-xl">
-            {value as ReactNode}
-          </p>
-        ))
-    ) : (
-      <p>No data available</p> 
+<div className={`prose ${Object.keys(configFile?.taxonomy?.text || {}).length <= 1 ? 'single-column' : 'column-text'}`}>
+    {configFile?.taxonomy?.text ? (
+        Object.entries(configFile?.taxonomy?.text)
+            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+            .map(([key, value]) => (
+                <p key={key} className="text-gray-700 text-justify text-xl">
+                    {value as ReactNode}
+                </p>
+            ))
+    ) : (""
     )}
-  </div>
+</div>
+
 </div>
 
   <div className="flex">
@@ -577,29 +576,49 @@ const filter = (
       )}
     </GraphicCard>
   </div>
-  <div className="px-6 py-8" >
-  <div className="grid grid-cols-2 gap-10">
-  {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
-    key === "samplelocation" && (Location.length > 1) && (
-      <div key={key}>
-        <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
-      </div>
-    )
-  ))}
+  <div className="px-6 py-8">
+<div className={Object.entries(configFile?.taxonomy?.graph?.samplelocation || {}).length <= 1 ? "grid grid-cols-1 gap-10" : "grid grid-cols-2 gap-10"}>
+    {Object.entries(configFile?.taxonomy?.graph || {}).map(([key, value]: [string, unknown]) => {
+        if (key === "samplelocation" && Location.length > 1) {
+            const entries: [string, unknown][] = Object.entries(value as { [s: string]: unknown });
+            const isSingleParagraph = entries.length <= 1;
+            return entries.map(([subKey, subValue]) => (
+                <div key={subKey} className={isSingleParagraph ? "col-span-2" : ""}>
+                    <p className="text-gray-700 m-3 text-justify text-xl">{subValue as ReactNode}</p>
+                </div>
+            ));
+        }
+        return null;
+    })}
 </div>
 
-    <div className="prose flex flex-row flex-wrap">
-      {Object.entries(configFile?.summary?.graph || {}).map(([key, value]) => (
-        key === selectedGroup && key !== "samplelocation" && (
-          <div className="w-1/2" key={key}>
-            <p className="text-gray-700 m-3 text-justify text-xl">{value as ReactNode}</p>
-          </div>
-        )
-      ))}
-    </div>
-  </div>
+<div className={Object.entries(configFile?.taxonomy?.graph || {}).length === 1 && selectedGroup !== "samplelocation" ? "prose flex flex-row" : "prose flex flex-row flex-wrap"}>
+    {Object.entries(configFile?.taxonomy?.graph || {}).map(([key, value]) => {
+        if (key === selectedGroup && key !== "samplelocation") {
+            // Verificamos si 'value' es una cadena y lo renderizamos directamente si es así
+            if (typeof value === 'string') {
+                return (
+                    <div key={key} className="w-full">
+                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                    </div>
+                );
+            }
+            // Add a null check before calling Object.entries(value)
+            else if (typeof value === 'object' && value !== null) {
+                return Object.entries(value).map(([subKey, subValue]) => (
+                    <div key={subKey} className="w-full">
+                        <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
+                    </div>
+                ));
+            }
+        }
+        return null;
+    })}
 </div>
 
+
+</div>
+</div>
         ) : (
           <div>Loading...</div>
         )}

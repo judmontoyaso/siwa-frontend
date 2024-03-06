@@ -33,7 +33,7 @@ const Dashboard = () => {
       return;
     }
     try {
-      const response = await fetch("http://localhost:3000/api/auth/token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
       const { accessToken } = await response.json();
       setAccessToken(accessToken);
       setTokenObtenido(true);

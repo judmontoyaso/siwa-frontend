@@ -8,6 +8,9 @@ import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
 import { Bounce, toast } from "react-toastify";
 import { renderToStaticMarkup } from "react-dom/server";
+import { AiOutlineInfoCircle } from "react-icons/ai";
+import { Tooltip } from 'react-tooltip'
+import 'react-tooltip/dist/react-tooltip.css'
 
 export default function Page({ params }: { params: { slug: string } }) {
     type OtuType = {
@@ -88,7 +91,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     ];
     const fetchToken = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/auth/token");
+            const response = await fetch(`${process.env.AUTH0_BASE_URL}/api/auth/token`);
             const { accessToken } = await response.json();
             setAccessToken(accessToken);
             console.log("Token obtenido:", accessToken);
@@ -533,8 +536,26 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
           {isLoaded ? (
   <div className="flex flex-col w-full">
   
-  <h1 className="text-3xl my-5">Alpha diversity</h1>
-    <div className="px-6 py-8">
+  <div className="flex flex-row w-full text-center justify-center items-center">
+<h1 className="text-3xl my-5 mx-2">Alpha diversity</h1>
+         <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip"/> 
+         <Tooltip 
+           style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px",textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)"}}
+         anchorSelect="#interpreteTip">
+        <div className={`prose single-column w-96 z-50`}>
+    {configFile?.alphadiversity?.interpretation ? (
+        Object.entries(configFile?.alphadiversity?.interpretation)
+            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+            .map(([key, value]) => (
+                <p key={key} className="text-gray-700 text-justify text-xl m-3">
+                    {value as ReactNode}
+                </p>
+            ))
+    ) : (""
+    )}
+</div>
+</Tooltip> 
+        </div>    <div className="px-6 py-8">
     <div className={`prose ${Object.keys(configFile?.alphadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
     {Object.entries(configFile?.alphadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
       <p key={key} className="text-gray-700 text-justify text-xl">

@@ -108,7 +108,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     ];
     const fetchToken = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/auth/token");
+            const response = await fetch(`${process.env.AUTH0_BASE_URL}/api/auth/token`);
             const { accessToken } = await response.json();
             setAccessToken(accessToken);
             console.log("Token obtenido:", accessToken);

@@ -19,6 +19,7 @@
     "react-loading": "^2.0.3",
     "react-plotly.js": "^2.6.0",
     "react-toastify": "^10.0.4",
+    "react-tooltip": "^5.26.3",
     "swr": "^2.2.4"
   },
   "devDependencies": {

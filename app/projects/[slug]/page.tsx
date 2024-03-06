@@ -29,7 +29,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
   };
   const fetchConfigFile = async (token: any) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/projects/config/${params.slug}`, {
+      const response = await fetch(`https://127.0.0.1:8000/projects/config/${params.slug}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

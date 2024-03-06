@@ -54,7 +54,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Nota: No es necesario establecer el encabezado 'Content-Type' al usar FormData.
         // El navegador lo establecerá automáticamente con el 'boundary' adecuado para 'multipart/form-data'.
-        const result = await fetch(`http://127.0.0.1:8000/admin/uploadconfigfile/${projectName}`, {
+        const result = await fetch(`https://127.0.0.1:8000/admin/uploadconfigfile/${projectName}`, {
             method: 'POST',
             headers: {
                 // Incluye el token de Auth0 en los encabezados de la solicitud
@@ -99,7 +99,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const downloadConfigFile = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/admin/downloadconfigfile/${projectName}`, {
+            const response = await fetch(`https://127.0.0.1:8000/admin/downloadconfigfile/${projectName}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`, // Asegúrate de incluir el token de autorización si es necesario

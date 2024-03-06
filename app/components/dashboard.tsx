@@ -47,7 +47,7 @@ const Dashboard = () => {
   const fetchProjectIds = async (token: any) => {
     // Usa el token pasado como argumento
     try {
-      const response = await fetch("http://127.0.0.1:8000/projects", {
+      const response = await fetch("https://127.0.0.1:8000/projects", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -88,7 +88,7 @@ const Dashboard = () => {
         });
       }, 2000); // 2 segundos
   
-      const response = await fetch(`http://127.0.0.1:8000/projects/${projectId}`, {
+      const response = await fetch(`https://127.0.0.1:8000/projects/${projectId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -6,6 +6,8 @@ import { Bounce, ToastContainer, toast } from 'react-toastify';
 import { FaSpinner } from "react-icons/fa6";
 import { GrDocumentConfig } from "react-icons/gr";
 import { FaDownload } from "react-icons/fa6";
+import { RiUploadCloud2Fill } from "react-icons/ri"
+import Link from 'next/link';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [file, setFile] = useState(null);
@@ -142,6 +144,12 @@ export default function Page({ params }: { params: { slug: string } }) {
     return (
         <div>
             <Layout slug={params.slug} filter={""}>
+           <Link href={'/admin/loadproject/E335'}>
+           <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer">
+                    <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Load Project <RiUploadCloud2Fill className='ml-2' /></h5>
+                </div>
+           </Link> 
+
                 <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer" onClick={() => setIsFormVisible(true)}>
                     <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Upload Config File  <GrDocumentConfig className='ml-2' /></h5>
                 </div>

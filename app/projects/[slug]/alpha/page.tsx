@@ -127,7 +127,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const fetchConfigFile = async (token: any) => {
         try {
-            const response = await fetch(`https://127.0.0.1:8000/projects/config/${params.slug}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/config/${params.slug}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         try {
             const response = await fetch(
-                `https://127.0.0.1:8000/projects/alpha-diversity/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/alpha-diversity/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

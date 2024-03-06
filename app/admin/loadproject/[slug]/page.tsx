@@ -1,17 +1,21 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import StepOne from '@/app/components/wizard/stepone';
 import StepTwo from '@/app/components/wizard/steptwo';
 import Layout from '@/app/components/Layout';
 import { useRouter } from 'next/navigation';
+import confetti from "canvas-confetti";
 
 function Wizard({ params }: { params: { slug: string } }) {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
+  const [isExploding, setIsExploding] = useState(false); 
+  const [isLoaded, setIsLoaded] = useState(false);
   const totalSteps = 3; // Ajusta este número al total de pasos de tu wizard
-
+  let exploding = false;
   const onNext = () => {
     setCurrentStep(currentStep + 1);
+    currentStep === 2 ? setIsExploding(true) : setIsExploding(false);
   };
 
   const onBack = () => {
@@ -22,6 +26,38 @@ function Wizard({ params }: { params: { slug: string } }) {
     router.push('/admin');
   };
 
+  const defaults = {
+    particleCount: 500,
+    spread: 80,
+    angle: 50,
+  };
+
+
+
+
+  useEffect(() => {
+    setIsExploding( currentStep === 3 ? true : false)
+    if (   currentStep === 3 ){
+      setIsExploding(true);
+      if (isExploding) {
+        const fire = (particleRatio: number, opts: any) => {
+          confetti(
+            Object.assign({}, defaults, opts, {
+              particleCount: Math.floor(defaults.particleCount * particleRatio),
+            })
+          );
+        };
+        console.log(isExploding);
+        // Ejemplo de cómo podrías estructurarlo:
+        fire(0.25, { spread: 26, startVelocity: 55 });
+        fire(0.2, { spread: 60 });
+        fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+        fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+        fire(0.1, { spread: 120, startVelocity: 45 });        // Añade más llamadas a 'fire' según sea necesario.
+      }
+    }
+    else{console.log(isExploding)}
+  }, [currentStep]); 
 
   const renderStepIndicators = () => {
     return Array.from({ length: totalSteps }, (_, index) => (

@@ -47,7 +47,7 @@ const Dashboard = () => {
   const fetchProjectIds = async (token: any) => {
     // Usa el token pasado como argumento
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

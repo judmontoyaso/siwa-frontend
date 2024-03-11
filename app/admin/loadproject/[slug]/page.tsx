@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import StepOne from '@/app/components/wizard/stepone';
 import StepTwo from '@/app/components/wizard/steptwo';
 import Layout from '@/app/components/Layout';
@@ -11,6 +11,7 @@ function Wizard({ params }: { params: { slug: string } }) {
   const router = useRouter();
   const [isExploding, setIsExploding] = useState(false); 
   const [isLoaded, setIsLoaded] = useState(false);
+  const messageRef = useRef<HTMLDivElement>(null);
   const totalSteps = 3; // Ajusta este número al total de pasos de tu wizard
   let exploding = false;
   const onNext = () => {
@@ -23,42 +24,47 @@ function Wizard({ params }: { params: { slug: string } }) {
   };
 
   const handleHome = () => {
-    router.push('/admin');
+    router.push('/admin/loadproject');
   };
 
   const defaults = {
     particleCount: 500,
     spread: 80,
-    angle: 50,
+    angle: 90,
+      origin: { y: 0.7 }
   };
 
-
-
-
   useEffect(() => {
-    setIsExploding( currentStep === 3 ? true : false)
-    if (   currentStep === 3 ){
-      setIsExploding(true);
-      if (isExploding) {
-        const fire = (particleRatio: number, opts: any) => {
-          confetti(
-            Object.assign({}, defaults, opts, {
-              particleCount: Math.floor(defaults.particleCount * particleRatio),
-            })
-          );
-        };
-        console.log(isExploding);
-        // Ejemplo de cómo podrías estructurarlo:
-        fire(0.25, { spread: 26, startVelocity: 55 });
-        fire(0.2, { spread: 60 });
-        fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-        fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-        fire(0.1, { spread: 120, startVelocity: 45 });        // Añade más llamadas a 'fire' según sea necesario.
-      }
-    }
-    else{console.log(isExploding)}
-  }, [currentStep]); 
+    setIsExploding(currentStep === 3);
+    if (currentStep === 3 && isExploding) {
+      const fire = (particleRatio: number, opts: any) => {
+        let confettiOpts = Object.assign({}, defaults, opts, {
+          particleCount: Math.floor(defaults.particleCount * particleRatio),
+        });
 
+        if (messageRef.current) { // Verifica si el ref.current es no nulo
+          const rect = messageRef.current.getBoundingClientRect();
+          // Calcula el origen basado en la posición del elemento
+          const origin = {
+            x: (rect.left + rect.width / 2) / window.innerWidth,
+            y: (rect.top + rect.height / 2) / window.innerHeight
+          };
+
+          // Actualiza las opciones de confetti con el origen calculado
+          confettiOpts.origin = origin;
+        }
+
+        confetti(confettiOpts);
+      };
+
+      fire(0.25, { spread: 26, startVelocity: 55 });
+      fire(0.2, { spread: 60 });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+      fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+      fire(0.1, { spread: 120, startVelocity: 45 });       }
+  }, [currentStep, isExploding]);
+  
+     // Añade más llamadas a 'fire' según sea necesario.
   const renderStepIndicators = () => {
     return Array.from({ length: totalSteps }, (_, index) => (
       <span
@@ -84,13 +90,15 @@ function Wizard({ params }: { params: { slug: string } }) {
         return <StepTwo onNext={onNext} onBack={onBack} slug={params.slug} />;
       default:
         return (
-          <div className='flex justify-center w-full'>
+          <div className='flex items-center justify-center w-full'>
+               <div className='text-center flex justify-center w-full'>
             <div className='flex flex-col bg-white p-6 rounded-lg shadow-md w-1/3'>
-              <div><div>Project Load :)</div>
+              <div>      <div ref={messageRef} className="message-container">Project Load :)</div>
               <button onClick={handleHome} className="bg-gray-200 mt-10 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded transition duration-150 ease-in-out transform hover:-translate-y-1 hover:scale-105">
                 Exit
               </button>
               </div>
+            </div>
             </div>
           </div>
         );
@@ -100,9 +108,13 @@ function Wizard({ params }: { params: { slug: string } }) {
   return (
     <div>
       <Layout slug={''} filter={undefined}>
+      <div className='flex items-center justify-center w-full h-full'>
+               <div className='text-center flex  flex-col justify-center w-full'>
         {renderStep()}
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-7">
           {renderStepIndicators()}
+        </div>
+        </div>
         </div>
       </Layout>
     </div>

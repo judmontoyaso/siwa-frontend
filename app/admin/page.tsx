@@ -8,6 +8,7 @@ import { GrDocumentConfig } from "react-icons/gr";
 import { FaDownload } from "react-icons/fa6";
 import { RiUploadCloud2Fill } from "react-icons/ri"
 import Link from 'next/link';
+import CardButton from '../components/cardButton';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [file, setFile] = useState(null);
@@ -144,17 +145,11 @@ export default function Page({ params }: { params: { slug: string } }) {
     return (
         <div>
             <Layout slug={params.slug} filter={""}>
-           <Link href={'/admin/loadproject/E335'}>
-           <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer">
-                    <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Load Project <RiUploadCloud2Fill className='ml-2' /></h5>
-                </div>
-           </Link> 
+                <div className='w-full flex justify-center items-center h-3/4'>
 
-                <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer" onClick={() => setIsFormVisible(true)}>
-                    <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Upload Config File  <GrDocumentConfig className='ml-2' /></h5>
-                </div>
+                <div className='flex flex-grow items-center justify-center align-middle content-center w-3/4'>
+<CardButton href={'/admin/loadproject/'} Icon={ RiUploadCloud2Fill} onClick={undefined} title={'Load Project'}/>
 
- 
 
                 {isFormVisible && (
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
@@ -183,10 +178,9 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
+<CardButton href={''} Icon={ FaDownload} onClick={' '} title={'Download Config File'}/>
 
-<div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer" onClick={() => setIsDownloadVisible(true)}>
-                    <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Download Config File  <FaDownload className='ml-2' /></h5>
-                </div>
+
 
  
 
@@ -224,6 +218,8 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
                 <ToastContainer />
+                </div>
+                </div>
             </Layout>
         </div>
     );

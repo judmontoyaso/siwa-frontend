@@ -1,5 +1,5 @@
 "use client";
-import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, useEffect, useRef, useState } from "react";
+import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, SetStateAction, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Loading from "@/app/components/loading";
@@ -43,7 +43,10 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
     const [configFile, setconfigFile] = useState({} as any);
-    const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
+    const [selectedColumnRemove, setSelectedColumnRemove] = useState('');
+    const [selectedValue, setSelectedValue] = useState('');
+    const [columnOptions, setColumnOptions] = useState([]);
+    const [valueOptions, setValueOptions] = useState<any[]>([]);    const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
     const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
     const [loaded, setLoaded] = useState(false);
     let colorIndex = 0;
@@ -89,6 +92,8 @@ export default function Page({ params }: { params: { slug: string } }) {
       '#dbdb8d', // amarillo pastel
       '#9edae5'  // turquesa claro
     ];
+
+
     const fetchToken = async () => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
@@ -182,6 +187,8 @@ export default function Page({ params }: { params: { slug: string } }) {
             setAvailableLocations(uniqueLocations);
 
             setOtus(result);
+            setColumnOptions(result.data.columns);
+            setValueOptions(result.data.data);
 
             setIsLoaded(true);
             return result;
@@ -364,7 +371,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const handleLocationChange = (event: any) => {
         if (event === 'all') {
             setSelectedLocations(['cecum', 'feces', 'ileum']);
-            setSelectedColumn("samplelocation");
+            setSelectedColumnRemove("samplelocation");
             setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
         } else {
             setSelectedLocations([event]);
@@ -503,7 +510,28 @@ const CustomLegend = ({ shannonData, scatterColors }: { shannonData: ShannonData
 );
 
 
-  
+useEffect(() => {
+    if (!selectedColumnRemove) {
+        setValueOptions([]);
+        setSelectedValue(''); // Restablecer el valor seleccionado cuando no hay columna seleccionada
+        return;
+    }
+
+    // Filtrar los valores únicos de la columna seleccionada
+    const uniqueValues = new Set(otus?.data?.data?.map((item: { [x: string]: any; }) => item[selectedColumnRemove]));
+    setValueOptions([...uniqueValues]);
+
+    setSelectedValue(''); // Restablecer el valor seleccionado cada vez que se cambia la columna
+}, [selectedColumnRemove, otus]);
+
+const handleColumnChange = (event: { target: { value: any; }; }) => {
+    const newSelectedColumnRemoselectedColumnRemove = event.target.value;
+    setSelectedColumnRemove(newSelectedColumnRemoselectedColumnRemove);
+};
+
+const handleValueChange = (event: { target: { value: SetStateAction<string>; }; }) => {
+    setSelectedValue(event.target.value);
+};
   
   
 const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
@@ -514,7 +542,7 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
  data={Object.values(shannonData.filter(entry => entry.name !== "null")).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] }}))}      layout={{
     width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
     height: 600,
-        title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumn === "" || selectedColumn === "none" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
+        title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumnRemove === "" || selectedColumnRemove === "none" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
         showlegend: false, // Oculta la leyenda de Plotly
       }}
     />
@@ -625,6 +653,23 @@ const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonD
 
 
   </div>
+  <div>
+    <h3>Eliminar muestras</h3>
+    <select value={selectedColumnRemove} onChange={handleColumnChange}>
+        <option value="">Selecciona una columna</option>
+        {columnOptions.map(column => (
+            <option key={column} value={column}>{column}</option>
+        ))}
+    </select>
+
+    <select value={selectedValue} onChange={handleValueChange} disabled={!selectedColumnRemove}>
+        <option value="">Selecciona un valor</option>
+        {valueOptions.map((value, index) => (
+            <option key={index} value={value}>{value}</option>
+        ))}
+    </select>
+    {/* <button onClick={handleRemoveSamples} disabled={!selectedColumn || !selectedValue}>Eliminar muestras</button> */}
+</div>
 </div>
 
         ) : (

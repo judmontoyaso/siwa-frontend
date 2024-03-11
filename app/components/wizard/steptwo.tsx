@@ -17,12 +17,12 @@ function StepTwo({ onNext, onBack, slug }: StepTwoProps) {
   };
 
   const handleCancel = () => {
-    router.push('/admin'); // Aquí defines la ruta a la que quieres que el usuario sea redirigido al cancelar
+    router.push('/admin/loadproject'); // Aquí defines la ruta a la que quieres que el usuario sea redirigido al cancelar
   };
 
   return (
-    <div className='flex justify-center w-full'>
-
+    <div className='flex h-full items-center justify-center w-full'>
+    <div className='text-center flex justify-center w-full'>
 <div className='flex flex-col bg-white p-6 rounded-lg shadow-md w-1/3'>
     <label htmlFor="extradata" className="block text-sm font-medium text-gray-700">Extradata Path</label>
     <input
@@ -45,6 +45,7 @@ function StepTwo({ onNext, onBack, slug }: StepTwoProps) {
       </button>
     </div>
   </div>
+    </div>
     </div>
   
   );

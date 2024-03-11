@@ -142,7 +142,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const fetchToken = async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_}/api/auth/token`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
             const { accessToken } = await response.json();
             setAccessToken(accessToken);
             console.log("Token obtenido:", accessToken);

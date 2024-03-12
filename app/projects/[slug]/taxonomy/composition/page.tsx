@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
+import TagsInput from "@/app/components/tags";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -380,6 +381,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             });
     
             setPlotData(traces);
+            console.log("Traces:", otus);
             setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
         }
     }, [otus]);
@@ -475,6 +477,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         </div>);
 
 
+  
 
 
 const filter = (
@@ -542,6 +545,8 @@ const filter = (
                             </select>
  
            </div>
+           <TagsInput data={otus?.data} selectedGroup={selectedGroup} />
+
          </div>);
   
   

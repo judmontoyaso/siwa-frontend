@@ -9,6 +9,7 @@ import { FaDownload } from "react-icons/fa6";
 import { RiUploadCloud2Fill } from "react-icons/ri"
 import Link from 'next/link';
 import CardButton from '../components/cardButton';
+import { SidebarProvider } from '../components/context/sidebarContext';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [file, setFile] = useState(null);
@@ -144,6 +145,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     return (
         <div>
+            <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
                 <div className='w-full flex justify-center items-center h-3/4'>
 
@@ -221,6 +223,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 </div>
                 </div>
             </Layout>
+            </SidebarProvider>
         </div>
     );
 

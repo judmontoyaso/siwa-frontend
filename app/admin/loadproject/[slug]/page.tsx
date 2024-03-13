@@ -5,6 +5,7 @@ import StepTwo from '@/app/components/wizard/steptwo';
 import Layout from '@/app/components/Layout';
 import { useRouter } from 'next/navigation';
 import confetti from "canvas-confetti";
+import { SidebarProvider } from "@/app/components/context/sidebarContext";
 
 function Wizard({ params }: { params: { slug: string } }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -107,6 +108,7 @@ function Wizard({ params }: { params: { slug: string } }) {
 
   return (
     <div>
+      <SidebarProvider>
       <Layout slug={''} filter={undefined}>
       <div className='flex items-center justify-center w-full h-full'>
                <div className='text-center flex  flex-col justify-center w-full'>
@@ -117,6 +119,7 @@ function Wizard({ params }: { params: { slug: string } }) {
         </div>
         </div>
       </Layout>
+      </SidebarProvider>
     </div>
   );
 }

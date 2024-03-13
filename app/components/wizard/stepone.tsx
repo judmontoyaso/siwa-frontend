@@ -11,7 +11,7 @@ const StepOne = ({ onNext, slug }: { onNext: () => void; slug: string }) => {
   };
 
   const handleCancel = () => {
-    router.push('/admin');
+    router.push('/admin/loadproject');
   };
 
   const handleNext = async () => {
@@ -25,8 +25,8 @@ const StepOne = ({ onNext, slug }: { onNext: () => void; slug: string }) => {
   };
 
   return (
-    <div className='flex justify-center w-full'>
-
+    <div className='flex h-full items-center justify-center w-full'>
+    <div className='text-center flex justify-center w-full'>
     <div className='flex flex-col bg-white p-6 rounded-lg shadow-md w-1/3 justify-center text-center items-center'>      <div className="flex items-center">
         <label htmlFor="extradata" className="text-sm font-medium text-gray-700 mr-2">
           Load config file {slug}:
@@ -41,6 +41,7 @@ const StepOne = ({ onNext, slug }: { onNext: () => void; slug: string }) => {
           Next
         </button>
       </div>
+    </div>
     </div>
     </div>
   );

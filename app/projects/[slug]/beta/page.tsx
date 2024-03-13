@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
+import { SidebarProvider } from "@/app/components/context/sidebarContext";
 
 
 
@@ -43,14 +44,16 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [isColorByDisabled, setIsColorByDisabled] = useState(true);
-  const [colorBy, setColorBy] = useState<string>('none');
+  const [colorBy, setColorBy] = useState<string>('samplelocation');
   const [colorByOptions, setColorByOptions] = useState([]);
   const [tittleVariable, SetTittleVariable] = useState<string>('location');
   const [isTabFilterOpen, setIsTabFilterOpen] = useState(false);
   const [dataResult, setDataResult] = useState<any>(null);
   const [betaText, setBetaText] = useState({} as any);
   const [configFile, setconfigFile] = useState({} as any);
-
+  const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
+  const [dataUnique, setDataUnique] = useState<any>();
+  const [columnOptions, setColumnOptions] = useState<string[]>([]);
 
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
@@ -104,6 +107,8 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
   const [loaded, setLoaded] = useState(false);
+  const [valueOptions, setValueOptions] = useState<any[]>([]);
+
   useEffect(() => {
     // Función para actualizar el ancho del gráfico con un pequeño retraso
     const updatePlotWidth = () => {
@@ -139,7 +144,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
   const fetchConfigFile = async (token: any) => {
     try {
-      const response = await fetch(`https://127.0.0.1:8000/projects/config/${params.slug}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/config/${params.slug}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -160,36 +165,91 @@ export default function Page({ params }: { params: { slug: string } }) {
   };
 
   const handleLocationChange = (event: any) => {
+    console.log(event)
 console.log(colorBy)
     if (event === 'all') {
       setSelectedLocations(["cecum", "feces", "ileum"]);
+      setIsColorByDisabled(true);
     } else {
       setSelectedLocations([event]);
+      setIsColorByDisabled(false);
+
     }
   };
 
   const handleLocationChangeColorby = (event: any) => {
-    if (Location.length !== 3) {
       setColorBy(event.target.value);
-      console.log(Location)
-      fetchProjectIdsFiltercolor(dataResult, event.target.value);
-    }
-    console.log(event.target.value)
+      // fetchProjectIdsFiltercolor(dataResult, event.target.value);
+    
 
+    console.log(event.target.value)
+console.log(selectedLocations)
+console.log(colorBy)
   };
 
-  // Definir una función genérica para realizar el fetch
+    // Definir una función genérica para realizar el fetch
+    const fetchData = async (token: any) => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/beta-diversity/${params.slug}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            "samplelocation": selectedLocations,
+            "column": colorBy,
+            "columnValues" : selectedLocations
+        }),        }
+        );
+        if (!response.ok) {
+          toast.warn('The data needs to be loaded again!', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            transition: Bounce,
+          });
+          setTimeout(() => { window.location.href = "/"; }, 5000);
+          throw new Error("Respuesta no válida desde el servidor");
+        }
+  
+        const result = await response.json();
+        console.log(result);
+        setDataResult(result);
+        setColumnOptions(result.data.columns);
+        setDataUnique(result);
+
+        setValueOptions(result.data.data);
+        return result; // Devolver los datos obtenidos
+  
+      } catch (error) {
+  
+        throw error; // Propagar el error para manejarlo más adelante
+      }
+    };
+
+  // Definir una función genérica para realizar el fetch con filtro
   const fetchBetaDiversityData = async (token: any) => {
     try {
       const response = await fetch(
-        `https://127.0.0.1:8000/projects/beta-diversity/${params.slug}`, {
+        `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/beta-diversity/${params.slug}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ "samplelocation": selectedLocations })
-      }
+        body: JSON.stringify({
+          "samplelocation": selectedLocations,
+          "column": colorBy,
+          "columnValues" : colorBy === 'samplelocation' ? selectedLocations : [...selectedValues],
+
+      }),      }
       );
       if (!response.ok) {
         toast.warn('The data needs to be loaded again!', {
@@ -227,21 +287,77 @@ console.log(colorBy)
     const currentSelectionString = Location.join(',');
 
     // Comprueba si la nueva selección es diferente de la selección actual
-    if (newSelectionString !== currentSelectionString) {
       fetchBetaDiversityData(accessToken).then(result => { fetchProjectIdsFilter(result) });
       console.log(newSelectionString, currentSelectionString);
-    } else {
-      fetchProjectIdsFilter(dataResult);
-    }
-    isColorByDisabled || colorBy === "none" ? SetTittleVariable('location') : SetTittleVariable(colorBy.replace('_', ' '));
+    
+    isColorByDisabled || colorBy === "samplelocation" ? SetTittleVariable('location') : SetTittleVariable(colorBy.replace('_', ' '));
     setLocation(selectedLocations);
 
-    if (selectedLocations.length === 3) {
-      setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
-    } else {
-      setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
-    }
   };
+
+
+
+
+  useEffect(() => {
+    if (otus && colorBy) {
+        // Filtrar los valores únicos de la columna seleccionada
+        const columnIndex = columnOptions.indexOf(colorBy);
+        const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+        const uniqueValuesCheck: Set<string> = new Set(dataResult?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+
+        setValueOptions([...uniqueValues].filter(value => value !== 'null'));
+
+        // Inicializa 'selectedValues' con todos los valores únicos
+        setSelectedValues(new Set<string>(uniqueValuesCheck));
+    }
+}, [colorBy, dataResult]);
+
+// Estado para manejar los valores seleccionados en los checks
+const handleValueChange = (value: string) => {
+    setSelectedValues(prevSelectedValues => {
+        const newSelectedValues = new Set(prevSelectedValues);
+        // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
+        if (newSelectedValues.size === 1 && newSelectedValues.has(value)) {
+            return prevSelectedValues;
+        }
+
+        // Si el valor está presente, lo eliminamos, de lo contrario, lo añadimos
+        if (newSelectedValues.has(value)) {
+            newSelectedValues.delete(value);
+        } else {
+            newSelectedValues.add(value);
+        }
+        return newSelectedValues;
+    });
+};
+
+  
+  
+
+// Componente de checks para los valores de la columna seleccionada
+const valueChecks = (
+    <div className="mb-5 mt-5">
+        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
+        {valueOptions.map((value, index) => (
+            <div key={index} className="flex items-center mb-2">
+                <input
+                    id={`value-${index}`}
+                    type="checkbox"
+                    value={value}
+                    checked={selectedValues.has(value)}
+                    onChange={() => handleValueChange(value)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    {value}
+                </label>
+            </div>
+        ))}
+    </div>
+);
+
+
+
 
   const fetchProjectIds = async (result: any) => {
     console.log(newScatterColors)
@@ -358,18 +474,18 @@ console.log(colorBy)
       const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
       // Determinar si "None" está seleccionado en "Color By"
 
-      color === 'none';
+      color === 'samplelocation';
       const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
         const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-        const colorValue = color !== 'none' ? item[result.data.columns.indexOf(color)] : sampleLocation;
+        const colorValue = color !== 'samplelocation' ? item[result.data.columns.indexOf(color)] : sampleLocation;
 
         let key = sampleLocation; // Por defecto, usa la locación como clave
         let name = `${sampleLocation}`;
-        // Si "All" no está seleccionado en las locaciones y "Color By" no es "None", 
+        // Si "All" no está seleccionado en las locaciones y "Color By" no es "samplelocation", 
         // usa el valor seleccionado en "Color By" para colorear
-        if (!isAllLocationsSelected && color !== 'none') {
-          key = color !== 'none' ? colorValue : sampleLocation;
-          name = color !== 'none' ? `${colorValue}` : `Location: ${sampleLocation}`;
+        if (!isAllLocationsSelected && color !== 'samplelocation') {
+          key = color !== 'samplelocation' ? colorValue : sampleLocation;
+          name = color !== 'samplelocation' ? `${colorValue}` : `Location: ${sampleLocation}`;
         }
 
         if (!acc[key]) {
@@ -388,12 +504,12 @@ console.log(colorBy)
 
         acc[key].x.push(PC1);
         acc[key].y.push(PC2);
-        acc[key].text.push(`Sample ID: ${sampleId}, ${color === "none" ? "location" : color}: ${colorValue}`);
+        acc[key].text.push(`Sample ID: ${sampleId}, ${color === "samplelocation" ? "location" : color}: ${colorValue}`);
 
         return acc;
       }, {});
       setScatterColors(prevColors => ({ ...prevColors, ...newScatterColors }));
-      isColorByDisabled || color === "none" ? SetTittleVariable('location') : SetTittleVariable(color.replace('_', ' '));
+      isColorByDisabled || color === "samplelocation" ? SetTittleVariable('location') : SetTittleVariable(color.replace('_', ' '));
       setScatterData(Object.values(scatterPlotData));
       setIsLoaded(true);
     } catch (error) {
@@ -406,19 +522,19 @@ console.log(colorBy)
     try {
 
       const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
-      // Determinar si "None" está seleccionado en "Color By"
-      colorBy === 'none';
+      // Determinar si "samplelocation" está seleccionado en "Color By"
+      colorBy === 'samplelocation';
       const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
         const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-        const colorValue = colorBy !== 'none' ? item[result.data.columns.indexOf(colorBy)] : sampleLocation;
+        const colorValue = colorBy !== 'samplelocation' ? item[result.data.columns.indexOf(colorBy)] : sampleLocation;
 
         let key = sampleLocation; // Por defecto, usa la locación como clave
         let name = `${sampleLocation}`;
-        // Si "All" no está seleccionado en las locaciones y "Color By" no es "None", 
+        // Si "All" no está seleccionado en las locaciones y "Color By" no es "samplelocation", 
         // usa el valor seleccionado en "Color By" para colorear
-        if (!isAllLocationsSelected && colorBy !== 'none') {
-          key = colorBy !== 'none' ? colorValue : sampleLocation;
-          name = colorBy !== 'none' ? `${colorValue}` : `Location: ${sampleLocation}`;
+        if (!isAllLocationsSelected && colorBy !== 'samplelocation') {
+          key = colorBy !== 'samplelocation' ? colorValue : sampleLocation;
+          name = colorBy !== 'samplelocation' ? `${colorValue}` : `Location: ${sampleLocation}`;
         }
 
         if (!acc[key]) {
@@ -437,7 +553,7 @@ console.log(colorBy)
 
         acc[key].x.push(PC1);
         acc[key].y.push(PC2);
-        acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy === "none" ? "location" : colorBy}: ${colorValue}`);
+        acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy === "samplelocation" ? "location" : colorBy}: ${colorValue}`);
         scatterColors[key] = colors[colorIndex % colors.length];
         return acc;
       }, {});
@@ -458,7 +574,7 @@ console.log(colorBy)
   useEffect(() => {
     fetchToken().then((token) => {
       fetchConfigFile(token);
-      fetchBetaDiversityData(token).then((result) => { console.log(result); fetchProjectIds(result) })
+      fetchData(token).then((result) => { console.log(result); fetchProjectIds(result) })
     });
   }
     , [params.slug]);
@@ -481,24 +597,15 @@ console.log(colorBy)
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="flex w-full items-center margin-0 justify-center my-8">
-          <button
-            onClick={applyFilters}
-            className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
-          >
-            Apply Filter
-          </button>
-        </div>
+        </div>  
         <div className="mt-10">
           <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
           <ul className="grid w-full gap-6 md:grid-cols-2">
             <li>
-              <input type="radio" id="none" name="none" value="none" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'none'}
+              <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
-              <label htmlFor="none" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
                   <div className="w-full text-center flex justify-center">Default</div>
                 </div>
@@ -550,8 +657,21 @@ console.log(colorBy)
             ))}
           </ul>
         </div>
-
-    </div>);
+        <div>
+{isColorByDisabled ? "" :
+        colorBy === "samplelocation" ? "" :
+                (valueChecks)}
+          </div>
+          <div className="flex w-full items-center margin-0 justify-center my-8">
+          <button
+            onClick={applyFilters}
+            className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
+          >
+            Apply Filter
+          </button>
+        </div>
+    </div>
+    );
 
 
 
@@ -590,8 +710,8 @@ console.log(colorBy)
           height: 600,
           font: { family: 'Roboto, sans-serif' },
           title: {
-            text: `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "none" ? "" : " por " + colorBy.replace('_', ' ')))}`,
-            font: { // Añade esta sección para personalizar el título
+            text: `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`,
+            font: { 
               family: 'Roboto, sans-serif',
               size: 26,
             }
@@ -599,7 +719,7 @@ console.log(colorBy)
           xaxis: {
             title: {
               text: 'PC1',
-              font: { // Añade esta sección para personalizar la fuente del eje X
+              font: { 
                 family: 'Roboto, sans-serif',
                 size: 18,
               }
@@ -608,7 +728,7 @@ console.log(colorBy)
           yaxis: {
             title: {
               text: 'PC2',
-              font: { // Personaliza la fuente del eje Y con un tamaño de fuente más grande
+              font: {
                 family: 'Roboto, sans-serif',
                 size: 18, // Aumenta el tamaño para mayor énfasis
               }
@@ -619,7 +739,7 @@ console.log(colorBy)
       />)}
       </div>
       <div className="w-3/12 flex flex-col  border border-gray-100 rounded-3xl p-5 overflow-auto max-h-full">
-        <h2 className="mb-3 text-xl ">{colorBy === "none" ? "Sample location" : colorBy}</h2>
+        <h2 className="mb-3 text-xl ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
         <CustomLegend scatterData={scatterData} scatterColors={scatterColors} />
       </div>
     </div>
@@ -628,6 +748,7 @@ console.log(colorBy)
 
   return (
     <div>
+      <SidebarProvider>
       <Layout slug={params.slug} filter={""} >
         {isLoaded ? (
 <div className="flex flex-col w-full">
@@ -725,6 +846,7 @@ console.log(colorBy)
         )}
         <ToastContainer />
       </Layout>
+      </SidebarProvider>
     </div>
   );
 }

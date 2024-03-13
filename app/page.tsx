@@ -8,6 +8,7 @@ import Navbar from "@/app/components/navbar";
 import Layout from "@/app/components/Layout";
 import Dashboard from "@/app/components/dashboard";
 import { useRouter } from "next/router";
+import { SidebarProvider } from "./components/context/sidebarContext";
 
 export default function Home() {
   const [accessToken, setAccessToken] = useState("");
@@ -21,9 +22,11 @@ export default function Home() {
   return (
     <>
       {user ? (
+        <SidebarProvider>
         <Layout slug={""} filter={undefined}>
           <Dashboard></Dashboard>
         </Layout>
+        </SidebarProvider>
       ) : (
         <LoginButton></LoginButton>
       )}

@@ -108,7 +108,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     ];
     const fetchToken = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/auth/token");
+            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
             const { accessToken } = await response.json();
             setAccessToken(accessToken);
             console.log("Token obtenido:", accessToken);
@@ -122,7 +122,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     };
     const fetchConfigFile = async (token: any) => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/projects/config/${params.slug}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/config/${params.slug}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/projects/taxonomycomposition/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/projects/taxonomycomposition/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/projects/taxonomycomposition/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -243,7 +243,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/projects/taxonomycomposition/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

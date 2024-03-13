@@ -6,6 +6,10 @@ import { Bounce, ToastContainer, toast } from 'react-toastify';
 import { FaSpinner } from "react-icons/fa6";
 import { GrDocumentConfig } from "react-icons/gr";
 import { FaDownload } from "react-icons/fa6";
+import { RiUploadCloud2Fill } from "react-icons/ri"
+import Link from 'next/link';
+import CardButton from '../components/cardButton';
+import { SidebarProvider } from '../components/context/sidebarContext';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [file, setFile] = useState(null);
@@ -17,7 +21,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const fetchToken = async () => {
         try {
-            const response = await fetch("http://localhost:3000/api/auth/token");
+            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
             const { accessToken } = await response.json();
             setAccessToken(accessToken);
             console.log("Token obtenido:", accessToken);
@@ -52,7 +56,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Nota: No es necesario establecer el encabezado 'Content-Type' al usar FormData.
         // El navegador lo establecerá automáticamente con el 'boundary' adecuado para 'multipart/form-data'.
-        const result = await fetch(`http://127.0.0.1:8000/admin/uploadconfigfile/${projectName}`, {
+        const result = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/uploadconfigfile/${projectName}`, {
             method: 'POST',
             headers: {
                 // Incluye el token de Auth0 en los encabezados de la solicitud
@@ -97,7 +101,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const downloadConfigFile = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/admin/downloadconfigfile/${projectName}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/downloadconfigfile/${projectName}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`, // Asegúrate de incluir el token de autorización si es necesario
@@ -141,12 +145,13 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     return (
         <div>
+            <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
-                <div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer" onClick={() => setIsFormVisible(true)}>
-                    <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Upload Config File  <GrDocumentConfig className='ml-2' /></h5>
-                </div>
+                <div className='w-full flex justify-center items-center h-3/4'>
 
- 
+                <div className='flex flex-grow items-center justify-center align-middle content-center w-3/4'>
+<CardButton href={'/admin/loadproject/'} Icon={ RiUploadCloud2Fill} onClick={undefined} title={'Load Project'}/>
+
 
                 {isFormVisible && (
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
@@ -175,10 +180,9 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
+<CardButton href={''} Icon={ FaDownload} onClick={' '} title={'Download Config File'}/>
 
-<div className="p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 m-4 cursor-pointer" onClick={() => setIsDownloadVisible(true)}>
-                    <h5 className="mb-2 flex flex-row text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Download Config File  <FaDownload className='ml-2' /></h5>
-                </div>
+
 
  
 
@@ -216,7 +220,10 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
                 <ToastContainer />
+                </div>
+                </div>
             </Layout>
+            </SidebarProvider>
         </div>
     );
 

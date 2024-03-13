@@ -33,7 +33,7 @@ const Dashboard = () => {
       return;
     }
     try {
-      const response = await fetch("http://localhost:3000/api/auth/token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
       const { accessToken } = await response.json();
       setAccessToken(accessToken);
       setTokenObtenido(true);
@@ -47,7 +47,7 @@ const Dashboard = () => {
   const fetchProjectIds = async (token: any) => {
     // Usa el token pasado como argumento
     try {
-      const response = await fetch("http://127.0.0.1:8000/projects", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -88,7 +88,7 @@ const Dashboard = () => {
         });
       }, 2000); // 2 segundos
   
-      const response = await fetch(`http://127.0.0.1:8000/projects/${projectId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/${projectId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

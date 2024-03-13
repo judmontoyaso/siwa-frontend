@@ -2,7 +2,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Image from "next/image";
-
+import imageload from '@/public/imagewait.png';
 
 
 import React from 'react';
@@ -18,7 +18,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
   const fetchToken = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
       const { accessToken } = await response.json();
       setAccessToken(accessToken);
       console.log("Token obtenido:", accessToken);
@@ -29,7 +29,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
   };
   const fetchConfigFile = async (token: any) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/projects/config/${params.slug}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/config/${params.slug}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -61,21 +61,42 @@ const Page = ({ params }: { params: { slug: string } }) => {
     <Layout slug={params.slug} filter={filterContent}>
 <div className="w-10/12 mx-auto px-4 py-8">
   <div className="bg-white shadow-lg rounded-lg overflow-hidden pb-10">
-        <h1 className="text-3xl m-5 font-bold text-gray-800 mb-6">{configFile?.summary?.title}</h1>
+<div className="w-full flex justify-center text-center">
+
+{configFile?.summary?.image ? (   <h1 className="text-3xl m-5 font-bold text-gray-800 mb-6">{configFile?.summary?.title}</h1> ) : (         <h1 className="h-3.5 bg-gray-200 rounded-full dark:bg-gray-700 w-80 mb-4"></h1>
+        )}
+</div>
+
     <div className="flex flex-wrap md:flex-nowrap">
 
       {/* Contenedor de texto */}
       <div className="px-6 py-8 md:w-1/2">
+      {configFile?.summary?.image ? (
         <div className="prose lg:prose-lg max-w-none space-y-4">
           {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
             <p key={key} className="text-gray-700">{value as ReactNode}</p>
           ))}
-        </div>
+        </div> ) : (
+
+        <div className="w-full">
+        <div className="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
+        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[480px] mb-2.5"></div>
+        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
+        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[440px] mb-2.5"></div>
+        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[460px] mb-2.5"></div>
+        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px]"></div>
+    </div>)
+}
       </div>
 
       {/* Contenedor de imagen */}
       <div className="md:w-1/2 flex justify-center items-center md:justify-end p-4">
-        <Image src={configFile?.summary?.image} alt="Summary Image" width={500} height={300} objectFit="cover" />
+        {configFile?.summary?.image ? (
+          <Image src={configFile?.summary?.image} alt="Summary Image" width={500} height={300} objectFit="cover" />
+        ) : (
+          <Image src={imageload} alt="Logo SIWA" width={650} className="animate-pulse" style={{ opacity: 0.2, filter: 'brightness(90%)' }} />
+        )}
+
       </div>
 
     </div>

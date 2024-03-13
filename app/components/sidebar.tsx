@@ -25,7 +25,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
   const router = usePathname();
 
 
-
+  useEffect(() => {console.log("sidebar", isSidebarOpen)}, [isSidebarOpen]);
 
 console.log(user)
   if (isLoading) {
@@ -41,7 +41,7 @@ console.log(user)
 
     <><div
       id="default-sidebar"
-      className={`left-0 z-40 w-1/4 h-screen transition-transform ${isSidebarOpen ? 'sm:translate-x-0 block' : '-translate-x-full hidden'
+      className={`left-0 z-40 w-1/5 h-screen transition-transform ${isSidebarOpen ? 'sm:translate-x-0 block' : '-translate-x-full hidden'
         } relative`}
       aria-label="Sidebar"
     >

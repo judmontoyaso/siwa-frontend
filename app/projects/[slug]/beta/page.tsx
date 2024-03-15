@@ -144,11 +144,9 @@ export default function Page({ params }: { params: { slug: string } }) {
 
   const fetchConfigFile = async (token: any) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/config/${params.slug}`, {
-        method: 'GET',
+      const response = await fetch(`/api/proxy/${params.slug}`, {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Enviar el token
         },
       });
       if (!response.ok) {

@@ -164,12 +164,10 @@ export default function Page({ params }: { params: { slug: string } }) {
     };
     const fetchConfigFile = async (token: any) => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/config/${params.slug}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
+            const response = await fetch(`/api/proxy/${params.slug}`, {
+              headers: {
+                Authorization: `Bearer ${token}`, // Enviar el token
+              },
             });
             if (!response.ok) {
                 throw new Error("Network response was not ok");

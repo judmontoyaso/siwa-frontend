@@ -237,7 +237,7 @@ console.log(colorBy)
   const fetchBetaDiversityData = async (token: any) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/api/project/beta/${params.slug}`, {
+        `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/beta/${params.slug}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

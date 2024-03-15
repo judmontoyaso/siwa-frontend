@@ -164,7 +164,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     };
     const fetchConfigFile = async (token: any) => {
         try {
-            const response = await fetch(`/api/proxy/${params.slug}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
               headers: {
                 Authorization: `Bearer ${token}`, // Enviar el token
               },
@@ -180,7 +180,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             setColorByOptions(combinedOptions);
         } catch (error) {
             console.error("Error al cargar las opciones del dropdown:", error);
-            window.location.href = "/api/auth/logout";
+            window.location.href = `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/logout`;
         }
     };
 
@@ -188,7 +188,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/taxo/composition/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -245,7 +245,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/taxo/composition/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

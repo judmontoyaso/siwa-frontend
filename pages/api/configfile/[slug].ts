@@ -17,7 +17,7 @@ const handler = async (req: { query: { slug: any; }; headers: { authorization: a
 console.log(response)
     if (!response.ok) throw new Error(`Error: ${response.statusText}`);
     const data = await response.json();
-    console.log(res)
+
     res.status(200).json(data);
 } catch (error: any) {
     res.status(500).json({ error: error.message });

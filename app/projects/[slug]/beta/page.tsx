@@ -144,8 +144,9 @@ export default function Page({ params }: { params: { slug: string } }) {
 
   const fetchConfigFile = async (token: any) => {
     try {
-      const response = await fetch(`/api/proxy/${params.slug}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`, // Enviar el token
         },
       });
@@ -189,7 +190,7 @@ console.log(colorBy)
     const fetchData = async (token: any) => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/beta-diversity/${params.slug}`, {
+          `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/beta/${params.slug}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -236,7 +237,7 @@ console.log(colorBy)
   const fetchBetaDiversityData = async (token: any) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/beta-diversity/${params.slug}`, {
+        `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/api/project/beta/${params.slug}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

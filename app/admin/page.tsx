@@ -56,7 +56,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Nota: No es necesario establecer el encabezado 'Content-Type' al usar FormData.
         // El navegador lo establecerá automáticamente con el 'boundary' adecuado para 'multipart/form-data'.
-        const result = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/uploadconfigfile/${projectName}`, {
+        const result = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/uploadconfig/${projectName}`, {
             method: 'POST',
             headers: {
                 // Incluye el token de Auth0 en los encabezados de la solicitud
@@ -101,7 +101,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const downloadConfigFile = async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/downloadconfigfile/${projectName}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/downloadconfig/${projectName}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`, // Asegúrate de incluir el token de autorización si es necesario

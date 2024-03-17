@@ -1,26 +1,19 @@
 "use client";
-import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, SetStateAction, useEffect, useRef, useState } from "react";
+import {  ReactNode, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Loading from "@/app/components/loading";
 import Plot from "react-plotly.js";
 import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
-import { Bounce, toast } from "react-toastify";
+import { Bounce, ToastContainer, toast } from "react-toastify";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
-import { Annotations } from "plotly.js";
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 
 export default function Page({ params }: { params: { slug: string } }) {
-    type OtuType = {
-        index: string[];
-        columns: string[];
-        data: number[][];
-    };
-
     const { user, error, isLoading } = useUser();
     const [accessToken, setAccessToken] = useState();
     const [isLoaded, setIsLoaded] = useState(false);
@@ -43,8 +36,6 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedColumnRemove, setSelectedColumnRemove] = useState('');
     const [columnOptions, setColumnOptions] = useState([]);
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
-    const [valuesColumnSelected, setValuesColumnSelected] = useState<string[]>([]);
-
     const [valueOptions, setValueOptions] = useState<any[]>([]);
      const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
     const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
@@ -98,7 +89,6 @@ export default function Page({ params }: { params: { slug: string } }) {
         '#9edae5'  // turquesa claro
     ];
 
-
     const fetchToken = async () => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
@@ -110,7 +100,6 @@ export default function Page({ params }: { params: { slug: string } }) {
             console.error("Error al obtener token:", error);
         }
     };
-
 
     const fetchConfigFile = async (token: any) => {
         try {
@@ -145,70 +134,15 @@ export default function Page({ params }: { params: { slug: string } }) {
                 body: JSON.stringify({
                     "samplelocation": selectedLocations,
                     "column": selectedColumn,
-                    "columnValues" : selectedLocations
-                }),
-
-            }
-            );
-            if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
-                setTimeout(() => { window.location.href = "/"; }, 5000);
-                throw new Error("Respuesta no válida desde el servidor");
-            }
-            const result = await response.json();
-
-            const locations = new Set(
-                result.data.data.map((item: any[]) => item[1])
-            );
-            const uniqueLocations = Array.from(locations) as string[];
-            setAvailableLocations(uniqueLocations);
-
-            setOtus(result);
-            setDataUnique(result);
-            setColumnOptions(result.data.columns);
-            
-            setValueOptions(result.data.data);
-
-            setIsLoaded(true);
-            return result;
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
-        }
-    };
-
-    const fetchDataFilter = async (token: any, columnIndex: number | undefined) => {
-
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/alpha/${params.slug}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    "samplelocation": selectedLocations,
-                    "column": selectedColumn,
                     "columnValues" : selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
-
                 }),
 
             }
             );
-            if (response.status === 404) {
+            if (response.status === 500 && accessToken !== undefined) {
                 toast.warn('The data needs to be loaded again!', {
                     position: "top-center",
-                    autoClose: 5000,
+                    autoClose: 4000,
                     hideProgressBar: false,
                     closeOnClick: true,
                     pauseOnHover: true,
@@ -222,25 +156,34 @@ export default function Page({ params }: { params: { slug: string } }) {
             }
             const result = await response.json();
 
-            console.log(result)
+
+            if (!otus) {
+                const locations = new Set(
+                    result.data.data.map((item: any[]) => item[1])
+                );
+                const uniqueLocations = Array.from(locations) as string[];
+
+                setAvailableLocations(uniqueLocations);
+                setDataUnique(result);
+                setColumnOptions(result.data.columns);
+                setValueOptions(result.data.data);
+            }
+
             setOtus(result);
+
             setIsLoaded(true);
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
         }
     };
-
 
     const fetchProjectIds = async (result: any, columnIndex: number | undefined) => {
 
         // Usa el token pasado como argumento
         try {
-            const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
-
             // Filtrar los datos basados en la locación seleccionada, si se ha seleccionado una
             const filteredData = result?.data?.data?.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
-
             const groupedData = filteredData.reduce(
                 (
                     acc: {
@@ -275,12 +218,8 @@ export default function Page({ params }: { params: { slug: string } }) {
                 {}
             );
             setScatterColors(newScatterColors);
-
-
-
             const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), columnIndex || 1);
             setShannonData(shannonData as never[]);
-
             setPlotData(
                 Object.keys(groupedData).map((location) => ({
                     ...groupedData[location],
@@ -288,14 +227,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                     name: location,
                 }))
             );
-
             setIsLoaded(true);
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
         }
     };
-
-
 
     const processData = (data: any[], index: number): any[] => {
 
@@ -329,16 +265,15 @@ export default function Page({ params }: { params: { slug: string } }) {
         return Object.values(result);
     };
 
-
     useEffect(() => {
         // Función para actualizar el ancho del gráfico con un pequeño retraso
         const updatePlotWidth = () => {
             setTimeout(() => {
                 if (plotContainerRef.current) {
-                    setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
+                    setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 100);
                     setLoaded(true)
                 }
-            }, 800); // Retraso de 10 ms
+            }, 500); // Retraso de 10 ms
         };
 
         updatePlotWidth(); // Establece el ancho inicial
@@ -348,9 +283,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         return () => {
             window.removeEventListener('resize', updatePlotWidth);
         };
-    }, [params.slug, plotData]);
-
-
+    }, [plotData]);
 
     useEffect(() => {
 
@@ -368,26 +301,17 @@ export default function Page({ params }: { params: { slug: string } }) {
         } else if (otus) {
             processData(otus?.data?.data?.data, Number(selectedColumn)); // Fix: Convert selectedColumn to a number
         }
-    }, [currentLocation, selectedColumn, otus]);
-
-
-    // Manejar cambio de locación
-    useEffect(() => {
-        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        if (otus && currentLocation) {
-            const filteredData = otus?.data?.data.filter((item: any[]) => item[1] === currentLocation);
-            processData(filteredData, columnIndex);
-        } else if (otus) {
-            processData(otus.data, columnIndex)
-        }
-    }, [currentLocation, selectedColumn, otus]);
-
+    }, [currentLocation, otus]);
 
     useEffect(() => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        fetchToken().then((token) => { fetchConfigFile(token); fetchData(token, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) }) });
-    }, [params.slug]);
+        fetchToken().then((token) => { fetchConfigFile(token); });
+    }, []);
 
+    useEffect(() => {
+        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+        fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) }) 
+    }, [accessToken]);
 
     useEffect(() => {
         if (selectedLocations.length === 3) {
@@ -396,8 +320,6 @@ export default function Page({ params }: { params: { slug: string } }) {
             setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
         }
     }, [Location]);
-
-
 
     const handleLocationChange = (event: any) => {
         if (event === 'all') {
@@ -411,24 +333,22 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
-
     const handleLocationChangeColorby = (event: any) => {
         setSelectedColumn(event.target.value);
         console.log(newScatterColors)
         console.log(scatterColors)
     };
 
-
     // Función para aplicar los filtros seleccionados
     const applyFilters = (event: any) => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        fetchDataFilter(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
+        fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
         setLocation(selectedLocations);
         console.log('filter',typeof(selectedValues), selectedValues)
 
 
 
-    };
+    }; 
 
     useEffect(() => {
         if (otus && selectedColumn) {
@@ -442,7 +362,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             // Inicializa 'selectedValues' con todos los valores únicos
             setSelectedValues(new Set<string>(uniqueValuesCheck));
         }
-    }, [selectedColumn, otus]);
+    }, [selectedColumn]);
 
     // Estado para manejar los valores seleccionados en los checks
     const handleValueChange = (value: string) => {
@@ -463,15 +383,14 @@ export default function Page({ params }: { params: { slug: string } }) {
         });
     };
     
-      
-      
-
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
-        <div className="mb-5 mt-5">
+        <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
             <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
+            <div className="flex w-full flex-col overflow-x-scroll items-start">
+
             {valueOptions.map((value, index) => (
-                <div key={index} className="flex items-center mb-2">
+                <div key={index} className="flex w-full items-start overflow-x-scroll mb-2 ">
                     <input
                         id={`value-${index}`}
                         type="checkbox"
@@ -480,14 +399,14 @@ export default function Page({ params }: { params: { slug: string } }) {
                         onChange={() => handleValueChange(value)}
                         className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     />
-                    <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
                         {value}
                     </label>
                 </div>
             ))}
+            </div>
         </div>
     );
-
 
     const filter = (
         <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
@@ -585,14 +504,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                     onClick={applyFilters}
                     className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
                 >
-                    Apply Filter
+                    Apply
                 </button>
             </div>
         </div>
     );
-
-
-
 
     type ShannonData = {
         name: string;
@@ -622,11 +538,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         </div>
     );
 
-
-
-
     const [annotations, setAnnotations] = useState([]);
-
 
     const maxYValueForLocation = (locationValue: string, data: any) => {
         // Asegurarse de que 'data' y 'data.columns' existan
@@ -678,36 +590,6 @@ export default function Page({ params }: { params: { slug: string } }) {
         setAnnotations(annotations as never[]);
     }, [otus]);
 
-
-
-
-
-
-
-    // useEffect(() => {
-    //     if (!selectedColumnRemove) {
-    //         setValueOptions([]);
-    //         setSelectedValue(''); // Restablecer el valor seleccionado cuando no hay columna seleccionada
-    //         return;
-    //     }
-
-    //     // Filtrar los valores únicos de la columna seleccionada
-    //     const uniqueValues = new Set(otus?.data?.data?.map((item: { [x: string]: any; }) => item[selectedColumnRemove]));
-    //     setValueOptions([...uniqueValues]);
-
-    //     setSelectedValue(''); // Restablecer el valor seleccionado cada vez que se cambia la columna
-    // }, [selectedColumnRemove, otus]);
-
-    // const handleColumnChange = (event: { target: { value: any; }; }) => {
-    //     const newSelectedColumnRemoselectedColumnRemove = event.target.value;
-    //     setSelectedColumnRemove(newSelectedColumnRemoselectedColumnRemove);
-    // };
-
-    // const handleValueChange = (event: { target: { value: SetStateAction<string>; }; }) => {
-    //     setSelectedValue(event.target.value);
-    // };
-
-
     const calculateMaxAlphaShannon = () => {
         if (!otus?.data) return 0;
     
@@ -730,10 +612,8 @@ export default function Page({ params }: { params: { slug: string } }) {
         return maxAlphaShannon;
     };
     
-
 // Calcula el máximo de 'alphashannon'
 const maxYValueForLocationShannon = calculateMaxAlphaShannon();
-
 // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
 const yAxisRange = [0, maxYValueForLocationShannon + 2];
 
@@ -742,7 +622,7 @@ console.log('Max alpha shannon:', yAxisRange);
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         
         <div className="flex flex-row w-full items-start">
-            <div className="w-9/12 flex " ref={plotContainerRef}>
+            <div className="w-9/12 " ref={plotContainerRef}>
                 {loaded && (
                     
                     <Plot
@@ -758,15 +638,13 @@ console.log('Max alpha shannon:', yAxisRange);
                     />
                 )}
             </div>
-            <div className="w-3/12 flex flex-col  border border-gray-100 rounded-3xl p-5 overflow-auto max-h-full">
+            <div className="w-3/12 flex flex-col  border border-gray-100 rounded-3xl overflow-x-scroll max-h-full">
                 <h2 className="mb-3 text-xl ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
                 <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
             </div>
         </div>
 
     );
-
-
 
     return (
         <div>
@@ -834,9 +712,6 @@ console.log('Max alpha shannon:', yAxisRange);
                                     return null;  // No renderizar nada si no se cumplen las condiciones
                                 })}
                             </div>
-
-
-
                             <div className="prose flex flex-row flex-wrap">
                                 {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
                                     if (key === selectedColumn && key !== "samplelocation") {
@@ -861,30 +736,13 @@ console.log('Max alpha shannon:', yAxisRange);
                                     return null;
                                 })}
                             </div>
-
-
                         </div>
-                        {/* <div>
-        <h3>Eliminar muestras</h3>
-        <select value={selectedColumnRemove} onChange={handleColumnChange}>
-            <option value="">Selecciona una columna</option>
-            {columnOptions.map(column => (
-                <option key={column} value={column}>{column}</option>
-            ))}
-        </select>
-
-        <select value={selectedValue} onChange={handleValueChange} disabled={!selectedColumnRemove}>
-            <option value="">Selecciona un valor</option>
-            {valueOptions.map((value, index) => (
-                <option key={index} value={value}>{value}</option>
-            ))}
-        </select>
-    </div> */}
                     </div>
 
                 ) : (
                     <div>Loading...</div>
                 )}
+                   <ToastContainer/>
             </Layout>
             </SidebarProvider>
         </div>

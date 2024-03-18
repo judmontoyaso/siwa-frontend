@@ -15,6 +15,7 @@ import TagsInput from "@/app/components/tags";
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { GoPlus } from "react-icons/go";
 import { FiMinus } from "react-icons/fi";
+import { useAuth } from "@/app/components/authContext";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -23,9 +24,9 @@ export default function Page({ params }: { params: { slug: string } }) {
         columns: string[];
         data: number[][];
     };
+    const { accessToken } = useAuth();
 
     const { user, error, isLoading } = useUser();
-    const [accessToken, setAccessToken] = useState();
     const [isLoaded, setIsLoaded] = useState(false);
     const [plotData, setPlotData] = useState<any[]>([]);
 
@@ -148,20 +149,8 @@ export default function Page({ params }: { params: { slug: string } }) {
         };
     }, [params.slug, plotData]);
 
-    const fetchToken = async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
-            const { accessToken } = await response.json();
-            setAccessToken(accessToken);
-            console.log("Token obtenido:", accessToken);
-            return accessToken; // Retorna el token obtenido para su uso posterior
-        } catch (error) {
-            console.error("Error al obtener token:", error);
-        }
-    };
-    const toggleFilterCardVisibility = () => {
-        setIsFilterCardVisible(!isFilterCardVisible);
-    };
+
+
     const fetchConfigFile = async (token: any) => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
@@ -340,25 +329,10 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     useEffect(() => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        fetchToken().then((token) => { fetchConfigFile(token); fetchData(token); });
+fetchConfigFile(accessToken); fetchData(accessToken);
     }, [params.slug]);
 
-    useEffect(() => {
-        fetchToken().then((token) => { fetchConfigFile(token) });
-    }, [plotData, params.slug]);
-
-
-    // useEffect(() => {
-    //     fetchDataGroup(accessToken);
-    //     setSelectedGroup(selectedGroup)
-    // }, [selectedGroup]);
-
-    // Manejar cambio de locación
-
-    //    useEffect(() => {
-    //     const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-    //     fetchToken().then((token) => { fetchConfigFile(token); fetchData(token); });
-    // }, [selectedGroup]);
+  
     interface DataItem {
         // Asumiendo que todos los elementos tienen este formato
         0: string; // Para el label

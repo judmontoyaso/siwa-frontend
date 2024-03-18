@@ -88,6 +88,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         '#dbdb8d', // amarillo pastel
         '#9edae5'  // turquesa claro
     ];
+    
 
     const { accessToken } = useAuth();
     const fetchConfigFile = async (token: any) => {

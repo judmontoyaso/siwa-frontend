@@ -13,6 +13,7 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
+import { useAuth } from "@/app/components/authContext";
 
 
 
@@ -22,10 +23,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     columns: string[];
     data: number[][];
   };
-
-  const { user, error, isLoading } = useUser();
-  const [accessToken, setAccessToken] = useState();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { accessToken } = useAuth();
+  const { user, error, isLoading } = useUser();  const [isLoaded, setIsLoaded] = useState(false);
   const [plotData, setPlotData] = useState<
     { type: string; y: any; name: string }[]
   >([]);
@@ -130,17 +129,6 @@ export default function Page({ params }: { params: { slug: string } }) {
   }, [params.slug, plotData]);
 
 
-  const fetchToken = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
-      const { accessToken } = await response.json();
-      setAccessToken(accessToken);
-      console.log("Token obtenido:", accessToken);
-      return accessToken; // Retorna el token obtenido para su uso posterior
-    } catch (error) {
-      console.error("Error al obtener token:", error);
-    }
-  };
 
   const fetchConfigFile = async (token: any) => {
     try {
@@ -571,10 +559,10 @@ const valueChecks = (
 
 
   useEffect(() => {
-    fetchToken().then((token) => {
-      fetchConfigFile(token);
-      fetchData(token).then((result) => { console.log(result); fetchProjectIds(result) })
-    });
+
+      fetchConfigFile(accessToken);
+      fetchData(accessToken).then((result) => { console.log(result); fetchProjectIds(result) })
+    
   }
     , [params.slug]);
 

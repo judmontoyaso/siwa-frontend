@@ -568,7 +568,7 @@ const valueChecks = (
 
 
   const filter = (
-    <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
+    <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
 
         <div className="flex flex-col items-left space-x-2">
 
@@ -674,11 +674,11 @@ const valueChecks = (
   };
 
   const CustomLegend = ({ scatterData, scatterColors }: { scatterData: ScatterData[]; scatterColors: ScatterColors }) => (
-    <div style={{ marginLeft: '20px', display:'flex', flexDirection: 'column' }}>
+    <div style={{ marginLeft: '0px', display:'flex', flexDirection: 'column' }}>
       {scatterData.map((entry, index) => (
         <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
-          <div>{entry.name}</div>
+          <div className="rounded-full" style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
+          <div className="text-sm text-gray-500">{entry.name}</div>
         </div>
       ))}
     </div>
@@ -687,8 +687,8 @@ const valueChecks = (
 
 
   const MyPlotComponent = ({ scatterData, scatterColors }: { scatterData: any[]; scatterColors: any }) => (
-    <div className="flex flex-row w-full items-start">
-      <div className="w-9/12 flex " ref={plotContainerRef}>
+    <div className="flex flex-row w-full items-center">
+      <div className="w-10/12 flex " ref={plotContainerRef}>
       {loaded && (
       <Plot
         data={scatterData}
@@ -725,8 +725,8 @@ const valueChecks = (
         }}
       />)}
       </div>
-      <div className="w-3/12 flex flex-col  border border-gray-100 rounded-3xl p-5 overflow-auto max-h-full">
-        <h2 className="mb-3 text-xl ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
+      <div className="w-2/12 flex flex-col p-5 overflow-auto max-h-full items-start">
+        <h2 className="mb-3 text-base text-gray-700  ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
         <CustomLegend scatterData={scatterData} scatterColors={scatterColors} />
       </div>
     </div>

@@ -590,13 +590,13 @@ setActiveIndex(2)
                 <>
     <p className="mt-2 text-gray-700">To prepare your dataset for Differential Abundance (DA) analysis, please adhere to the following steps:</p>
     <ul className="list-disc list-inside space-y-2 mt-4 flex flex-col items-start text-start">
-        <li>
-            <strong>Select Sample Locations:</strong> You can explore the microbiome by specific locations. It's advisable to examine locations separately. However, if your aim is to identify biomarkers distinguishing between locations, you may select more than one. Options include CECUM, ILEUM, FECES.
-        </li>
-        <li>
-            <strong>Select a Variable:</strong> From the experiment's factors, pick one that interests you for analysis. Factors with only a single level/category won't appear as options. This step is optional; if you prefer not to filter the dataset by any specific group, you can choose to keep all samples.
-        
-        </li>
+    <li>
+  <strong>Select Sample Locations:</strong> You can explore the microbiome by specific locations. It&apos;s advisable to examine locations separately. However, if your aim is to identify biomarkers distinguishing between locations, you may select more than one. Options include CECUM, ILEUM, FECES.
+</li>
+<li>
+  <strong>Select a Variable:</strong> From the experiment&apos;s factors, pick one that interests you for analysis. Factors with only a single level/category won&apos;t appear as options. This step is optional; if you prefer not to filter the dataset by any specific group, you can choose to keep all samples.
+</li>
+
         <li>
             <strong>Select Your Groups of Interest:</strong> If a variable has been chosen, select at least 2 and at most 3 categories for the analysis. This will form the basis of your DA comparison.
         </li>
@@ -653,7 +653,7 @@ setActiveIndex(2)
       checked={selectedColorBy === "samplelocation"}
       disabled={selectedLocations.length < 1}
     />
-    <label htmlFor="samplelocation" className="ml-2 text-md">Don't filter</label>
+    <label htmlFor="samplelocation" className="ml-2 text-md"><p>{"Don't filter"}</p></label>
   </div>
 
   {colorByOptions.map((option, index) => (

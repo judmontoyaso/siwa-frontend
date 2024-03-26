@@ -1,9 +1,11 @@
 import './globals.css'
+import 'primereact/resources/themes/lara-light-cyan/theme.css';
 import { Inter } from 'next/font/google'
 import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { Roboto } from 'next/font/google'
 import { AuthProvider } from './components/authContext';
-
+import { PrimeReactProvider } from "primereact/api";
+// theme
 
 const roboto = Roboto({
   weight: '400',
@@ -23,10 +25,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <>
-      <AuthProvider>
-              <UserProvider>
-      <body className={roboto.className}>{children}</body></UserProvider>
-      </AuthProvider>
+        <UserProvider>
+            <PrimeReactProvider>
+          <AuthProvider>
+
+              <body className={`h-screen ${roboto.className}`}>{children}</body>   
+          </AuthProvider>
+              </PrimeReactProvider>
+
+        </UserProvider>
       </>
 
     </html>

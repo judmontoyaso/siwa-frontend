@@ -11,8 +11,8 @@ import SkeletonCard from "./skeletoncard";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { GiSpinalCoil } from "react-icons/gi";
-import { BsFillCloudCheckFill } from "react-icons/bs";
-
+import { BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
+import { IoCloudOffline } from "react-icons/io5";
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
   const [projectIds, setProjectIds] = useState([]);
@@ -24,7 +24,6 @@ const Dashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [loadedProjects, setLoadedProjects] = useState({});
   
-
 
   const fetchToken = async () => {
     if (!user) {
@@ -44,29 +43,34 @@ const Dashboard = () => {
     }
   };
 
-  const fetchProjectIds = async (token: any) => {
-    // Usa el token pasado como argumento
-    try {
-        const response = await fetch(`api/project/id`, { mode: 'cors',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Respuesta no válida al obtener projectIds");
-      }
-      const result = await response.json();
-      console.log(result);
-      const ids = result.projects;
-      const empresa = result.empresa;
-      setEmpresa(empresa);
-      setProjectIds(ids);
-      setProjectsLoading(false);
-      return ids
-    } catch (error) {
-      console.error("Error al obtener projectIds:", error);
-    }
-  };
+  // const fetchProjectIds = async (token: any) => {
+  //   // Usa el token pasado como argumento
+  //   try {
+  //       const response = await fetch(`api/project/id`, { mode: 'cors',
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     if (!response.ok) {
+  //       throw new Error("Respuesta no válida al obtener projectIds");
+  //     }
+  //     const result = await response.json();
+  //     console.log(result);
+  //     const ids = result.projects;
+  //     const empresa = result.empresa;
+
+  //     return ids
+  //   } catch (error) {
+  //     console.error("Error al obtener projectIds:", error);
+  //   }
+  // };
+
+  useEffect(() => {
+    setEmpresa(user?.Empresa as never);
+    setProjectIds(user?.Project as never[]);
+    setProjectsLoading(false);
+  }, [accessToken]);
+
   const fetchProjectData = async (projectId: string, token: string) => {
     setLoadedProjects((prevStatus) => ({ ...prevStatus, [projectId]: false }));
   
@@ -125,10 +129,10 @@ const Dashboard = () => {
     fetchToken()
   }, [user, path]);
 
-  useEffect(() => {
-    if (accessToken) {
-      fetchProjectIds(accessToken)
-    }}, [accessToken]);
+  // useEffect(() => {
+  //   if (accessToken) {
+  //     fetchProjectIds(accessToken)
+  //   }}, [accessToken]);
 
     useEffect(
       () => {
@@ -147,45 +151,55 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="flex justify-center mt-28 content-center w-full">
-        {!projectsLoading ? (
-          <div className="card bg-gradient-to-r from-gray-100 to-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out w-64 h-64 rounded-lg m-10 mx-4 p-6 flex flex-col justify-center items-center text-gray-600">
-            <div className="text-2xl font-semibold">{projectIds.length}</div>
-            <div className="text-lg mt-2">Proyectos en curso</div>
-            <div className="text-xl mt-4">{empresa}</div>
-            <div className="text-md">Empresa</div>
-          </div>
-        ) : (
-          <SkeletonCard width={"256px"} height={"256px"} />
-        )}
-        {!projectsLoading ? (
-          <div className="card bg-gradient-to-r from-gray-100 to-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out w-64 h-64 rounded-lg m-10 mx-4 p-6 flex flex-col justify-center items-center text-gray-600">
-            <ul>
-              {projectIds.map((projectId) => (
-                <li key={projectId} className={`mt-2 flex items-center ${loadedProjects[projectId] ? "cursor-pointer" : "pointer-events-none"} `}>
+    <div className="min-h-screen flex flex-col justify-start ">
+    <div className="mx-auto w-full max-w-4xl p-8">
+  <h1 className="text-center text-2xl font-semibold text-gray-800 mb-2">Hello, {user?.name}!</h1>
+  <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>
+</div>
+      <div className="mx-auto w-full max-w-4xl p-8">
+        <div className="flex w-full items-center justify-center">
+  
+  
+          {/* Lista de Proyectos */}
+          {!projectsLoading ? (
+            <div className="bg-white shadow rounded-lg overflow-hidden w-80">
+              <div className="p-6">
+                <h3 className="text-xl font-medium text-gray-800 mb-4">Projects</h3>
+                <ul className="divide-y divide-gray-200">
+                  {projectIds.map((projectId) => (
+                    
+                          <Link href={`/projects/${projectId}`}>
+                    <li key={projectId} className={`py-2 flex justify-between items-center ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-50" : "opacity-50"} rounded-lg`}>
 
-                  <Link href={`/projects/${projectId}`}>
-                    <div className="text-lg hover:text-gray-900 text-gray-600 flex items-center">
+                         
+                      <span className="text-lg text-gray-700 flex flex-row items-center">{projectId} {loadedProjects[projectId] ? (
+                        <BsFillCloudCheckFill className="w-5 h-5 text-green-500 ml-2" />
+                        
+                        ) : (                        <IoCloudOffline className="w-5 h-5 text-gray-700 opacity-50 ml-2" />
+                        )}
+                      </span>
+                      {loadedProjects[projectId] ? (
+                        <BsArrowRightShort className="w-5 h-5 text-gray-700" />
 
-                      <span className="mr-1 ml-1"> {projectId} </span> {loadedProjects[projectId] ? (<BsFillCloudCheckFill className="w-4 h-4 me-2 text-green-700 dark:text-green-400 flex-shrink-0" />) : (<div role="status" className="animate-spin">
-                      <GiSpinalCoil  className="w-4 h-4  text-gray-300 animate-spin dark:text-gray-600 fill-blue-400"/>                        <span className="sr-only">Loading...</span>
-                      </div>)}
-                    </div>
-                  </Link>
-                  {loadedProjects[projectId] !== false && loadedProjects[projectId] !== true && (
-                    <span className="text-lg text-gray-600">{projectId}</span> // Texto sin ícono si no se está cargando ni ha cargado
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="text-lg mt-4">Proyectos</div>
-          </div>
-        ) : (
-          <SkeletonCard width={"256px"} height={"256px"} />
-        )}
-        <ToastContainer/>
+                      ) : (
+                        <GiSpinalCoil className="w-5 h-5 text-gray-400 animate-spin" />
+                      )}
+                    </li>
+                    </Link>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <SkeletonCard width={"100%"} height={"256px"} />
+          )}
+        </div>
       </div>
-    </>
+    </div>
+    <ToastContainer />
+  </>
+  
+  
   );
 };
 

@@ -700,7 +700,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
                         </div>
 
                         <div className="flex">
-                            <GraphicCard filter={filter}>
+                            <GraphicCard filter={filter} legend={undefined}>
                                 {plotData.length > 0 ? (
                                     <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
                                 ) : (

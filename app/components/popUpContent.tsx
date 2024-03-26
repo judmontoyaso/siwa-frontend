@@ -29,7 +29,7 @@ const PopupComponent = ({filter}: any) => {
   }, [isWindowVisible]); // Este efecto se ejecuta sólo cuando `isWindowVisible` cambia
 
   return (
-    <div className="w-full h-full flex content-end">
+    <div className="w-full h-full flex content-end mr-5">
         <div ref={popupRef} className="mx-2 p-4 w-full border border-gray-50 bg-white">
           {filter}
         </div>

@@ -206,7 +206,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     theme: "light",
                     transition: Bounce,
                 });
-                setTimeout(() => { window.location.href = "/"; }, 5000);
+                // setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
             const result = await response.json();

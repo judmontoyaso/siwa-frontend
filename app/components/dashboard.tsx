@@ -69,7 +69,7 @@ const Dashboard = () => {
     setEmpresa(user?.Empresa as never);
     setProjectIds(user?.Project as never[]);
     setProjectsLoading(false);
-  }, [accessToken]);
+  }, [accessToken, user?.Empresa, user?.Project]);
 
   const fetchProjectData = async (projectId: string, token: string) => {
     setLoadedProjects((prevStatus) => ({ ...prevStatus, [projectId]: false }));
@@ -168,8 +168,8 @@ const Dashboard = () => {
                 <ul className="divide-y divide-gray-200">
                   {projectIds.map((projectId) => (
                     
-                          <Link href={`/projects/${projectId}`}>
-                    <li key={projectId} className={`py-2 flex justify-between items-center ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-50" : "opacity-50"} rounded-lg`}>
+                          <Link key={projectId}  href={`/projects/${projectId}`}>
+                    <li className={`py-2 flex justify-between items-center ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-50" : "opacity-50"} rounded-lg`}>
 
                          
                       <span className="text-lg text-gray-700 flex flex-row items-center">{projectId} {loadedProjects[projectId] ? (

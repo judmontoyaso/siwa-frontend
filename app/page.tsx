@@ -22,7 +22,7 @@ export default function Home() {
   return (
     <>
 {isLoading ? (<><SidebarProvider>
-        <Layout slug={""} filter={undefined}> "cargando"      </Layout>
+        <Layout slug={""} filter={undefined}> cargando...      </Layout>
         </SidebarProvider></> ) : (   <>
   {user ? (
         <SidebarProvider>

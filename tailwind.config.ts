@@ -5,6 +5,7 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/primereact/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -50,7 +51,10 @@ const config: Config = {
           700: '#803a00',
           800: '#592900',
           900: '#331800',
-        }}
+        },
+        'siwa-blue': { DEFAULT: '#0A283D' },
+        'siwa-yellow': { DEFAULT: '#FEF282' }
+      }
     },
   },
   plugins: [],

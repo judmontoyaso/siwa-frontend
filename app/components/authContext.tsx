@@ -32,8 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
 return (
-    <AuthContext.Provider value={{accessToken}}>
+    <>    <AuthContext.Provider value={{accessToken}}>
         {children}
     </AuthContext.Provider>
+    </>
+
 );
 }

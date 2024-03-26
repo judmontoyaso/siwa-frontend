@@ -107,26 +107,20 @@ export default function Page({ params }: { params: { slug: string } }) {
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Función para actualizar el ancho del gráfico con un pequeño retraso
-    const updatePlotWidth = () => {
-      setTimeout(() => {
+  const updatePlotWidth = () => {
         if (plotContainerRef.current) {
           setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
           setLoaded(true)
         }
-      }, 800); // Retraso de 10 ms
     };
+  useEffect(() => {
+    // Función para actualizar el ancho del gráfico con un pequeño retraso
+  
 
     updatePlotWidth(); // Establece el ancho inicial
 
-    window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
 
-    return () => {
-      window.removeEventListener('resize', updatePlotWidth);
-    };
-  }, [params.slug, plotData]);
+  }, [plotData]);
 
 
 
@@ -674,9 +668,9 @@ const valueChecks = (
   };
 
   const CustomLegend = ({ scatterData, scatterColors }: { scatterData: ScatterData[]; scatterColors: ScatterColors }) => (
-    <div style={{ marginLeft: '0px', display:'flex', flexDirection: 'column' }}>
+    <div className="flex w-full flex-grow items-start" style={{ marginLeft: '5px' }}>
       {scatterData.map((entry, index) => (
-        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', marginLeft:'10px' }}>
           <div className="rounded-full" style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
           <div className="text-sm text-gray-500">{entry.name}</div>
         </div>
@@ -684,11 +678,12 @@ const valueChecks = (
     </div>
   );
 
+const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`)
 
 
   const MyPlotComponent = ({ scatterData, scatterColors }: { scatterData: any[]; scatterColors: any }) => (
     <div className="flex flex-row w-full items-center">
-      <div className="w-10/12 flex " ref={plotContainerRef}>
+      <div className="w-full " ref={plotContainerRef}>
       {loaded && (
       <Plot
         data={scatterData}
@@ -697,7 +692,6 @@ const valueChecks = (
           height: 600,
           font: { family: 'Roboto, sans-serif' },
           title: {
-            text: `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`,
             font: { 
               family: 'Roboto, sans-serif',
               size: 26,
@@ -722,16 +716,25 @@ const valueChecks = (
             }
           },
                     showlegend: false,
+                    margin: { l: 40, r: 10, t: 0, b: 40 } 
+
         }}
       />)}
       </div>
-      <div className="w-2/12 flex flex-col p-5 overflow-auto max-h-full items-start">
-        <h2 className="mb-3 text-base text-gray-700  ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
-        <CustomLegend scatterData={scatterData} scatterColors={scatterColors} />
-      </div>
+
     </div>
 
   );
+
+  const legend =(      <div className="w-full flex flex-row overflow-x-scroll max-h-full items-start justify-center mt-5">
+ <div>
+  <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
+  </div> 
+  <div>
+
+  <CustomLegend scatterData={scatterData} scatterColors={scatterColors} />
+  </div>
+</div>)
 
   return (
     <div>
@@ -770,11 +773,11 @@ const valueChecks = (
 
     </div>
   <div className="flex">
-    <GraphicCard filter={filter}>
+    <GraphicCard legend={legend} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <MyPlotComponent scatterData={scatterData} scatterColors={scatterColors} />
       ) : (
-        <SkeletonCard width={"800px"} height={"470px"} />
+        <SkeletonCard width={"500px"} height={"270px"} />
       )}
     </GraphicCard>
   </div>

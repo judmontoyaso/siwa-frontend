@@ -21,7 +21,10 @@ export default function Home() {
 
   return (
     <>
-      {user ? (
+{isLoading ? (<><SidebarProvider>
+        <Layout slug={""} filter={undefined}> "cargando"      </Layout>
+        </SidebarProvider></> ) : (   <>
+  {user ? (
         <SidebarProvider>
         <Layout slug={""} filter={undefined}>
           <Dashboard></Dashboard>
@@ -29,7 +32,10 @@ export default function Home() {
         </SidebarProvider>
       ) : (
         <LoginButton></LoginButton>
-      )}
+      )} 
+</>)}
+
+    
     </>
   );
 }

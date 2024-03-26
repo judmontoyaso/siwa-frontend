@@ -33,7 +33,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
     const [configFile, setconfigFile] = useState({} as any);
-    const [selectedColumnRemove, setSelectedColumnRemove] = useState('');
+    // const [selectedColumnRemove, setSelectedColumnRemove] = useState('');
     const [columnOptions, setColumnOptions] = useState([]);
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
     const [valueOptions, setValueOptions] = useState<any[]>([]);
@@ -45,6 +45,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         "feces",
         "ileum",
     ]);
+    const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
     let colorIndex = 0;
 
     const colors = [
@@ -88,7 +89,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         '#dbdb8d', // amarillo pastel
         '#9edae5'  // turquesa claro
     ];
-    
+
 
     const { accessToken } = useAuth();
     const fetchConfigFile = async (token: any) => {
@@ -263,414 +264,432 @@ export default function Page({ params }: { params: { slug: string } }) {
             console.log(plotContainerRef.current)
             setLoaded(true)
 
-        };};
+        };
+    };
 
-        useEffect(() => {
-            updatePlotWidth(); // Establece el ancho inicial
-        }, [otus]);
+    useEffect(() => {
+        updatePlotWidth(); // Establece el ancho inicial
+    }, [otus]);
 
-        window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
-        
-        // useEffect(() => {
-        //     updatePlotWidth(); // Establece el ancho inicial
+    window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
 
-        // }, []);
-        
-        // Manejar cambio de locación
-        useEffect(() => {
-            if (otus && currentLocation) {
-                const filteredData = otus?.data?.data?.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
-                processData(filteredData, Number(selectedColumn)); // Fix: Convert selectedColumn to a number
-            } else if (otus) {
-                processData(otus?.data?.data?.data, Number(selectedColumn)); // Fix: Convert selectedColumn to a number
-            }
-        }, [currentLocation, otus]);
+    // useEffect(() => {
+    //     updatePlotWidth(); // Establece el ancho inicial
 
-        useEffect(() => {
+    // }, []);
+
+    // Manejar cambio de locación
+    useEffect(() => {
+        if (otus && currentLocation) {
+            const filteredData = otus?.data?.data?.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
+            processData(filteredData, Number(selectedColumn)); // Fix: Convert selectedColumn to a number
+        } else if (otus) {
+            processData(otus?.data?.data?.data, Number(selectedColumn)); // Fix: Convert selectedColumn to a number
+        }
+    }, [currentLocation, otus]);
+
+    useEffect(() => {
+        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+        fetchConfigFile(accessToken);
+    }, [accessToken]);
+
+    useEffect(() => {
+        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+        fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
+    }, [accessToken]);
+
+    useEffect(() => {
+        if (selectedLocations.length === 3) {
+            setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
+        } else {
+            setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
+        }
+    }, [Location]);
+
+    const handleLocationChange = (event: any) => {
+        if (event === 'all') {
+            setSelectedLocations(['cecum', 'feces', 'ileum']);
+            setSelectedColumn('samplelocation'); // Actualiza selectedColumn a 'none' para reflejar la selección por defecto
+            setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
+
+        } else {
+            setSelectedLocations([event]);
+            setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
+        }
+    };
+
+    const handleLocationChangeColorby = (event: any) => {
+        setSelectedColumn(event.target.value);
+        console.log(newScatterColors)
+        console.log(scatterColors)
+    };
+
+    // Función para aplicar los filtros seleccionados
+    const applyFilters = (event: any) => {
+        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+        fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
+        setLocation(selectedLocations);
+        console.log('filter', typeof (selectedValues), selectedValues)
+        setActualcolumn(selectedColumn);
+
+    };
+
+    useEffect(() => {
+        if (otus && selectedColumn) {
+            // Filtrar los valores únicos de la columna seleccionada
             const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-            fetchConfigFile(accessToken);
-        }, [accessToken]);
+            const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+            const uniqueValuesCheck: Set<string> = new Set(otus?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
 
-        useEffect(() => {
-            const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-            fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
-        }, [accessToken]);
+            setValueOptions([...uniqueValues].filter(value => value !== 'null'));
 
-        useEffect(() => {
-            if (selectedLocations.length === 3) {
-                setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
-            } else {
-                setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
+            // Inicializa 'selectedValues' con todos los valores únicos
+            setSelectedValues(new Set<string>(uniqueValuesCheck));
+        }
+    }, [selectedColumn]);
+
+    const handleValueChange = (value: string) => {
+        setSelectedValues(prevSelectedValues => {
+            const newSelectedValues = new Set(prevSelectedValues);
+    
+            // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
+            if (newSelectedValues.size === 1 && newSelectedValues.has(value)) {
+                return prevSelectedValues;
             }
-        }, [Location]);
-
-        const handleLocationChange = (event: any) => {
-            if (event === 'all') {
-                setSelectedLocations(['cecum', 'feces', 'ileum']);
-                setSelectedColumn('samplelocation'); // Actualiza selectedColumn a 'none' para reflejar la selección por defecto
-                setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
-
-            } else {
-                setSelectedLocations([event]);
-                setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
+    
+            // Si el valor está presente, lo eliminamos
+            if (newSelectedValues.has(value)) {
+                newSelectedValues.delete(value);
+            } else if (value !== null && value !== 'null') { // Verifica que el valor no sea null antes de añadirlo
+                // Si el valor no está presente y no es null, lo añadimos
+                newSelectedValues.add(value);
             }
-        };
+            
+            return newSelectedValues;
+        });
+    };
 
-        const handleLocationChangeColorby = (event: any) => {
-            setSelectedColumn(event.target.value);
-            console.log(newScatterColors)
-            console.log(scatterColors)
-        };
+    // Componente de checks para los valores de la columna seleccionada
+    const valueChecks = (
+        <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
+            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
+            <div className="flex w-full flex-col overflow-x-scroll items-start">
 
-        // Función para aplicar los filtros seleccionados
-        const applyFilters = (event: any) => {
-            const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-            fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
-            setLocation(selectedLocations);
-            console.log('filter', typeof (selectedValues), selectedValues)
-
-
-
-        };
-
-        useEffect(() => {
-            if (otus && selectedColumn) {
-                // Filtrar los valores únicos de la columna seleccionada
-                const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-                const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
-                const uniqueValuesCheck: Set<string> = new Set(otus?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
-
-                setValueOptions([...uniqueValues].filter(value => value !== 'null'));
-
-                // Inicializa 'selectedValues' con todos los valores únicos
-                setSelectedValues(new Set<string>(uniqueValuesCheck));
-            }
-        }, [selectedColumn]);
-
-        // Estado para manejar los valores seleccionados en los checks
-        const handleValueChange = (value: string) => {
-            setSelectedValues(prevSelectedValues => {
-                const newSelectedValues = new Set(prevSelectedValues);
-                // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
-                if (newSelectedValues.size === 1 && newSelectedValues.has(value)) {
-                    return prevSelectedValues;
-                }
-
-                // Si el valor está presente, lo eliminamos, de lo contrario, lo añadimos
-                if (newSelectedValues.has(value)) {
-                    newSelectedValues.delete(value);
-                } else {
-                    newSelectedValues.add(value);
-                }
-                return newSelectedValues;
-            });
-        };
-
-        // Componente de checks para los valores de la columna seleccionada
-        const valueChecks = (
-            <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
-                <div className="flex w-full flex-col overflow-x-scroll items-start">
-
-                    {valueOptions.map((value, index) => (
-                        <div key={index} className="flex w-full items-start overflow-x-scroll mb-2 ">
-                            <input
-                                id={`value-${index}`}
-                                type="checkbox"
-                                value={value}
-                                checked={selectedValues.has(value)}
-                                onChange={() => handleValueChange(value)}
-                                className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                            />
-                            <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
-                                {value}
-                            </label>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-
-        const filter = (
-            <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
-                <div className={`tab-content `}>
-                    <div className="flex flex-col items-left space-x-2">
-                        <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
-                        <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={currentLocation === "all" ? currentLocation : selectedLocations}
-                            onChange={(e) => handleLocationChange(e.target.value)}>
-                            <option selected value="all">All Locations</option>
-                            {availableLocations.map((location) => (
-                                <option key={location} value={location}>
-                                    {location.charAt(0).toUpperCase() + location.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-
-                </div>
-
-                <div className="mt-10">
-
-                    <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-                    <ul className="grid gap-6 md:grid-cols-2">
-                        <li>
-                            <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
-                                onChange={handleLocationChangeColorby}
-                                disabled={isColorByDisabled} />
-                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500 cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full text-center flex justify-center">Default</div>
-                                </div>
-
-                            </label>
-                        </li>
-                        <li>
-                            <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
-                                onChange={handleLocationChangeColorby}
-                                disabled={isColorByDisabled} />
-                            <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full">Treatment</div>
-                                </div>
-
-                            </label>
-                        </li>
-                        <li>
-                            <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
-                                onChange={handleLocationChangeColorby} />
-                            <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full">Age</div>
-                                </div>
-
-                            </label>
-                        </li>
-                        {colorByOptions.map((option, index) => (
-                            <li key={index}>
-                                <input
-                                    type="radio"
-                                    id={option}
-                                    name={option}
-                                    className="hidden peer"
-                                    value={option}
-                                    checked={isColorByDisabled ? false : selectedColumn === option}
-                                    onChange={handleLocationChangeColorby}
-                                    disabled={isColorByDisabled}
-                                />
-                                <label
-                                    htmlFor={option}
-                                    className={`flex items-center justify-center ${isColorByDisabled
-                                        ? 'cursor-not-allowed'
-                                        : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                        } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                                >
-                                    <div className="block">
-                                        <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-                                    </div>
-                                </label>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-
-                {selectedColumn === "samplelocation" ? "" :
-                    (valueChecks)}
-                <div className="flex w-full items-center margin-0 justify-center my-8">
-                    <button
-                        onClick={applyFilters}
-                        className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-10 rounded-xl"
-                    >
-                        Apply
-                    </button>
-                </div>
-            </div>
-        );
-
-        type ShannonData = {
-            name: string;
-            // Add other properties as needed
-        };
-
-        type ScatterColors = {
-            [key: string]: string;
-            // Add other properties as needed
-        };
-
-        // Componente de leyenda modificado para usar scatterColors para asignar colores consistentemente
-        const CustomLegend = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
-            <div style={{ marginLeft: '0px' }}>
-                {shannonData
-                    .filter(entry => entry.name !== "null") // Filtra las entradas donde name no es null
-                    .map((entry, index) => ({
-                        ...entry,
-                        color: scatterColors[entry.name],
-                    }))
-                    .map((entry, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                            <div className="rounded-full" style={{ width: '10px', height: '10px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
-                            <div className="text-sm text-gray-500">{entry.name.charAt(0).toUpperCase() + entry.name.slice(1)}</div>
-                        </div>
-                    ))}
-            </div>
-        );
-
-        const [annotations, setAnnotations] = useState([]);
-
-        const maxYValueForLocation = (locationValue: string, data: any) => {
-            // Asegurarse de que 'data' y 'data.columns' existan
-            if (!data || !data.columns) {
-                return 0;
-            }
-
-            // Encontrar el índice para la columna especificada por 'selectedColumn' y para 'alphashannon'
-            const locationColumnIndex = data.columns.indexOf(selectedColumn);
-            const alphashannonIndex = data.columns.indexOf('alphashannon');
-
-            // Asegurarse de que los índices sean válidos
-            if (locationColumnIndex === -1 || alphashannonIndex === -1) {
-                return 0;
-            }
-
-            // Filtrar los datos para los que el valor de la columna 'selectedColumn' coincida con 'locationValue'
-            const filteredData = data.data.filter((item: any[]) => item[locationColumnIndex] === locationValue && item[locationColumnIndex] !== "null");
-
-            // Extraer los valores de 'alphashannon' para los datos filtrados
-            const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
-
-            // Encontrar y devolver el valor máximo de 'alphashannon'
-            return Math.max(...values.filter((value: any) => typeof value === 'number'));
-        };
-
-
-        useEffect(() => {
-
-            const significanceEntries = Object.entries(otus?.significance || {});
-
-            const annotations = significanceEntries.map(([locationValue, significance]) => {
-                // Calcula la posición 'x' para la ubicación actual basándose en 'selectedLocations'
-                const xPosition = selectedLocations.indexOf(locationValue);
-
-                return {
-                    x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
-                    y: maxYValueForLocation(locationValue, otus?.data) + 0.5,
-                    text: significance, // Convertir 'significance' a cadena
-                    xref: 'x',
-                    yref: 'y',
-                    showarrow: true,
-                    arrowhead: 7,
-                    ax: 0,
-                    ay: -40,
-                };
-            });
-
-            setAnnotations(annotations as never[]);
-        }, [otus]);
-
-        const calculateMaxAlphaShannon = () => {
-            if (!otus?.data) return 0;
-
-            const alphashannonIndex = otus?.data?.columns.indexOf('alphashannon');
-            if (alphashannonIndex === -1) {
-                console.error('Column "alphashannon" not found in the data columns.');
-                return 0;
-            }
-
-            const alphashannonValues = otus?.data?.data?.map((entry: { [x: string]: any; }) => entry[alphashannonIndex]);
-            const filteredValues = alphashannonValues.filter((value: number) => typeof value === 'number' && !isNaN(value));
-
-            if (filteredValues.length === 0) {
-                console.error('No valid values found for column "alphashannon".');
-                return 0;
-            }
-
-            const maxAlphaShannon = Math.max(...filteredValues);
-            Math.round(maxAlphaShannon)
-            return maxAlphaShannon;
-        };
-
-        // Calcula el máximo de 'alphashannon'
-        const maxYValueForLocationShannon = calculateMaxAlphaShannon();
-        // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
-        const yAxisRange = [0, maxYValueForLocationShannon + 2];
-
-        console.log('Max alpha shannon:', yAxisRange);
-
-        const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
-
-            <div className="flex flex-row w-full items-center">
-                <div className="w-10/12 " ref={plotContainerRef}>
-                    {loaded && (
-
-                        <Plot
-                            data={Object.values(shannonData.filter(entry => entry.name !== "null")).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] } }))}
-                            layout={{
-                                width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-                                height: 600,
-                                title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumnRemove === "" || selectedColumnRemove === "samplelocation" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
-                                showlegend: false,
-                                annotations: annotations,
-                                yaxis: { range: yAxisRange }
-                            }}
+                {valueOptions.filter(value => value !== null).map((value, index) => (
+                    <div key={index} className="flex w-full items-start overflow-x-scroll mb-2 ">
+                        <input
+                            id={`value-${index}`}
+                            type="checkbox"
+                            value={value}
+                            checked={selectedValues.has(value)}
+                            onChange={() => handleValueChange(value)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
-                    )}
+                        <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
+                            {value}
+                        </label>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
+    const filter = (
+        <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
+            <div className={`tab-content `}>
+                <div className="flex flex-col items-left space-x-2">
+                    <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
+                    <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        value={currentLocation === "all" ? currentLocation : selectedLocations}
+                        onChange={(e) => handleLocationChange(e.target.value)}>
+                        <option selected value="all">All Locations</option>
+                        {availableLocations.map((location) => (
+                            <option key={location} value={location}>
+                                {location.charAt(0).toUpperCase() + location.slice(1)}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <div className="w-2/12 flex flex-col overflow-x-scroll max-h-full items-start">
-                    <h2 className="mb-3 text-base text-gray-700 ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
-                    <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
-                </div>
+
+
             </div>
 
-        );
+            <div className="mt-10">
 
-        return (
-            <div>
-                <SidebarProvider>
-                    <Layout slug={params.slug} filter={""} >
+                <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+                <ul className="flex flex-wrap justify-between">
+                    <li className="w-28 mb-5">
+                        <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
+                            onChange={handleLocationChangeColorby}
+                            disabled={isColorByDisabled} />
+                        <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500 cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <div className="block">
+                                <div className="w-full text-center flex justify-center">Default</div>
+                            </div>
 
-                        {isLoaded ? (
-                            <div className="flex flex-col w-full">
+                        </label>
+                    </li>
+                    <li className="w-28 mb-5">
+                        <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
+                            onChange={handleLocationChangeColorby}
+                            disabled={isColorByDisabled} />
+                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <div className="block">
+                                <div className="w-full">Treatment</div>
+                            </div>
 
-                                <div className="flex flex-row w-full text-center justify-center items-center">
-                                    <h1 className="text-3xl my-5 mx-2">Alpha diversity</h1>
-                                    <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
-                                    <Tooltip
-                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                                        anchorSelect="#interpreteTip">
-                                        <div className={`prose single-column w-96 z-50`}>
-                                            {configFile?.alphadiversity?.interpretation ? (
-                                                Object.entries(configFile?.alphadiversity?.interpretation)
-                                                    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-                                                    .map(([key, value]) => (
-                                                        <p key={key} className="text-gray-700 text-justify text-xl m-3">
-                                                            {value as ReactNode}
-                                                        </p>
-                                                    ))
-                                            ) : (""
-                                            )}
-                                        </div>
-                                    </Tooltip>
-                                </div>    <div className="px-6 py-8">
-                                    <div className={`prose ${Object.keys(configFile?.alphadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
-                                        {Object.entries(configFile?.alphadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
-                                            <p key={key} className="text-gray-700 text-justify text-xl">
-                                                {value as React.ReactNode}
-                                            </p>
-                                        ))}
-                                    </div>
+                        </label>
+                    </li>
+                    <li className="w-28 mb-5">
+                        <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
+                            onChange={handleLocationChangeColorby} />
+                        <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <div className="block">
+                                <div className="w-full">Age</div>
+                            </div>
+
+                        </label>
+                    </li>
+                    {colorByOptions.map((option, index) => (
+                        <li key={index} className="w-28 mb-5">
+                            <input
+                                type="radio"
+                                id={option}
+                                name={option}
+                                className="hidden peer"
+                                value={option}
+                                checked={isColorByDisabled ? false : selectedColumn === option}
+                                onChange={handleLocationChangeColorby}
+                                disabled={isColorByDisabled}
+                            />
+                            <label
+                                htmlFor={option}
+                                className={`flex items-center justify-center ${isColorByDisabled
+                                    ? 'cursor-not-allowed'
+                                    : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
+                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                            >
+                                <div className="block">
+                                    <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
                                 </div>
-                                <div className="flex">
-                                    <GraphicCard filter={filter}>
-                                        {shannonData.length > 0 ? (
-                                            <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
-                                        ) : (
-                                            <SkeletonCard width={"500px"} height={"270px"} />
+                            </label>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+
+            {selectedColumn === "samplelocation" ? "" :
+                (valueChecks)}
+            <div className="flex w-full items-center margin-0 justify-center my-8">
+                <button
+                    onClick={applyFilters}
+                    className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-10 rounded-xl"
+                >
+                    Apply
+                </button>
+            </div>
+        </div>
+    );
+
+    const title = (
+        <div>
+            Alpha Shannon{Location.length === 3  ? " by Sample Location" :  " in " + Location[0] + (actualcolumn !== "samplelocation" ? (" by " + actualcolumn ) : "")}
+        </div>
+
+    )
+    type ShannonData = {
+        name: string;
+        // Add other properties as needed
+    };
+
+    type ScatterColors = {
+        [key: string]: string;
+        // Add other properties as needed
+    };
+
+    // Componente de leyenda modificado para usar scatterColors para asignar colores consistentemente
+    const CustomLegend = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
+        <div className="flex w-full flex-wrap items-start" style={{ marginLeft: '5px' }}>
+            {shannonData
+                .filter(entry => entry.name !== "null") // Filtra las entradas donde name no es null
+                .map((entry, index) => ({
+                    ...entry,
+                    color: scatterColors[entry.name],
+                }))
+                .map((entry, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginLeft:'10px'}}>
+                        <div className="rounded-full" style={{ width: '10px', height: '10px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
+                        <div className="text-sm text-gray-500">{entry.name.charAt(0).toUpperCase() + entry.name.slice(1)}</div>
+                    </div>
+                ))}
+        </div>
+    );
+
+    const [annotations, setAnnotations] = useState([]);
+
+    const maxYValueForLocation = (locationValue: string, data: any) => {
+        // Asegurarse de que 'data' y 'data.columns' existan
+        if (!data || !data.columns) {
+            return 0;
+        }
+
+        // Encontrar el índice para la columna especificada por 'selectedColumn' y para 'alphashannon'
+        const locationColumnIndex = data.columns.indexOf(selectedColumn);
+        const alphashannonIndex = data.columns.indexOf('alphashannon');
+
+        // Asegurarse de que los índices sean válidos
+        if (locationColumnIndex === -1 || alphashannonIndex === -1) {
+            return 0;
+        }
+
+        // Filtrar los datos para los que el valor de la columna 'selectedColumn' coincida con 'locationValue'
+        const filteredData = data.data.filter((item: any[]) => item[locationColumnIndex] === locationValue && item[locationColumnIndex] !== "null");
+
+        // Extraer los valores de 'alphashannon' para los datos filtrados
+        const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
+
+        // Encontrar y devolver el valor máximo de 'alphashannon'
+        return Math.max(...values.filter((value: any) => typeof value === 'number'));
+    };
+
+
+    useEffect(() => {
+
+        const significanceEntries = Object.entries(otus?.significance || {});
+
+        const annotations = significanceEntries.map(([locationValue, significance]) => {
+            // Calcula la posición 'x' para la ubicación actual basándose en 'selectedLocations'
+            const xPosition = selectedLocations.indexOf(locationValue);
+
+            return {
+                x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
+                y: maxYValueForLocation(locationValue, otus?.data) + 0.5,
+                text: significance, // Convertir 'significance' a cadena
+                xref: 'x',
+                yref: 'y',
+                showarrow: true,
+                arrowhead: 7,
+                ax: 0,
+                ay: -40,
+            };
+        });
+
+        setAnnotations(annotations as never[]);
+    }, [otus]);
+
+    const calculateMaxAlphaShannon = () => {
+        if (!otus?.data) return 0;
+
+        const alphashannonIndex = otus?.data?.columns.indexOf('alphashannon');
+        if (alphashannonIndex === -1) {
+            console.error('Column "alphashannon" not found in the data columns.');
+            return 0;
+        }
+
+        const alphashannonValues = otus?.data?.data?.map((entry: { [x: string]: any; }) => entry[alphashannonIndex]);
+        const filteredValues = alphashannonValues.filter((value: number) => typeof value === 'number' && !isNaN(value));
+
+        if (filteredValues.length === 0) {
+            console.error('No valid values found for column "alphashannon".');
+            return 0;
+        }
+
+        const maxAlphaShannon = Math.max(...filteredValues);
+        Math.round(maxAlphaShannon)
+        return maxAlphaShannon;
+    };
+
+    // Calcula el máximo de 'alphashannon'
+    const maxYValueForLocationShannon = calculateMaxAlphaShannon();
+    // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
+    const yAxisRange = [0, maxYValueForLocationShannon + 2];
+
+    console.log('Max alpha shannon:', yAxisRange);
+
+    const legend = (<div className="w-full flex flex-row overflow-x-scroll max-h-full  justify-center mt-5 items-center">
+      <div className="">
+      <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualcolumn === "samplelocation" ? "Sample location" : actualcolumn}</h2>
+        </div>  
+     <div className=" flex flex-col w-auto">
+     <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
+        </div>   
+    </div>)
+
+    const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
+
+        <div className="flex flex-row w-full items-center">
+            <div className="w-full" ref={plotContainerRef}>
+                {loaded && (
+
+                    <Plot
+                        data={Object.values(shannonData.filter(entry => entry.name !== "null")).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] } }))}
+                        layout={{
+                            width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
+                            height: 600,
+                            // title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumnRemove === "" || selectedColumnRemove === "samplelocation" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
+                            showlegend: false,
+                            annotations: annotations,
+                            yaxis: { range: yAxisRange },
+                            margin: { l: 20, r: 10, t: 0, b: 20 } 
+                        }}
+                    />
+                )}
+            </div>
+
+        </div>
+
+    );
+
+    return (
+        <div>
+            <SidebarProvider>
+                <Layout slug={params.slug} filter={""} >
+
+                    {isLoaded ? (
+                        <div className="flex flex-col w-full">
+
+                            <div className="flex flex-row w-full text-center justify-center items-center">
+                                <h1 className="text-3xl my-5 mx-2">Alpha diversity</h1>
+                                <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
+                                <Tooltip
+                                    style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+                                    anchorSelect="#interpreteTip">
+                                    <div className={`prose single-column w-96 z-50`}>
+                                        {configFile?.alphadiversity?.interpretation ? (
+                                            Object.entries(configFile?.alphadiversity?.interpretation)
+                                                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                                                .map(([key, value]) => (
+                                                    <p key={key} className="text-gray-700 text-justify text-xl m-3">
+                                                        {value as ReactNode}
+                                                    </p>
+                                                ))
+                                        ) : (""
                                         )}
-                                    </GraphicCard>
+                                    </div>
+                                </Tooltip>
+                            </div>    <div className="px-6 py-8">
+                                <div className={`prose ${Object.keys(configFile?.alphadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
+                                    {Object.entries(configFile?.alphadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
+                                        <p key={key} className="text-gray-700 text-justify text-xl">
+                                            {value as React.ReactNode}
+                                        </p>
+                                    ))}
                                 </div>
-                                <div className="px-6 py-8" >
+                            </div>
+                            
+                            <div className="flex">
+                                <GraphicCard filter={filter} legend={legend} title={title}>
+                                    {shannonData.length > 0 ? (
+                                        <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
+                                    ) : (
+                                        <SkeletonCard width={"500px"} height={"270px"} />
+                                    )}
+                                </GraphicCard>
+                            </div>
+                            <div className="w-full flex flex-row ">
+                                <div className="w-1/5"></div>
+                                <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
                                             if (key === "samplelocation" && selectedLocations.length > 1 && typeof value === 'object' && value !== null) {
@@ -719,12 +738,16 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 </div>
                             </div>
 
-                        ) : (
-                            <div>Loading...</div>
-                        )}
-                        <ToastContainer />
-                    </Layout>
-                </SidebarProvider>
-            </div>
-        );
-    }
+                        </div>
+
+                    ) : (
+                        <div>Loading...</div>
+                    )}
+                    <ToastContainer />
+                </Layout>
+            </SidebarProvider>
+        </div>
+    );
+}
+
+

@@ -25,6 +25,7 @@ import { Steps } from "primereact/steps";
 import { TriStateCheckbox } from 'primereact/tristatecheckbox';
 import { Checkbox } from "primereact/checkbox";
 import { RadioButton } from "primereact/radiobutton";
+import { ProgressSpinner } from "primereact/progressspinner";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -117,17 +118,20 @@ export default function Page({ params }: { params: { slug: string } }) {
             label: 'Select Group'
         },
         {
-            label: 'Generate dataset'
+            label: 'Generate dataset',
+            className: isDatasetReady ? 'last-step-green' : '' // Aplica la clase 'last-step-green' cuando isDatasetReady es true
         },
-        {
-            label: 'Data Ready',
-            className: 'last-step-green'
-        }
     ];
 
     const { accessToken } = useAuth();
 
     const toast = useRef<any>(null);
+
+      // Función que simula el proceso de generación del dataset y activa el botón "Ver gráfico"
+      const simulateDatasetGeneration = () => {
+        // Simula la generación del dataset
+        setIsDatasetReady(true);
+    };
 
     const accept = () => {
         if (toast.current) {
@@ -141,20 +145,38 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
-    const confirm1 = (event: { currentTarget: any; }) => {
-        // Preparar el mensaje con las selecciones realizadas
-        const message = (
-            <div>
-                <p>You have selected the following options:</p>
-                <ul>
-                    <li><strong>Location:</strong> {selectedLocations.join(', ')}</li>
-                    <li><strong>Group:</strong> {selectedColorBy}</li>
-                    <li><strong>Subgroups:</strong> {[...selectedValues].join(', ')}</li>
-                </ul>
-                <p>Do you want to create the dataset with the selected parameters?</p>
-            </div>
+    const confirm1 = async (event: { currentTarget: any; }) => {
+        const response = await fetchData(accessToken);
+        const { records } = response; // Extrae 'records' de la respuesta
 
-        );
+        // Construir una lista de registros y sus conteos
+        const recordsList = Object.entries(records).map(([key, value]) => {
+            return `${key}: ${Object.entries(value as string).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')}`;
+        });
+        // Preparar el mensaje con las selecciones realizadas
+     // Preparar el mensaje con las selecciones realizadas y los registros
+     const message = (
+        <div className="p-6 bg-gray-100 rounded-lg shadow-sm">
+            <p className="mb-4 text-lg font-bold text-gray-800">You have selected the following options:</p>
+    
+            <div className="mb-5">
+                <p className="font-semibold text-gray-800">Samples:</p>
+                <ul className="list-none pl-0">
+                    {Object.entries(records).map(([key, value]) => (
+                        <li key={key} className="bg-white p-3 mb-2 rounded shadow">
+                            <span className="font-medium text-gray-700">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</span>
+                            {` `}
+                            <span className="font-semibold text-gray-900">{Object.entries(value as string).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+    
+            <p className="text-md text-gray-800">Do you want to create the dataset with the selected parameters?</p>
+        </div>
+    );
+    
+
 
         // Mostrar el diálogo de confirmación con el mensaje preparado
         confirmPopup({
@@ -168,9 +190,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             accept: () => {
                 // Función a ejecutar si el usuario acepta
                 toast.current.show({ severity: 'info', summary: 'Confirmed', detail: 'Your dataset will start to be generated', life: 3000 });
-                fetchData(accessToken).then((result) => { console.log(result);
-                     setLoadcsv(true);
-                    console.log(loadcsv)});
+setLoadcsv(true)
             },
             reject: () => {
                 // Función a ejecutar si el usuario cancela
@@ -217,9 +237,6 @@ export default function Page({ params }: { params: { slug: string } }) {
             const result = await response.json();
 
 setLoadcsv(false)
-setIsGeneratingDataset(false); // Desactiva la pantalla de carga
-setIsDatasetReady(true);
-setActiveIndex(2) 
         console.log(result)
             return result;
         } catch (error) {
@@ -308,9 +325,11 @@ setActiveIndex(2)
                 setAvailableLocations(uniqueLocations);
                 setDataUnique(result);
                 setColumnOptions(result.data.columns);
-                setRecords(result.records);
+                // setRecords(result.records);
                 setValueOptions(result.data.data);
             }
+
+            console.log(result);
 
             console.log(availableLocations, dataUnique, columnOptions, valueOptions)
 
@@ -417,7 +436,7 @@ setActiveIndex(2)
             setSelectedColorBy("samplelocation");
             setSelectedLocations(['cecum', 'feces', 'ileum']); // Reemplaza estos valores por tus ubicaciones iniciales predeterminadas
             setSelectedValues(new Set(['cecum', 'feces', 'ileum'])); // Ajusta según sea necesario
-            setIsDatasetReady(false); // Restablece el estado de 'isDatasetReady'
+
             setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'
             setActiveIndex(0) 
             await fetchData(accessToken);
@@ -532,18 +551,42 @@ setActiveIndex(2)
         const GenerationDataset = (
             <div className="flex flex-col items-center justify-center">
               <div className="bg-white shadow-lg rounded-lg p-6 m-4 text-center">
-                <p className="text-lg font-medium text-gray-800">
-                  You have selected <span className="font-bold">{records}</span> samples. The necessary files for the analysis are being generated, please wait.
-                </p>
-                <Button
-                  label="Cancel"
-                  icon="pi pi-times"
-                  className="p-button-rounded p-button-secondary mt-6"
-                  onClick={handleCancel}
-                />
+              {isDatasetReady ? (
+          <>
+            <i className="pi pi-check" style={{'fontSize': '3em', 'color': 'green'}}></i>
+            <p className="text-lg font-medium text-gray-800">
+              The dataset has been successfully processed. Click "View Graph" to explore the data.
+            </p>
+          </>
+        ) : (
+          <>
+            <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="8" fill="#EEEEEE" animationDuration=".5s" />
+            <p className="text-lg font-medium text-gray-800 mt-4">
+              The selected dataset has been generated and is currently being processed. Please wait...
+            </p>
+          </>
+        )}
+                <div className="flex justify-center gap-4 mt-6">
+                  <Button
+                    label="Back"
+                    icon="pi pi-arrow-left"
+                    className="p-button-rounded p-button-secondary"
+                    onClick={handleCancel} // Asumiendo que 'handleBack' es tu función para manejar el evento "Volver atrás"
+                  />
+                  <Button
+                    label="View Graph"
+                    icon="pi pi-chart-bar"
+                    className="p-button-rounded p-button-success"
+                    onClick={undefined} // Asumiendo que 'handleViewGraph' es tu función para manejar el evento "Ver gráfico"
+                    disabled={!isDatasetReady} // Deshabilitar el botón hasta que el dataset esté listo
+                  />
+                </div>
+                <button onClick={simulateDatasetGeneration}>Simulate Dataset Generation</button>
+       
               </div>
             </div>
           );
+        
 
         const datasetReady = (
             <div className="flex flex-col items-center justify-center p-4">
@@ -612,7 +655,7 @@ setActiveIndex(2)
    <Steps model={items} activeIndex={activeIndex} />
 </div>
 
-                            {isGeneratingDataset ? GenerationDataset : (   isDatasetReady ? datasetReady : (
+                            {isGeneratingDataset ? GenerationDataset : (
                             <div className="p-4 flex flex-wrap justify-between gap-4">
                                 {/* Selección de ubicaciones */}
                                 <div className="flex-grow min-w-[25%] border p-4 rounded-lg">
@@ -702,7 +745,7 @@ setActiveIndex(2)
                                 </div>
 
 
-                            </div>))}
+                            </div>)}
 
                         </Card>
                     </div>

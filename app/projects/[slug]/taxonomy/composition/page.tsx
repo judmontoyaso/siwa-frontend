@@ -169,7 +169,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             setColorByOptions(combinedOptions);
         } catch (error) {
             console.error("Error al cargar las opciones del dropdown:", error);
-            window.location.href = `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/logout`;
+            // window.location.href = `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/logout`;
         }
     };
 
@@ -262,7 +262,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     theme: "light",
                     transition: Bounce,
                 });
-                setTimeout(() => { window.location.href = "/"; }, 5000);
+                // setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
             const result = await response.json();
@@ -522,7 +522,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
     const valueChecks = (
         <div className="mb-5 mt-5">
             <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select the values to keep</h3>
-            {valueOptions.map((value, index) => (
+            {valueOptions?.map((value, index) => (
                 <div key={index} className="flex items-center mb-2">
                     <input
                         id={`value-${index}`}

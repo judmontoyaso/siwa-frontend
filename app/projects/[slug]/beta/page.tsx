@@ -196,17 +196,17 @@ console.log(colorBy)
             theme: "light",
             transition: Bounce,
           });
-          setTimeout(() => { window.location.href = "/"; }, 5000);
+          // setTimeout(() => { window.location.href = "/"; }, 5000);
           throw new Error("Respuesta no válida desde el servidor");
         }
   
         const result = await response.json();
         console.log(result);
         setDataResult(result);
-        setColumnOptions(result.data.columns);
+        setColumnOptions(result?.data?.columns);
         setDataUnique(result);
 
-        setValueOptions(result.data.data);
+        setValueOptions(result?.data?.data);
         return result; // Devolver los datos obtenidos
   
       } catch (error) {
@@ -244,7 +244,7 @@ console.log(colorBy)
           theme: "light",
           transition: Bounce,
         });
-        setTimeout(() => { window.location.href = "/"; }, 5000);
+        // setTimeout(() => { window.location.href = "/"; }, 5000);
         throw new Error("Respuesta no válida desde el servidor");
       }
 
@@ -319,7 +319,7 @@ const handleValueChange = (value: string) => {
 const valueChecks = (
     <div className="mb-5 mt-5">
         <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
-        {valueOptions.map((value, index) => (
+        {valueOptions?.map((value, index) => (
             <div key={index} className="flex items-center mb-2">
                 <input
                     id={`value-${index}`}
@@ -355,7 +355,7 @@ const valueChecks = (
       selectedLocations.includes(item[3])
     );
 
-    const groupedData = filteredData.reduce(
+    const groupedData = filteredData?.reduce(
       (
         acc: {
           [x: string]: {

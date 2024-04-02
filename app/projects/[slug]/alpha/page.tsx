@@ -187,8 +187,12 @@ export default function Page({ params }: { params: { slug: string } }) {
                     },
                     item: any[]
                 ) => {
+
+                    
                     const location = item[1];
-                    const alphaShannon = item[9];
+                    const alphaShannon = params.slug == "PFF24" ?   item[2] :  item[9];
+                    
+                   
                     const sampleId = item[0];
                     // Verifica si la locación actual debe ser incluida
                     if (selectedLocations.includes(location)) {
@@ -218,6 +222,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     name: location,
                 }))
             );
+            console.log('shannonData:', shannonData);
             setIsLoaded(true);
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
@@ -245,7 +250,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     colorIndex++;
                 }
 
-                acc[key].y.push(item[9]); // Asumiendo que el valor de interés está en el índice 9
+                acc[key].y.push(params.slug == "PFF24" ?   item[2] :  item[9]); // Asumiendo que el valor de interés está en el índice 9
                 acc[key].text.push(`Sample ID: ${item[0]}`);
             }
             return acc;

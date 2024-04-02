@@ -26,6 +26,10 @@ import { TriStateCheckbox } from 'primereact/tristatecheckbox';
 import { Checkbox } from "primereact/checkbox";
 import { RadioButton } from "primereact/radiobutton";
 import { ProgressSpinner } from "primereact/progressspinner";
+import { Column } from "primereact/column";
+import { DataTable } from "primereact/datatable";
+import React from "react";
+import Link from "next/link";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -71,6 +75,13 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [loadcsv, setLoadcsv] = useState(false);
     const [selectedColorBy, setSelectedColorBy] = useState("samplelocation");
     const [activeIndex, setActiveIndex] = useState(0);
+    const [abundanceData, setAbundanceData] = useState<any>();
+    const [showLefsePlot, setShowLefsePlot] = useState(false);
+const [message, setMessage] = useState<ReactNode | null>(null);
+const [tempfile, setTempFile] = useState<any>();
+
+
+
     const colors = [
         '#1f77b4', // azul metálico
         '#ff7f0e', // naranja de seguridad
@@ -113,15 +124,55 @@ export default function Page({ params }: { params: { slug: string } }) {
         '#9edae5'  // turquesa claro
     ];
     const tooltipTargetId = 'info-icon';
+    const customTemplatecheck = (item: any, options: { index: number; }) => (
+        <React.Fragment>
+            <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>
+                <Button 
+                    className={`p-button-rounded ${activeIndex === 2 ? 'animate-bounce' : ''} ${activeIndex >= 2 ? 'p-steps-complete p-button-success' : 'bg-gray-100 border-gray-100'}`} 
+                    icon="pi pi-arrow-right"
+                    style={{width: '2rem', height: '2rem'}}
+                    data-pr-tooltip="Explore Data" // Mensaje del tooltip
+                    data-pr-position="top" // Posición del tooltip
+                />
+            </Link>
+        </React.Fragment>
+    );
+    
+
+
+
+
+        
     const items = [
         {
-            label: 'Select Group'
+            label: 'Select Filters',
+            index: 0,
+
         },
         {
-            label: 'Generate dataset',
-            className: isDatasetReady ? 'last-step-green' : '' // Aplica la clase 'last-step-green' cuando isDatasetReady es true
+            label: 'Filtered Results',
+            index:1,
+
         },
+        {
+            label: '',
+            className: activeIndex >= 1 ? 'p-steps-complete' : '', // Agrega clase para indicar completado
+            index:2,
+            template: customTemplatecheck
+        }
     ];
+    
+    useEffect(() => {
+        // Verifica si 'tempfile' tiene algún contenido significativo
+        const datasetExists = !!tempfile;
+    
+        // Si existe un dataset, ajusta 'activeIndex' al último paso
+        if (datasetExists) {
+            setActiveIndex(2); // Asumiendo que 2 es el índice del último paso
+            setIsDatasetReady(true); // Asume que el dataset está listo si 'tempfile' existe
+        }
+    }, [tempfile]);
+    
 
     const { accessToken } = useAuth();
 
@@ -145,6 +196,11 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
+    const handleViewGraph = () => {
+     setActiveIndex(2)
+        console.log(abundanceData)
+    };
+
     const confirm1 = async (event: { currentTarget: any; }) => {
         const response = await fetchData(accessToken);
         const { records } = response; // Extrae 'records' de la respuesta
@@ -153,51 +209,88 @@ export default function Page({ params }: { params: { slug: string } }) {
         const recordsList = Object.entries(records).map(([key, value]) => {
             return `${key}: ${Object.entries(value as string).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')}`;
         });
+        const data = Object.entries(records).map(([key, value]) => {
+            return {
+                variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                samples: Object.entries(value as { [s: string]: unknown }).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')
+            };
+        });
         // Preparar el mensaje con las selecciones realizadas
      // Preparar el mensaje con las selecciones realizadas y los registros
      const message = (
-        <div className="p-6 bg-gray-100 rounded-lg shadow-sm">
-            <p className="mb-4 text-lg font-bold text-gray-800">You have selected the following options:</p>
-    
-            <div className="mb-5">
-                <p className="font-semibold text-gray-800">Samples:</p>
-                <ul className="list-none pl-0">
-                    {Object.entries(records).map(([key, value]) => (
-                        <li key={key} className="bg-white p-3 mb-2 rounded shadow">
-                            <span className="font-medium text-gray-700">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</span>
-                            {` `}
-                            <span className="font-semibold text-gray-900">{Object.entries(value as string).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')}</span>
-                        </li>
-                    ))}
-                </ul>
+
+            <div className="p-6 mb-5 mt-5 bg-gray-100 rounded-lg shadow-sm w-full">
+                <p className="text-lg mb-5 mt-5 text-gray-800">
+                    A dataset has been generated containing the following samples per variable. It will be available for one hour before it's deleted, requiring re-upload.
+                </p>
+                <div className="mb-5">
+                    <DataTable value={data}>
+                        <Column field="variable" header="Variable"></Column>
+                        <Column field="samples" header="Number of Samples"></Column>
+                    </DataTable>
+                </div>
+                <div className="text-center mb-5">
+    <i className="pi pi-info-circle text-green-500 text-xl mr-2 align-middle"></i>
+    <p className="text-lg text-gray-800 inline align-middle">
+    To explore the dataset, click on the <strong className="text-green-500 animate-pulse">green arrow</strong> step above.
+</p>
+
+</div>
+
+                <div className="flex justify-center gap-4">
+                    <Button
+                        label="Back"
+                        icon="pi pi-arrow-left"
+                        className="p-button-rounded p-button-secondary"
+                        onClick={handleCancel}
+                    />
+                </div>
             </div>
+        )
+        
     
-            <p className="text-md text-gray-800">Do you want to create the dataset with the selected parameters?</p>
-        </div>
-    );
     
+    
+    setMessage(message)
 
 
-        // Mostrar el diálogo de confirmación con el mensaje preparado
-        confirmPopup({
-            target: event.currentTarget, // Posicionar el popup cerca del botón que fue clickeado
-            message: message, // Usar el mensaje preparado
-            icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Aceptar', // Personalizar el texto del botón de aceptar
-            rejectLabel: 'Cancelar', // Personalizar el texto del botón de cancelar
-            acceptClassName: 'p-button-success', // Personalizar el estilo del botón de aceptar
-            rejectClassName: 'p-button-danger', // Personalizar el estilo del botón de cancelar
-            accept: () => {
-                // Función a ejecutar si el usuario acepta
-                toast.current.show({ severity: 'info', summary: 'Confirmed', detail: 'Your dataset will start to be generated', life: 3000 });
-setLoadcsv(true)
-            },
-            reject: () => {
-                // Función a ejecutar si el usuario cancela
-                toast.current.show({ severity: 'warn', summary: 'Canceled', detail: 'Please select the necessary parameters to generate the dataset.', life: 3000 });
-            }
-        });
+//         // Mostrar el diálogo de confirmación con el mensaje preparado
+//         confirmPopup({
+//             target: event.currentTarget , // Posicionar el popup cerca del botón que fue clickeado
+//             message: message, // Usar el mensaje preparado
+//             icon: 'pi pi-exclamation-triangle',
+//             acceptLabel: 'Accept', // Customize the text of the accept button to English
+//             rejectLabel: 'Cancel',
+//             acceptClassName: 'p-button-success', // Personalizar el estilo del botón de aceptar
+//             rejectClassName: 'p-button-danger', // Personalizar el estilo del botón de cancelar
+            
+// //             onShow: () => {
+// //                 // Aplicar estilos personalizados después de que el confirmPopup sea visible
+           
+// //                     const confirmPopupContainers = document.getElementsByClassName('p-confirm-popup');
+// //                     if (confirmPopupContainers.length > 0) {
+// //                         const container = confirmPopupContainers[0] as HTMLElement;
+// //                         container.style.zIndex = '25226';
+// //                         container.style.position = 'absolute';
+// //                         container.style.top = '20%';
+// //                         container.style.left = '25%';
+// //                         container.style.marginTop = '10px';
+// //                         container.style.right = '25%';
+// //  // El timeout asegura que el código se ejecute después de que el popup se haya mostrado completamente
+//             // }},
+//             accept: () => {
+//                 // Función a ejecutar si el usuario acepta
+//                 toast.current.show({ severity: 'info', summary: 'Confirmed', detail: 'Your dataset will start to be generated', life: 3000 });
+// setLoadcsv(true)
+//             },
+//             reject: () => {
+//                 // Función a ejecutar si el usuario cancela
+//                 toast.current.show({ severity: 'warn', summary: 'Canceled', detail: 'Please select the necessary parameters to generate the dataset.', life: 3000 });
+//             }
+//         });
     };
+
+    useEffect(() => {if(message!== null){ setLoadcsv(true)}}, [message])
 
 
     const fetchDatacsv = async (token: any | undefined) => {
@@ -235,8 +328,8 @@ setLoadcsv(true)
             //     throw new Error("Respuesta no válida desde el servidor");
             // }
             const result = await response.json();
-
-setLoadcsv(false)
+            setActiveIndex(2)
+// setLoadcsv(false)
         console.log(result)
             return result;
         } catch (error) {
@@ -245,11 +338,11 @@ setLoadcsv(false)
         }
     };
 
-    // useEffect(() => {
-    //     if (isGeneratingDataset) {
-    //         fetchDatacsv(accessToken);
-    //     }
-    // }, [isGeneratingDataset]);
+    useEffect(() => {
+
+            fetchDataAbundance(accessToken);
+        
+    }, [params.slug]);
 
     useEffect(() => {
         if (loadcsv) {
@@ -342,17 +435,18 @@ setLoadcsv(false)
         }
     };
 
-    const fetchDataAbundance = async () => {
+    const fetchDataAbundance = async (token: any | undefined) => {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/abundancedif/${params.slug}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/loadlefse/${params.slug}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
                 body: JSON.stringify({
-                    "group": "Group",
+                    "group": "treatment",
                     "taxa_rank": "Genus",
                 }),
 
@@ -360,9 +454,8 @@ setLoadcsv(false)
             );
 
             const result = await response.json();
-            setOtus(result);
-            setLoaded(true);
-            console.log(result)
+            setAbundanceData(result);
+            // setIsDatasetReady(true);
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
@@ -402,6 +495,36 @@ setLoadcsv(false)
         setSelectedLocations(updatedSelectedLocations);
 
     };
+
+
+    const checktempfile = async (token: any | undefined) => {
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/abundancedifdata/exploration/${params.slug}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+
+            }
+            );
+
+            const result = await response.json();
+
+            const temp = result?.status_code === 200 ? true : false;
+            setTempFile(temp);
+            console.log(result)
+            // setIsDatasetReady(true);
+            return result;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
+
+    useEffect(() => {checktempfile(accessToken)}, [accessToken]);
+
     // Función para manejar la confirmación de la selección
     const handleConfirmSelection = () => {
         console.log("Ubicaciones seleccionadas:", selectedLocations);
@@ -434,12 +557,14 @@ setLoadcsv(false)
         const handleCancel = async () => {
             // Restablece los estados a los valores predeterminados
             setSelectedColorBy("samplelocation");
-            setSelectedLocations(['cecum', 'feces', 'ileum']); // Reemplaza estos valores por tus ubicaciones iniciales predeterminadas
-            setSelectedValues(new Set(['cecum', 'feces', 'ileum'])); // Ajusta según sea necesario
+            setSelectedLocations(['cecum', 'feces', 'ileum']); 
+            setSelectedValues(new Set(['cecum', 'feces', 'ileum'])); 
 
             setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'
             setActiveIndex(0) 
-            await fetchData(accessToken);
+            setMessage(null)
+            await fetchData(accessToken).then(() => {setLoadcsv(false)});
+
         };
 
     // Componente de checks para los valores de la columna seleccionada
@@ -573,15 +698,15 @@ setLoadcsv(false)
                     className="p-button-rounded p-button-secondary"
                     onClick={handleCancel} // Asumiendo que 'handleBack' es tu función para manejar el evento "Volver atrás"
                   />
-                  <Button
+                  {/* <Button
                     label="View Graph"
                     icon="pi pi-chart-bar"
                     className="p-button-rounded p-button-success"
-                    onClick={undefined} // Asumiendo que 'handleViewGraph' es tu función para manejar el evento "Ver gráfico"
+                    onClick={handleViewGraph} // Asumiendo que 'handleViewGraph' es tu función para manejar el evento "Ver gráfico"
                     disabled={!isDatasetReady} // Deshabilitar el botón hasta que el dataset esté listo
-                  />
+                  /> */}
                 </div>
-                <button onClick={simulateDatasetGeneration}>Simulate Dataset Generation</button>
+                {/* <button onClick={simulateDatasetGeneration}>Simulate Dataset Generation</button> */}
        
               </div>
             </div>
@@ -621,7 +746,7 @@ setLoadcsv(false)
                     <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
                 </div>
             }>                        
-  <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 opacity-60 relative">
+     {showLefsePlot? <LefsePlot data={abundanceData}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 opacity-60 relative">
             <div className="flex items-center text-yellow-600 mb-2 w-full">
                 <AiOutlineInfoCircle size={24} />
                 <p className="text-lg font-semibold ml-2">Instructions for Dataset Generation:</p>
@@ -652,14 +777,36 @@ setLoadcsv(false)
 
                             <div className="card m-14">
    
-   <Steps model={items} activeIndex={activeIndex} />
+   <Steps model={items as any} activeIndex={activeIndex} />
 </div>
 
-                            {isGeneratingDataset ? GenerationDataset : (
+                            {tempfile ? (<>
+    <p className="text-lg mb-4">A dataset has already been loaded.</p>
+    <p className="mb-4">
+        If you need to adjust or update the dataset parameters, you can regenerate the dataset. 
+        Please note that regenerating the dataset will replace the current dataset and any analysis performed on it.
+    </p>
+    <Button
+    label="Regenerate Dataset"
+    icon="pi pi-refresh"
+    className="p-button p-button-outlined bg-blue-500 text-white hover:bg-blue-600"
+    onClick={() => {
+        // Reset the necessary states and possibly make API calls to restart the process
+        setTempFile(null);
+        setActiveIndex(0); // Return to the first step
+        setIsDatasetReady(false); // Indicate the dataset is not ready
+        // Reset other states as necessary...
+    }}
+    data-pr-tooltip="Click to regenerate the dataset with new parameters." // Tooltip message
+    data-pr-position="top" // Tooltip position
+/>
+
+</>
+ ): (loadcsv ? message : (
                             <div className="p-4 flex flex-wrap justify-between gap-4">
                                 {/* Selección de ubicaciones */}
                                 <div className="flex-grow min-w-[25%] border p-4 rounded-lg">
-                                    <h2 className="mb-4 font-semibold text-lg">Select the Sample Location:</h2>
+                                    <h2 className="mb-4 font-semibold text-lg">Sample Location:</h2>
                                     <div className="flex flex-wrap gap-4">
                                     {initialLocations.map((location) => (
   <div key={location} className="flex items-center">
@@ -678,14 +825,14 @@ setLoadcsv(false)
                                     </div>
                                 </div>
                                 <div className="flex-grow min-w-[70%] border p-4 rounded-lg">
-                                <h2 className="mb-4 font-semibold text-lg">Select the options to group samples</h2>
+                                <h2 className="mb-4 font-semibold text-lg">Options to filter samples</h2>
 
                                    <div className="flex-row flex w-full">
   
            {/* Selección de ColorBy */}
                                 <div className={`flex-grow border p-4 rounded-lg min-w-[45%] mr-1 `}>
 
-                                    <div> <h3 className="mb-4 font-semibold text-lg">Select a Variable:</h3>   
+                                    <div> <h3 className="mb-4 font-semibold text-lg">Variable:</h3>   
                                     <div className="grid grid-cols-1 gap-4">
   <div className="flex items-center">
     <RadioButton
@@ -738,19 +885,16 @@ setLoadcsv(false)
                                 <div className="w-full flex justify-center mt-6">
                                     <Toast ref={toast} />
                                     <ConfirmPopup />
-                                    <div className="w-full mt-6 flex flex-wrap gap-2 justify-center">
+                                    <div className="w-full mt-6 flex flex-wrap gap-2 justify-center button-generate-cont">
 
-                                        <Button onClick={confirm1} outlined icon="pi pi-check" type="submit" label="Generate dataset" className="p-button-rounded" />
+                                        <Button onClick={confirm1} outlined icon="pi pi-arrow-right" iconPos="right" type="submit" label="Generate dataset" className="p-button-rounded" />
                                     </div>
                                 </div>
 
 
-                            </div>)}
-
+                            </div>))}</>}
                         </Card>
                     </div>
-                    {loaded && <LefsePlot data={otus} />}
-
                 </Layout>
             </SidebarProvider>
         </div>

@@ -35,6 +35,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
     const handleFileChange = (e: any) => {
+        console.log(e.target.files[0])
         setFile(e.target.files[0]);
     };
 
@@ -101,7 +102,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const downloadConfigFile = async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/downloadconfig/${projectName}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/downloadconfigfile/${projectName}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`, // Asegúrate de incluir el token de autorización si es necesario
@@ -144,13 +145,13 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
     return (
-        <div>
+        <div className='h-full'>
             <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
-                <div className='w-full flex justify-center items-center h-3/4'>
+                <div className='w-full flex justify-center items-center h-full'>
 
-                <div className='flex flex-grow items-center justify-center align-middle content-center w-3/4'>
-<CardButton href={'/admin/loadproject/'} Icon={ RiUploadCloud2Fill} onClick={undefined} title={'Load Project'}/>
+                <div className='flex flex-grow items-center justify-center align-middle h-full content-center w-3/4'>
+<CardButton href={'/admin/loadproject/'} Icon={ RiUploadCloud2Fill} onClick={() => setIsFormVisible(true)} title={'Load Project'}/>
 
 
                 {isFormVisible && (
@@ -180,9 +181,15 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-<CardButton href={''} Icon={ FaDownload} onClick={' '} title={'Download Config File'}/>
+<CardButton href={'/admin/loadproject/'} Icon={ FaDownload} onClick={() => setIsDownloadVisible(true)} title={'Download Config File'}/>
 
 
+
+
+<div className="w-96 h-36 flex items-center justify-evenly p-6 max-w-md mx-5 bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out m-4 cursor-pointer dark:bg-gray-800 dark:border-gray-700" onClick={() => setIsFormVisible(true)}>
+            <h5 className="text-2xl font-bold tracking-tight text-gray-700 dark:text-white">Upload Config File</h5>
+            <GrDocumentConfig className="text-3xl text-gray-700" />
+        </div>
 
  
 

@@ -125,16 +125,22 @@ const [tempfile, setTempFile] = useState<any>();
     ];
     const tooltipTargetId = 'info-icon';
     const customTemplatecheck = (item: any, options: { index: number; }) => (
-        <React.Fragment>
-            <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>
+        <React.Fragment><> 
+            <div className={`flex flex-col ${activeIndex === 2 ? 'absolute -top-1' : ''}`}>
+
+                  <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>
                 <Button 
                     className={`p-button-rounded ${activeIndex === 2 ? 'animate-bounce' : ''} ${activeIndex >= 2 ? 'p-steps-complete p-button-success' : 'bg-gray-100 border-gray-100'}`} 
                     icon="pi pi-arrow-right"
-                    style={{width: '2rem', height: '2rem'}}
+                    style={{width: activeIndex === 2 ? '3rem' : '2rem', height: activeIndex === 2 ? '3rem' : '2rem'}}
                     data-pr-tooltip="Explore Data" // Mensaje del tooltip
                     data-pr-position="top" // Posición del tooltip
                 />
             </Link>
+            <span className={` ${activeIndex === 2 ? 'font-bold' : ' mt-2'}`}>Go to analysis</span>
+     </div>  
+            </>
+          
         </React.Fragment>
     );
     
@@ -155,7 +161,7 @@ const [tempfile, setTempFile] = useState<any>();
 
         },
         {
-            label: '',
+            label: 'Go to analysis',
             className: activeIndex >= 1 ? 'p-steps-complete' : '', // Agrega clase para indicar completado
             index:2,
             template: customTemplatecheck
@@ -252,42 +258,6 @@ const [tempfile, setTempFile] = useState<any>();
     
     
     setMessage(message)
-
-
-//         // Mostrar el diálogo de confirmación con el mensaje preparado
-//         confirmPopup({
-//             target: event.currentTarget , // Posicionar el popup cerca del botón que fue clickeado
-//             message: message, // Usar el mensaje preparado
-//             icon: 'pi pi-exclamation-triangle',
-//             acceptLabel: 'Accept', // Customize the text of the accept button to English
-//             rejectLabel: 'Cancel',
-//             acceptClassName: 'p-button-success', // Personalizar el estilo del botón de aceptar
-//             rejectClassName: 'p-button-danger', // Personalizar el estilo del botón de cancelar
-            
-// //             onShow: () => {
-// //                 // Aplicar estilos personalizados después de que el confirmPopup sea visible
-           
-// //                     const confirmPopupContainers = document.getElementsByClassName('p-confirm-popup');
-// //                     if (confirmPopupContainers.length > 0) {
-// //                         const container = confirmPopupContainers[0] as HTMLElement;
-// //                         container.style.zIndex = '25226';
-// //                         container.style.position = 'absolute';
-// //                         container.style.top = '20%';
-// //                         container.style.left = '25%';
-// //                         container.style.marginTop = '10px';
-// //                         container.style.right = '25%';
-// //  // El timeout asegura que el código se ejecute después de que el popup se haya mostrado completamente
-//             // }},
-//             accept: () => {
-//                 // Función a ejecutar si el usuario acepta
-//                 toast.current.show({ severity: 'info', summary: 'Confirmed', detail: 'Your dataset will start to be generated', life: 3000 });
-// setLoadcsv(true)
-//             },
-//             reject: () => {
-//                 // Función a ejecutar si el usuario cancela
-//                 toast.current.show({ severity: 'warn', summary: 'Canceled', detail: 'Please select the necessary parameters to generate the dataset.', life: 3000 });
-//             }
-//         });
     };
 
     useEffect(() => {if(message!== null){ setLoadcsv(true)}}, [message])
@@ -672,28 +642,7 @@ const [tempfile, setTempFile] = useState<any>();
 
         , [valueOptions]);
 
-   
 
-
-        const datasetReady = (
-            <div className="flex flex-col items-center justify-center p-4">
-              <p className="text-lg font-semibold text-gray-800 mb-8">El dataset está listo para ser analizado.</p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  label="Ver Gráfica"
-                  icon="pi pi-chart-line"
-                  className="p-button-success p-button-rounded"
-                  onClick={() => {/* Aquí tu lógica para mostrar la gráfica */}}
-                />
-                <Button
-                  label="Cancelar"
-                  icon="pi pi-times"
-                  className="p-button-rounded p-button-secondary"
-                  onClick={handleCancel}
-                />
-              </div>
-            </div>
-          );
      
 
     return (
@@ -724,16 +673,14 @@ const [tempfile, setTempFile] = useState<any>();
   <strong>Select Sample Locations:</strong> You can explore the microbiome by specific locations. It&apos;s advisable to examine locations separately. However, if your aim is to identify biomarkers distinguishing between locations, you may select more than one. Options include CECUM, ILEUM, FECES.
 </li>
 <li>
-  <strong>Select a Variable:</strong> From the experiment&apos;s factors, pick one that interests you for analysis. Factors with only a single level/category won&apos;t appear as options. This step is optional; if you prefer not to filter the dataset by any specific group, you can choose to keep all samples.
+  <strong>Select a Variable (Optional):</strong> From the experiment&apos;s factors, pick one that interests you for analysis. Factors with only a single level/category won&apos;t appear as options. This step is optional; if you prefer not to filter the dataset by any specific group, you can choose to keep all samples.
 </li>
 
         <li>
             <strong>Select Your Groups of Interest:</strong> If a variable has been chosen, select at least 2 and at most 3 categories for the analysis. This will form the basis of your DA comparison.
         </li>
     </ul>
-    <p className="mt-4 text-gray-700">
-  Once the parameters have been selected, you can generate the dataset that will be used in data exploration.
-</p>
+
 </> )}
 </div>
 

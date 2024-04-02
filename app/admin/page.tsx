@@ -10,6 +10,7 @@ import { RiUploadCloud2Fill } from "react-icons/ri"
 import Link from 'next/link';
 import CardButton from '../components/cardButton';
 import { SidebarProvider } from '../components/context/sidebarContext';
+import ConfettiTrigger from '../components/confettiTrigger';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [file, setFile] = useState(null);
@@ -144,17 +145,24 @@ export default function Page({ params }: { params: { slug: string } }) {
     };
 
 
+
+
     return (
         <div className='h-full'>
             <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
                 <div className='w-full flex justify-center items-center h-full'>
 
+
+
+ 
+               
                 <div className='flex flex-grow items-center justify-center align-middle h-full content-center w-3/4'>
+                <ConfettiTrigger>
 <CardButton href={'/admin/loadproject/'} Icon={ RiUploadCloud2Fill} onClick={() => setIsFormVisible(true)} title={'Load Project'}/>
-
-
-                {isFormVisible && (
+</ConfettiTrigger>
+  
+                {/* {isFormVisible && (
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
                         <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                             <div className="mt-3 text-center">
@@ -177,7 +185,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
 
 
 

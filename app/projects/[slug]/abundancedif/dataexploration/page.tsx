@@ -433,30 +433,6 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
         , [valueOptions]);
 
    
-        const GenerationDataset = (
-            <div className="flex flex-col items-center justify-center">
-              <div className="bg-white shadow-lg rounded-lg p-6 m-4 text-center">
-              {isDatasetReady ? (
-          <>
-            <i className="pi pi-check" style={{'fontSize': '3em', 'color': 'green'}}></i>
-            <p className="text-lg font-medium text-gray-800">
-              The dataset has been successfully processed. Click "View Graph" to explore the data.
-            </p>
-          </>
-        ) : (
-          <>
-            <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="8" fill="#EEEEEE" animationDuration=".5s" />
-            <p className="text-lg font-medium text-gray-800 mt-4">
-              The selected dataset has been generated and is currently being processed. Please wait...
-            </p>
-          </>
-        )}
-                
-                {/* <button onClick={simulateDatasetGeneration}>Simulate Dataset Generation</button> */}
-       
-              </div>
-            </div>
-          );
         
 
           const filter = (

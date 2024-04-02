@@ -71,7 +71,7 @@ console.log(user)
             </Link>
           </li>
         </ul>
-        {user?.nickname === "juandavidsolorzano73" ? (
+        {user?.Rol === "Admin" ? (
 
 
         <ul className="space-y-2 font-medium">

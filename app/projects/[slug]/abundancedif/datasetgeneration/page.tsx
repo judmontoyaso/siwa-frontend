@@ -221,7 +221,7 @@ const [tempfile, setTempFile] = useState<any>();
 
             <div className="p-6 mb-5 mt-5 bg-gray-100 rounded-lg shadow-sm w-full">
                 <p className="text-lg mb-5 mt-5 text-gray-800">
-                    A dataset has been generated containing the following samples per variable. It will be available for one hour before it's deleted, requiring re-upload.
+                A dataset has been generated containing the following samples per variable. It will be available for one hour before it&apos;s deleted, requiring re-upload.
                 </p>
                 <div className="mb-5">
                     <DataTable value={data}>
@@ -673,45 +673,7 @@ const [tempfile, setTempFile] = useState<any>();
         , [valueOptions]);
 
    
-        const GenerationDataset = (
-            <div className="flex flex-col items-center justify-center">
-              <div className="bg-white shadow-lg rounded-lg p-6 m-4 text-center">
-              {isDatasetReady ? (
-          <>
-            <i className="pi pi-check" style={{'fontSize': '3em', 'color': 'green'}}></i>
-            <p className="text-lg font-medium text-gray-800">
-              The dataset has been successfully processed. Click "View Graph" to explore the data.
-            </p>
-          </>
-        ) : (
-          <>
-            <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="8" fill="#EEEEEE" animationDuration=".5s" />
-            <p className="text-lg font-medium text-gray-800 mt-4">
-              The selected dataset has been generated and is currently being processed. Please wait...
-            </p>
-          </>
-        )}
-                <div className="flex justify-center gap-4 mt-6">
-                  <Button
-                    label="Back"
-                    icon="pi pi-arrow-left"
-                    className="p-button-rounded p-button-secondary"
-                    onClick={handleCancel} // Asumiendo que 'handleBack' es tu función para manejar el evento "Volver atrás"
-                  />
-                  {/* <Button
-                    label="View Graph"
-                    icon="pi pi-chart-bar"
-                    className="p-button-rounded p-button-success"
-                    onClick={handleViewGraph} // Asumiendo que 'handleViewGraph' es tu función para manejar el evento "Ver gráfico"
-                    disabled={!isDatasetReady} // Deshabilitar el botón hasta que el dataset esté listo
-                  /> */}
-                </div>
-                {/* <button onClick={simulateDatasetGeneration}>Simulate Dataset Generation</button> */}
-       
-              </div>
-            </div>
-          );
-        
+
 
         const datasetReady = (
             <div className="flex flex-col items-center justify-center p-4">

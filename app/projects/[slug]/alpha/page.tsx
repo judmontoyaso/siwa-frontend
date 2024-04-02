@@ -13,6 +13,7 @@ import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { AuthProvider, useAuth } from "@/app/components/authContext";
+import { Dropdown } from "primereact/dropdown";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -146,7 +147,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             //     throw new Error("Respuesta no válida desde el servidor");
             // }
             const result = await response.json();
-
+            console.log('result:', result);
 
             if (!otus) {
                 const locations = new Set(
@@ -374,6 +375,17 @@ export default function Page({ params }: { params: { slug: string } }) {
         });
     };
 
+    const options = availableLocations.length > 1
+    ? [{ label: 'All Locations', value: 'all' }, ...availableLocations.map(location => ({
+        label: location.charAt(0).toUpperCase() + location.slice(1),
+        value: location
+    }))]
+    : availableLocations.map(location => ({
+        label: location.charAt(0).toUpperCase() + location.slice(1),
+        value: location
+    }));
+
+
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
@@ -399,21 +411,30 @@ export default function Page({ params }: { params: { slug: string } }) {
         </div>
     );
 
+    useEffect(() => {
+        if (availableLocations.length === 1) {
+          // Si solo hay una ubicación disponible, selecciónala automáticamente
+          const uniqueLocation = availableLocations[0];
+          handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
+        }
+      }, [availableLocations]); // Dependencia del efecto
+      
+
     const filter = (
         <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
             <div className={`tab-content `}>
                 <div className="flex flex-col items-left space-x-2">
-                    <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
-                    <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        value={currentLocation === "all" ? currentLocation : selectedLocations}
-                        onChange={(e) => handleLocationChange(e.target.value)}>
-                        <option selected value="all">All Locations</option>
-                        {availableLocations.map((location) => (
-                            <option key={location} value={location}>
-                                {location.charAt(0).toUpperCase() + location.slice(1)}
-                            </option>
-                        ))}
-                    </select>
+                    <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select a sample location</h3>
+                    <Dropdown
+    value={currentLocation}
+    options={options}
+    onChange={(e) => handleLocationChange(e.value)}
+    placeholder={availableLocations.length === 1 ? availableLocations[0] : "Select a Location"}
+    disabled={availableLocations.length === 1}
+/>
+
+
+
                 </div>
 
 
@@ -423,13 +444,13 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                 <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
                 <ul className="flex flex-wrap justify-between">
-                    <li className="w-28 mb-5">
+                    <li className="w-36 mb-5">
                         <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
                             onChange={handleLocationChangeColorby}
                             disabled={isColorByDisabled} />
                         <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500 cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                             <div className="block">
-                                <div className="w-full text-center flex justify-center">Default</div>
+                                <div className="w-full text-center flex justify-center">Sample location</div>
                             </div>
 
                         </label>
@@ -445,16 +466,20 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                         </label>
                     </li>
-                    <li className="w-28 mb-5">
-                        <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
-                            onChange={handleLocationChangeColorby} />
-                        <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                            <div className="block">
-                                <div className="w-full">Age</div>
-                            </div>
+                                                            {
+                        columnOptions.includes("age" as never) && (
+                            <li className="w-28 mb-5">
+                                <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
+                                        onChange={handleLocationChangeColorby} />
+                                <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                                        <div className="block">
+                                                <div className="w-full">Age</div>
+                                        </div>
+                                </label>
+                            </li>
+                        )
+                    }
 
-                        </label>
-                    </li>
                     {colorByOptions.map((option, index) => (
                         <li key={index} className="w-28 mb-5">
                             <input
@@ -655,32 +680,27 @@ export default function Page({ params }: { params: { slug: string } }) {
                         <div className="flex flex-col w-full">
 
                             <div className="flex flex-row w-full text-center justify-center items-center">
-                                <h1 className="text-3xl my-5 mx-2">Alpha diversity</h1>
+                                <h1 className="text-3xl my-5 mx-2">{configFile?.alphadiversity?.title ?? "Alpha Diversidad"}</h1>
                                 <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
                                 <Tooltip
                                     style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
                                     anchorSelect="#interpreteTip">
                                     <div className={`prose single-column w-96 z-50`}>
                                         {configFile?.alphadiversity?.interpretation ? (
-                                            Object.entries(configFile?.alphadiversity?.interpretation)
-                                                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-                                                .map(([key, value]) => (
-                                                    <p key={key} className="text-gray-700 text-justify text-xl m-3">
-                                                        {value as ReactNode}
-                                                    </p>
-                                                ))
+                                          <p className="text-gray-700 text-justify text-xl m-3">
+                                          {configFile.alphadiversity.interpretation}
+                                      </p>
                                         ) : (""
                                         )}
                                     </div>
                                 </Tooltip>
                             </div>    <div className="px-6 py-8">
-                                <div className={`prose ${Object.keys(configFile?.alphadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
-                                    {Object.entries(configFile?.alphadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
-                                        <p key={key} className="text-gray-700 text-justify text-xl">
-                                            {value as React.ReactNode}
-                                        </p>
-                                    ))}
-                                </div>
+                            <div className={`prose ${configFile?.alphadiversity?.text ? 'single-column' : 'column-text'}`}>
+    <p className="text-gray-700 text-justify text-xl">
+        {configFile?.alphadiversity?.text}
+    </p>
+</div>
+
                             </div>
                             
                             <div className="flex">
@@ -697,45 +717,27 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                            if (key === "samplelocation" && selectedLocations.length > 1 && typeof value === 'object' && value !== null) {
-                                                const entries = Object.entries(value);
-                                                const isSingleEntry = entries.length === 1;  // Verificar si solo hay una entrada
-
-                                                return entries.map(([subKey, subValue]) => (
-                                                    <div key={subKey} className={isSingleEntry ? "col-span-2" : ""}>
-                                                        <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
-                                                    </div>
-                                                ));
-                                            } else if (typeof value === 'string') {
-                                                return (
-                                                    <div key={key} className="col-span-2">
-                                                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                    </div>
-                                                );
-                                            }
+                                        if (key === "samplelocation" && actualcolumn==="samplelocation"  && typeof value === 'string') {
+                                        
+                                            return (
+                                              <div key={key} className="col-span-2">
+                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                              </div>
+                                            );
+                                          }
                                             return null;  // No renderizar nada si no se cumplen las condiciones
                                         })}
                                     </div>
                                     <div className="prose flex flex-row flex-wrap">
                                         {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                            if (key === selectedColumn && key !== "samplelocation") {
-                                                if (typeof value === 'object' && value !== null) {
-                                                    const entries = Object.entries(value);
-                                                    const isSingleEntry = entries.length === 1; // Verificar si hay una sola entrada
+                                            if (key === actualcolumn && key !== "samplelocation") {
+                                                if (typeof value === 'string' && value !== null) {
+                                                 
 
-                                                    return entries.map(([subKey, subValue]) => (
-                                                        <div key={subKey} className={isSingleEntry ? "w-full" : "w-1/2"}>
-                                                            <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
-                                                        </div>
-                                                    ));
-                                                } else if (typeof value === 'string') {
-                                                    // Las cadenas siempre ocupan la mitad de la columna, pero puedes cambiar esto si lo deseas
-                                                    return (
-                                                        <div className="w-full" key={key}>
-                                                            <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                        </div>
-                                                    );
-                                                }
+                                                    return (  <div key={key} className="col-span-2">
+                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                  </div>);
+                                                } 
                                             }
                                             return null;
                                         })}

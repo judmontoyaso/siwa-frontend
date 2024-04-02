@@ -159,10 +159,10 @@ export default function Page({ params }: { params: { slug: string } }) {
                
                 <div className='flex flex-grow items-center justify-center align-middle h-full content-center w-3/4'>
                 <ConfettiTrigger>
-<CardButton href={'/admin/loadproject/'} Icon={ RiUploadCloud2Fill} onClick={() => setIsFormVisible(true)} title={'Load Project'}/>
+<CardButton href={''} Icon={ RiUploadCloud2Fill} onClick={undefined} title={'Load Project'}/>
 </ConfettiTrigger>
   
-                {/* {isFormVisible && (
+                {isFormVisible && (
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
                         <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                             <div className="mt-3 text-center">
@@ -185,13 +185,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                             </div>
                         </div>
                     </div>
-                )} */}
+                )}
 
 
 
 <CardButton href={'/admin/loadproject/'} Icon={ FaDownload} onClick={() => setIsDownloadVisible(true)} title={'Download Config File'}/>
-
-
 
 
 <div className="w-96 h-36 flex items-center justify-evenly p-6 max-w-md mx-5 bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out m-4 cursor-pointer dark:bg-gray-800 dark:border-gray-700" onClick={() => setIsFormVisible(true)}>

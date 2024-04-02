@@ -23,7 +23,7 @@ const Dashboard = () => {
   const [path, setPath] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [loadedProjects, setLoadedProjects] = useState({});
-  
+  const [projectErrors, setProjectErrors] = useState({});
 
   const fetchToken = async () => {
     if (!user) {
@@ -103,8 +103,12 @@ const Dashboard = () => {
       clearTimeout(tostifyTimeout);
   
       if (!response.ok) {
+        if (response.status === 500) {
+            setProjectErrors((prevErrors) => ({ ...prevErrors, [projectId]: true })); // Establecer el estado de error para este proyecto
+        }
         throw new Error(`Error al obtener datos del proyecto ${projectId}`);
-      }
+    }
+
   
       const projectData = await response.json();
       console.log(`Datos del proyecto ${projectId}:`, projectData);

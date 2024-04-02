@@ -133,8 +133,8 @@ console.log(user)
                             <Link href={`/projects/${slug}/taxonomy/composition`} className="block px-3 ">
                               Taxonomy Composition</Link>
                           </li>
-                          <li className={`py-2 ${router === `/projects/${slug}/abundancedif` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
-                            <Link href={`/projects/${slug}/abundancedif`} className="block px-3 ">
+                          <li className={`py-2 ${router === `/projects/${slug}/abundancedif/datasetgeneration` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
+                            <Link href={`/projects/${slug}/abundancedif/datasetgeneration`} className="block px-3 ">
                             Differential abundance</Link>
                           </li>
                         </ul>

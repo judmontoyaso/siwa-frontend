@@ -6,29 +6,31 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 const handler = async (req: {
     body: {
         column: { column: any; };
+        group: { group: any; };
+        taxa_rank: { taxa_rank: any; }; 
         columnValues: { columnValues: any; };
-        samplelocation: { selectedLocations: any; }; selectedLocations: any; selectedColumn: any;
+        samplelocation: { selectedLocations: any; }; selectedLocations: any; selectedColumn: any; 
     }; query: { slug: any; }; headers: { authorization: any; };
 }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { error: any; }): void; new(): any; }; }; }) => {
     const { slug } = req.query;
     const token = req.headers.authorization;
-    const selectedLocations = req.body.samplelocation;
-    const column = req.body.column;
-    const columnValues = req.body.columnValues;
-    console.log("________")
-    console.log(req.body.samplelocation, token)
+    const group = req.body.group;
+    const taxa_rank = req.body.taxa_rank;
+    const  selectedLocations  = req.body.samplelocation;
+    const column  = req.body.column;
+    const columnValues  = req.body.columnValues;
     try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/alpha-diversity/${slug}`, {
+            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/loadlefse/${slug}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: token,
+
             },
             body: JSON.stringify({
-                "samplelocation": selectedLocations,
-                "column": column,
-                "columnValues": columnValues
+                "group": group,
+                "taxa_rank": taxa_rank,
             }),
 
         }

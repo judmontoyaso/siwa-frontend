@@ -191,7 +191,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                     
                     const location = item[1];
-                    const alphaShannon = params.slug == "PFF24" ?   item[2] :  item[9];
+                    const alphaShannon = item[2];
                     
                    
                     const sampleId = item[0];
@@ -251,7 +251,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     colorIndex++;
                 }
 
-                acc[key].y.push(params.slug == "PFF24" ?   item[2] :  item[9]); // Asumiendo que el valor de interés está en el índice 9
+                acc[key].y.push(item[2]); // Asumiendo que el valor de interés está en el índice 9
                 acc[key].text.push(`Sample ID: ${item[0]}`);
             }
             return acc;
@@ -448,7 +448,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                         <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
                             onChange={handleLocationChangeColorby}
                             disabled={isColorByDisabled} />
-                        <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500 cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                        <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                             <div className="block">
                                 <div className="w-full text-center flex justify-center">Sample location</div>
                             </div>
@@ -459,7 +459,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                         <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
                             onChange={handleLocationChangeColorby}
                             disabled={isColorByDisabled} />
-                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                             <div className="block">
                                 <div className="w-full">Treatment</div>
                             </div>
@@ -471,7 +471,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                             <li className="w-28 mb-5">
                                 <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
                                         onChange={handleLocationChangeColorby} />
-                                <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                                <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                                         <div className="block">
                                                 <div className="w-full">Age</div>
                                         </div>
@@ -497,7 +497,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 className={`flex items-center justify-center ${isColorByDisabled
                                     ? 'cursor-not-allowed'
                                     : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}   dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                             >
                                 <div className="block">
                                     <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>

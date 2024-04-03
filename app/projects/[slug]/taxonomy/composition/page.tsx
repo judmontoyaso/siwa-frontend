@@ -121,6 +121,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
     const [dataUnique, setDataUnique] = useState<any>();
     const [dataResult, setDataResult] = useState<any>(null);
+    const [actualGroup, setActualGroup] = useState<any>('samplelocation');
 
     const [columnOptions, setColumnOptions] = useState([]);
 
@@ -173,6 +174,9 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
+
+
+   
     const fetchData = async (token: any) => {
 
         try {
@@ -330,7 +334,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     useEffect(() => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
 fetchConfigFile(accessToken); fetchData(accessToken);
-    }, [params.slug]);
+    }, [params.slug, accessToken]);
 
   
     interface DataItem {
@@ -393,7 +397,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
         if (selectedLocations.length === 3) {
             setSelectedGroup("samplelocation"); // Restablecer el valor de tratamiento si se selecciona 'All'
         } 
-
+setActualGroup(selectedGroup);
 
     };
 
@@ -572,10 +576,11 @@ fetchConfigFile(accessToken); fetchData(accessToken);
 
                 <div className="flex flex-col items-left space-x-2 mt-5">
 
-                    <h3 className="mb-5 mt-2 text-base font-medium text-gray-900 dark:text-white">Select a location</h3>
+                    <h3 className="mb-5 mt-2 text-base font-medium text-gray-900 dark:text-white">Select a sample location</h3>
                     <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         value={selectedLocation === "all" ? selectedLocation : selectedLocations}
                         onChange={(e) => handleLocationChange(e.target.value)}
+                        disabled={availableLocations.length === 1}
                     >
                         <option selected value="all">All Locations</option>
                         {availableLocations.map((location) => (
@@ -601,36 +606,45 @@ fetchConfigFile(accessToken); fetchData(accessToken);
                               />
                             <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                                 <div className="block">
-                                    <div className="w-full text-center flex justify-center">Default</div>
+                                    <div className="w-full text-center flex justify-center">Sample location</div>
                                 </div>
                             </label>
                         </li>
-                        {colorByOptions.map((option, index) => (
-                            <li key={index}>
-                                <input
-                                    type="radio"
-                                    id={option}
-                                    name={option}
-                                    className="hidden peer"
-                                    value={option}
-                                    checked={selectedGroup === option}
-                                    onChange={(e) => setSelectedGroup(e.target.value)}
-                                    disabled={isColorByDisabled}
-                                />
-                                <label
-                                    htmlFor={option}
-                                    className={`flex items-center justify-center 
-                                    ${isColorByDisabled
-                                        ? 'cursor-not-allowed'
-                                        : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                        }                                         w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                                >
-                                    <div className="block">
-                                        <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-                                    </div>
-                                </label>
-                            </li>
-                        ))}
+                        {colorByOptions.map((option, index) => {
+  // Solo renderizar el elemento si 'option' está presente en 'columnOptions'
+if ((columnOptions as string[]).includes(option)) {
+    return (
+      <li key={index}>
+        <input
+          type="radio"
+          id={option}
+          name={option}
+          className="hidden peer"
+          value={option}
+          checked={selectedGroup === option}
+          onChange={(e) => setSelectedGroup(e.target.value)}
+          disabled={isColorByDisabled}
+        />
+        <label
+          htmlFor={option}
+          className={`flex items-center justify-center 
+          ${isColorByDisabled
+              ? 'cursor-not-allowed'
+              : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
+          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+        >
+          <div className="block">
+            <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
+          </div>
+        </label>
+      </li>
+    );
+  } else {
+    // No retorna nada si 'option' no está en 'columnOptions'
+    return null;
+  }
+})}
+
                     </ul>
                 </div>
 
@@ -652,7 +666,14 @@ fetchConfigFile(accessToken); fetchData(accessToken);
         </div>);
 
 
-
+useEffect(() => {
+    if (availableLocations.length === 1) {
+      // Si solo hay una ubicación disponible, selecciónala automáticamente
+      const uniqueLocation = availableLocations[0];
+      handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
+    }
+  }, [availableLocations]); // Dependencia del efecto
+  
 
     return (
         <div>
@@ -662,42 +683,31 @@ fetchConfigFile(accessToken); fetchData(accessToken);
                     <div className="flex flex-col w-full">
 
                         <div className="flex flex-row w-full text-center justify-center items-center">
-                            <h1 className="text-3xl my-5 mx-2">Taxonomy diversity</h1>
+                            <h1 className="text-3xl my-5 mx-2">{configFile?.taxonomic_composition?.title ?? "Taxonomy diversity"}</h1>
                             {configFile?.taxonomy?.interpretation && (
                                 <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
                             )}
                             <Tooltip
-                                style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                                anchorSelect="#interpreteTip">
-                                <div className={`prose single-column w-96 z-50`}>
-                                    {configFile?.taxonomy?.interpretation ? (
-                                        Object.entries(configFile?.taxonomy?.interpretation)
-                                            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-                                            .map(([key, value]) => (
-                                                <p key={key} className="text-gray-700 text-justify text-xl m-3">
-                                                    {value as ReactNode}
-                                                </p>
-                                            ))
-                                    ) : (""
-                                    )}
-                                </div>
-                            </Tooltip>
-                        </div>
-                        <div className="px-6 py-8">
-                            <div className={`prose ${Object.keys(configFile?.taxonomy?.text || {}).length <= 1 ? 'single-column' : 'column-text'}`}>
-                                {configFile?.taxonomy?.text ? (
-                                    Object.entries(configFile?.taxonomy?.text)
-                                        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-                                        .map(([key, value]) => (
-                                            <p key={key} className="text-gray-700 text-justify text-xl">
-                                                {value as ReactNode}
-                                            </p>
-                                        ))
+                            style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+                            anchorSelect="#interpreteTip">
+                            <div className={`prose single-column w-96 z-50`}>
+                                {configFile?.taxonomic_composition?.interpretation ? (
+                                  <p className="text-gray-700 text-justify text-xl m-3">
+                                  {configFile.taxonomic_composition?.interpretation}
+                              </p>
                                 ) : (""
                                 )}
                             </div>
-
+                        </Tooltip>
                         </div>
+                        <div className="px-6 py-8">
+                            <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
+    <p className="text-gray-700 text-justify text-xl">
+        {configFile?.taxonomic_composition?.text}
+    </p>
+</div>
+
+                            </div>
 
                         <div className="flex">
                             <GraphicCard filter={filter} legend={undefined}>
@@ -708,48 +718,38 @@ fetchConfigFile(accessToken); fetchData(accessToken);
                                 )}
                             </GraphicCard>
                         </div>
-                        <div className="flex w-full px-6 py-8">
-                            <div className={Object.entries(configFile?.taxonomy?.graph?.samplelocation || {}).length <= 1 ? "grid grid-cols-1 gap-10" : "grid grid-cols-2 gap-10"}>
-                                {Object.entries(configFile?.taxonomy?.graph || {}).map(([key, value]: [string, unknown]) => {
-                                    if (key === "samplelocation" && Location.length > 1) {
-                                        const entries: [string, unknown][] = Object.entries(value as { [s: string]: unknown });
-                                        const isSingleParagraph = entries.length <= 1;
-                                        return entries.map(([subKey, subValue]) => (
-                                            <div key={subKey} className={isSingleParagraph ? "col-span-2" : ""}>
-                                                <p className="text-gray-700 m-3 text-justify text-xl">{subValue as ReactNode}</p>
-                                            </div>
-                                        ));
-                                    }
-                                    return null;
-                                })}
-                            </div>
-
-                            <div className={Object.entries(configFile?.taxonomy?.graph || {}).length === 1 && selectedGroup !== "samplelocation" ? "prose flex flex-row" : "prose flex flex-row flex-wrap"}>
-                                {Object.entries(configFile?.taxonomy?.graph || {}).map(([key, value]) => {
-                                    if (key === selectedGroup && key !== "samplelocation") {
-                                        // Verificamos si 'value' es una cadena y lo renderizamos directamente si es así
-                                        if (typeof value === 'string') {
+                        <div className="w-full flex flex-row ">
+                                <div className="w-1/5"></div>
+                                <div className="px-6 py-8 w-4/5" >
+                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
+                                        if (key === "samplelocation" && actualGroup==="samplelocation"  && typeof value === 'string') {
+                                        
                                             return (
-                                                <div key={key} className="w-full">
-                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                </div>
+                                              <div key={key} className="col-span-2">
+                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                              </div>
                                             );
-                                        }
-                                        // Add a null check before calling Object.entries(value)
-                                        else if (typeof value === 'object' && value !== null) {
-                                            return Object.entries(value).map(([subKey, subValue]) => (
-                                                <div key={subKey} className="w-full">
-                                                    <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
-                                                </div>
-                                            ));
-                                        }
-                                    }
-                                    return null;
-                                })}
+                                          }
+                                            return null;  // No renderizar nada si no se cumplen las condiciones
+                                        })}
+                                    </div>
+                                    <div className="prose flex flex-row flex-wrap">
+                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
+                                            if (key === actualGroup && key !== "samplelocation") {
+                                                if (typeof value === 'string' && value !== null) {
+                                                 
+
+                                                    return (  <div key={key} className="col-span-2">
+                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                  </div>);
+                                                } 
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+                                </div>
                             </div>
-
-
-                        </div>
                     </div>
                 ) : (
                     <div>Loading...</div>

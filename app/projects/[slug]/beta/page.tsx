@@ -44,6 +44,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [isColorByDisabled, setIsColorByDisabled] = useState(true);
   const [colorBy, setColorBy] = useState<string>('samplelocation');
+  const [selectedColorBy, setSelectedColorBy] = useState<string>('samplelocation');
   const [colorByOptions, setColorByOptions] = useState([]);
   const [tittleVariable, SetTittleVariable] = useState<string>('location');
   const [isTabFilterOpen, setIsTabFilterOpen] = useState(false);
@@ -197,16 +198,16 @@ console.log(colorBy)
             transition: Bounce,
           });
           // setTimeout(() => { window.location.href = "/"; }, 5000);
-          throw new Error("Respuesta no válida desde el servidor");
+          // throw new Error("Respuesta no válida desde el servidor");
         }
   
         const result = await response.json();
         console.log(result);
         setDataResult(result);
-        setColumnOptions(result?.data?.columns);
+        setColumnOptions(result.data.columns);
         setDataUnique(result);
 
-        setValueOptions(result?.data?.data);
+        setValueOptions(result.data.data);
         return result; // Devolver los datos obtenidos
   
       } catch (error) {
@@ -245,7 +246,7 @@ console.log(colorBy)
           transition: Bounce,
         });
         // setTimeout(() => { window.location.href = "/"; }, 5000);
-        throw new Error("Respuesta no válida desde el servidor");
+        // throw new Error("Respuesta no válida desde el servidor");
       }
 
       const result = await response.json();
@@ -273,6 +274,7 @@ console.log(colorBy)
     
     isColorByDisabled || colorBy === "samplelocation" ? SetTittleVariable('location') : SetTittleVariable(colorBy.replace('_', ' '));
     setLocation(selectedLocations);
+    setSelectedColorBy(colorBy);
 
   };
 
@@ -319,7 +321,7 @@ const handleValueChange = (value: string) => {
 const valueChecks = (
     <div className="mb-5 mt-5">
         <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
-        {valueOptions?.map((value, index) => (
+        {valueOptions.map((value, index) => (
             <div key={index} className="flex items-center mb-2">
                 <input
                     id={`value-${index}`}
@@ -355,7 +357,7 @@ const valueChecks = (
       selectedLocations.includes(item[3])
     );
 
-    const groupedData = filteredData?.reduce(
+    const groupedData = filteredData.reduce(
       (
         acc: {
           [x: string]: {
@@ -550,6 +552,14 @@ const valueChecks = (
   };
 
 
+  useEffect(() => {
+    if (availableLocations.length === 1) {
+      // Si solo hay una ubicación disponible, selecciónala automáticamente
+      const uniqueLocation = availableLocations[0];
+      handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
+    }
+  }, [availableLocations]); // Dependencia del efecto
+  
 
 
   useEffect(() => {
@@ -570,6 +580,7 @@ const valueChecks = (
           <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={selectedLocation === "all" ? selectedLocation : selectedLocations}
             onChange={(e) => handleLocationChange(e.target.value)}
+            disabled={availableLocations.length === 1}
           >
             <option selected value="all">All Locations</option>
             {availableLocations.map((location) => (
@@ -586,9 +597,9 @@ const valueChecks = (
               <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
-              <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700  dark:peer-checked:text-white peer-checked:border-siwa-blue peer-checked:text-white  ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
-                  <div className="w-full text-center flex justify-center">Default</div>
+                  <div className="w-full text-center flex justify-center">Sample location</div>
                 </div>
               </label>
             </li>
@@ -596,21 +607,22 @@ const valueChecks = (
               <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'treatment'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
-              <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-white peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
                   <div className="w-full">Treatment</div>
                 </div>
               </label>
             </li>
+           { columnOptions.includes("age" as never) && (
             <li>
               <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'age'}
                 onChange={handleLocationChangeColorby} />
-              <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
                   <div className="w-full">Age</div>
                 </div>
               </label>
-            </li>
+            </li>)}
             {colorByOptions.map((option, index) => (
               <li key={index}>
                 <input
@@ -628,7 +640,7 @@ const valueChecks = (
                   className={`flex items-center justify-center ${isColorByDisabled
                     ? 'cursor-not-allowed'
                     : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                 >
                   <div className="block">
                     <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
@@ -744,32 +756,29 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
 <div className="flex flex-col w-full">
 <div className="flex flex-row w-full text-center justify-center items-center">
 <h1 className="text-3xl my-5 mx-2">Beta diversity</h1>
-         <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip"/> 
+<AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip"/> 
          <Tooltip 
            style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px",textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)"}}
          anchorSelect="#interpreteTip">
         <div className={`prose single-column w-96 z-50`}>
     {configFile?.betadiversity?.interpretation ? (
-        Object.entries(configFile?.betadiversity?.interpretation)
-            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-            .map(([key, value]) => (
-                <p key={key} className="text-gray-700 text-justify text-xl m-3">
-                    {value as ReactNode}
-                </p>
-            ))
+             <p className="text-gray-700 text-justify text-xl m-3">
+             {configFile?.betadiversity?.interpretation}
+         </p>
+            
     ) : (""
     )}
 </div>
 </Tooltip> 
         </div>
       <div className="px-6 py-8">
-    <div className={`prose ${Object.keys(configFile?.betadiversity?.text || {}).length === 1 ? 'single-column' : 'column-text'}`}>
-    {Object.entries(configFile?.betadiversity?.text || {}).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([key, value]) => (
-      <p key={key} className="text-gray-700 text-justify text-xl">
-        {value as React.ReactNode}
-      </p>
-    ))}
-  </div>
+
+      <div className={`prose ${configFile?.betadiversity?.text ? 'single-column' : 'column-text'}`}>
+    <p className="text-gray-700 text-justify text-xl">
+        {configFile?.betadiversity?.text}
+    </p>
+</div>
+
 
     </div>
   <div className="flex">
@@ -781,53 +790,38 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
       )}
     </GraphicCard>
   </div>
-  <div className="px-6 py-8">
-  <div>
-  {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
-    if (key === "samplelocation" && Location.length > 1 && typeof value === 'object' && value !== null) {
-      const entries = Object.entries(value);
-      const isSingleParagraph = entries.length === 1;
+  <div className="w-full flex flex-row ">
+                                <div className="w-1/5"></div>
+                                <div className="px-6 py-8 w-4/5" >
+                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                        {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
+                                        if (key === "samplelocation" && selectedColorBy==="samplelocation"  && typeof value === 'string') {
+                                        
+                                            return (
+                                              <div key={key} className="col-span-2">
+                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                              </div>
+                                            );
+                                          }
+                                            return null;  // No renderizar nada si no se cumplen las condiciones
+                                        })}
+                                    </div>
+                                    <div className="prose flex flex-row flex-wrap">
+                                        {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
+                                            if (key === selectedColorBy && key !== "samplelocation") {
+                                                if (typeof value === 'string' && value !== null) {
+                                                 
 
-      return (
-        <div key={key} className={`grid gap-10 ${isSingleParagraph ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          {entries.map(([subKey, subValue]) => (
-            <div key={subKey}>
-              <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  })}
-</div>
-
-
-  <div className={Object.entries(configFile?.taxonomy?.graph || {}).length === 1 && colorBy !== "samplelocation" && Location.length !== 3 ? "prose flex flex-row" : "prose flex flex-row flex-wrap"}>
-    {Object.entries(configFile?.taxonomy?.graph || {}).map(([key, value]) => {
-        if (key === colorBy && key !== "samplelocation" && Location.length !== 3 && typeof value === 'object' && value !== null) {
-            // Verificamos si 'value' es una cadena y lo renderizamos directamente si es así
-            if (typeof value === 'string') {
-                return (
-                    <div key={key} className="w-full">
-                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                    </div>
-                );
-            }
-            // Add a null check before calling Object.entries(value)
-            else if (typeof value === 'object' && value !== null) {
-                return Object.entries(value).map(([subKey, subValue]) => (
-                    <div key={subKey} className="w-full">
-                        <p className="text-gray-700 m-3 text-justify text-xl">{subValue}</p>
-                    </div>
-                ));
-            }
-        }
-        return null;
-    })}
-</div>
-
-</div>
+                                                    return (  <div key={key} className="col-span-2">
+                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                  </div>);
+                                                } 
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
 
 </div>
 

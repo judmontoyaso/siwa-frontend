@@ -673,7 +673,7 @@ const [tempfile, setTempFile] = useState<any>();
   <strong>Select Sample Locations:</strong> You can explore the microbiome by specific locations. It&apos;s advisable to examine locations separately. However, if your aim is to identify biomarkers distinguishing between locations, you may select more than one. Options include CECUM, ILEUM, FECES.
 </li>
 <li>
-  <strong>Select a Variable (Optional):</strong> From the experiment&apos;s factors, pick one that interests you for analysis. Factors with only a single level/category won&apos;t appear as options. This step is optional; if you prefer not to filter the dataset by any specific group, you can choose to keep all samples.
+  <strong>Select a Variable (Optional):</strong> Only select the variable you wish to filter in/out groups from. 
 </li>
 
         <li>
@@ -689,26 +689,10 @@ const [tempfile, setTempFile] = useState<any>();
    <Steps model={items as any} activeIndex={activeIndex} />
 </div>
 
-                            {tempfile ? (<>
-    <p className="text-lg mb-4">A dataset has already been loaded.</p>
-    <p className="mb-4">
-        If you need to adjust or update the dataset parameters, you can regenerate the dataset. 
-        Please note that regenerating the dataset will replace the current dataset and any analysis performed on it.
-    </p>
-    <Button
-    label="Regenerate Dataset"
-    icon="pi pi-refresh"
-    className="p-button p-button-outlined bg-blue-500 text-white hover:bg-blue-600"
-    onClick={() => {
-        // Reset the necessary states and possibly make API calls to restart the process
-        setTempFile(null);
-        setActiveIndex(0); // Return to the first step
-        setIsDatasetReady(false); // Indicate the dataset is not ready
-        // Reset other states as necessary...
-    }}
-    data-pr-tooltip="Click to regenerate the dataset with new parameters." // Tooltip message
-    data-pr-position="top" // Tooltip position
-/>
+                            {tempfile ? (
+
+<>
+{message}
 
 </>
  ): (loadcsv ? message : (

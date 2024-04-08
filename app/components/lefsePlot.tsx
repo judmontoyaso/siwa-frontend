@@ -9,6 +9,7 @@ const LefsePlot = ({ data }: { data: any }) => {
   useEffect(() => {
     const newTraces: ((prevState: never[]) => never[]) | { type: string; orientation: string; x: any; y: any; name: unknown; }[] = [];
     const groups = [...new Set(data?.data?.map((item: any[]) => item[1]))];
+    const [traces, setTraces] = useState<{ type: string; orientation: string; x: any; y: any; name: unknown; }[]>([]);
 
     groups.forEach(group => {
       const groupData = data?.data?.filter((item: unknown[]) => item[1] === group);
@@ -25,7 +26,6 @@ const LefsePlot = ({ data }: { data: any }) => {
       newTraces.push(trace);
     });
 
-    const [traces, setTraces] = useState<{ type: string; orientation: string; x: any; y: any; name: unknown; }[]>([]);
   }, [data]);
 
   return (

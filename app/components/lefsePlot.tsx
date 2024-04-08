@@ -3,13 +3,12 @@ import { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 
 const LefsePlot = ({ data }: { data: any }) => {
-  const [traces, setTraces] = useState([]);
   const [layout, setLayout] = useState({});
+  const newTraces: ((prevState: never[]) => never[]) | { type: string; orientation: string; x: any; y: any; name: unknown; }[] = [];
+  const groups = [...new Set(data?.data?.map((item: any[]) => item[1]))];
+  const [traces, setTraces] = useState<{ type: string; orientation: string; x: any; y: any; name: unknown; }[]>([]);
 
   useEffect(() => {
-    const newTraces: ((prevState: never[]) => never[]) | { type: string; orientation: string; x: any; y: any; name: unknown; }[] = [];
-    const groups = [...new Set(data?.data?.map((item: any[]) => item[1]))];
-    const [traces, setTraces] = useState<{ type: string; orientation: string; x: any; y: any; name: unknown; }[]>([]);
 
     groups.forEach(group => {
       const groupData = data?.data?.filter((item: unknown[]) => item[1] === group);

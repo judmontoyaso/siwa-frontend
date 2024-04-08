@@ -5,10 +5,10 @@ import Plot from "react-plotly.js";
 const LefsePlot = ({ data }: { data: any }) => {
   const [traces, setTraces] = useState([]);
   const [layout, setLayout] = useState({});
-  const newTraces: ((prevState: never[]) => never[]) | { type: string; orientation: string; x: any; y: any; name: unknown; }[] = [];
-  const groups = [...new Set(data?.data?.map((item: any[]) => item[1]))];
 
   useEffect(() => {
+    const newTraces: ((prevState: never[]) => never[]) | { type: string; orientation: string; x: any; y: any; name: unknown; }[] = [];
+    const groups = [...new Set(data?.data?.map((item: any[]) => item[1]))];
 
     groups.forEach(group => {
       const groupData = data?.data?.filter((item: unknown[]) => item[1] === group);
@@ -25,6 +25,19 @@ const LefsePlot = ({ data }: { data: any }) => {
       newTraces.push(trace);
     });
 
+    const newLayout = {
+      title: 'LefSe Results',
+      xaxis: { title: 'LDA Score' },
+      yaxis: { title: 'Features', automargin: true },
+      barmode: 'group',
+      margin: { l: 120, r: 10, t: 0, b: 20 },
+      height: 900,
+      width: 900,
+      showlegend: true, // Asegura que la leyenda se muestre siempre
+    };
+
+    setTraces(newTraces as never[]);
+    setLayout(newLayout);
   }, [data]);
 
   return (

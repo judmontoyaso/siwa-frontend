@@ -77,8 +77,9 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [abundanceData, setAbundanceData] = useState<any>();
     const [showLefsePlot, setShowLefsePlot] = useState(false);
-const [message, setMessage] = useState<ReactNode | null>(null);
-const [tempfile, setTempFile] = useState<any>();
+const [tempfile, setTempFile] = useState<any>(false);
+const [messageData, setMessageData] = useState<any>(null);
+const messageName = "messageData_" +  params.slug;
 
 
 
@@ -207,62 +208,35 @@ const [tempfile, setTempFile] = useState<any>();
         console.log(abundanceData)
     };
 
+
+
     const confirm1 = async (event: { currentTarget: any; }) => {
+
         const response = await fetchData(accessToken);
         const { records } = response; // Extrae 'records' de la respuesta
 
-        // Construir una lista de registros y sus conteos
-        const recordsList = Object.entries(records).map(([key, value]) => {
-            return `${key}: ${Object.entries(value as string).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')}`;
-        });
         const data = Object.entries(records).map(([key, value]) => {
             return {
                 variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                 samples: Object.entries(value as { [s: string]: unknown }).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')
             };
         });
-        // Preparar el mensaje con las selecciones realizadas
-     // Preparar el mensaje con las selecciones realizadas y los registros
-     const message = (
+        setMessageData(data);
 
-            <div className="p-6 mb-5 mt-5 bg-gray-100 rounded-lg shadow-sm w-full">
-                <p className="text-lg mb-5 mt-5 text-gray-800">
-                A dataset has been generated containing the following samples per variable. It will be available for one hour before it&apos;s deleted, requiring re-upload.
-                </p>
-                <div className="mb-5">
-                    <DataTable value={data}>
-                        <Column field="variable" header="Variable"></Column>
-                        <Column field="samples" header="Number of Samples"></Column>
-                    </DataTable>
-                </div>
-                <div className="text-center mb-5">
-    <i className="pi pi-info-circle text-green-500 text-xl mr-2 align-middle"></i>
-    <p className="text-lg text-gray-800 inline align-middle">
-    To explore the dataset, click on the <strong className="text-green-500 animate-pulse">green arrow</strong> step above.
-</p>
-
-</div>
-
-                <div className="flex justify-center gap-4">
-                    <Button
-                        label="Back"
-                        icon="pi pi-arrow-left"
-                        className="p-button-rounded p-button-secondary"
-                        onClick={handleCancel}
-                    />
-                </div>
-            </div>
-        )
-        
-    
-    
-    
-    setMessage(message)
+        localStorage.setItem(messageName, JSON.stringify(data));
+   
     };
 
-    useEffect(() => {if(message!== null){ setLoadcsv(true)}}, [message])
+    useEffect(() => {if(messageData!== null){ setLoadcsv(true)}}, [messageData])
 
+useEffect(() => {
+    const storedData = localStorage.getItem(messageName);
+    if (storedData) {
+      setMessageData(JSON.parse(storedData));
+    }
+  }, [params.slug]);
 
+  
     const fetchDatacsv = async (token: any | undefined) => {
         setActiveIndex(1)
         setIsGeneratingDataset(true);
@@ -405,6 +379,40 @@ const [tempfile, setTempFile] = useState<any>();
         }
     };
 
+    const deleteTempFiles = async (token: any | undefined) => {
+        try {
+          // Construir la URL del endpoint para borrar los archivos temporales
+          const url = `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/delete-temp-files/${params.slug}`;
+      
+          const response = await fetch(url, {
+            method: 'POST', // Usar método DELETE
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`, // Asumiendo que la autenticación es necesaria
+            },
+            // No es necesario enviar un cuerpo (body) para la petición DELETE en este caso
+          });
+      
+          if (!response.ok) {
+            // Manejar respuestas no exitosas, como un 404 o 500
+            throw new Error(`Error: ${response.statusText}`);
+          }
+      
+          const result = await response.json();
+      
+          console.log(result.message); // Mostrar el mensaje de éxito en la consola
+      
+          // Aquí puedes realizar acciones adicionales en base a la respuesta, como actualizar el estado de la UI
+      
+        } catch (error) {
+          console.error("Error al borrar archivos temporales:", error);
+        }
+      };
+      
+      // Llamada de ejemplo a deleteTempFiles, asegúrate de reemplazar 'your_token_here' y 'your_project_id_here' con valores reales
+      // deleteTempFiles('your_token_here', 'your_project_id_here');
+      
+
     const fetchDataAbundance = async (token: any | undefined) => {
 
         try {
@@ -508,6 +516,8 @@ const [tempfile, setTempFile] = useState<any>();
     };
 
     const handleValueChange = (value: string) => {
+        const filteredSelectedValues = Array.from(selectedValues).filter(value => value !== null);
+
         setSelectedValues(prevSelectedValues => {
             const newSelectedValues = new Set(prevSelectedValues);
 
@@ -522,20 +532,34 @@ const [tempfile, setTempFile] = useState<any>();
             return newSelectedValues;
         });
     };
+    const handleCancelClick = () => {
+        confirmDialog({
+          message: 'Are you sure you want to cancel? This will delete all temporary data files.',
+          header: 'Confirmation',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'Yes, delete',
+          rejectLabel: 'No, go back',
+          accept: () => handleDeleteTempFiles(), // Llama a tu función para borrar los archivos temporales
+          reject: () => {} // Opcionalmente, define lógica para "No, volver atrás"
+        });
+      };
 
-        // Función para restablecer los valores y volver a cargar los datos
-        const handleCancel = async () => {
-            // Restablece los estados a los valores predeterminados
-            setSelectedColorBy("samplelocation");
-            setSelectedLocations(['cecum', 'feces', 'ileum']); 
-            setSelectedValues(new Set(['cecum', 'feces', 'ileum'])); 
+        // Función para manejar la eliminación de archivos temporales
+  const handleDeleteTempFiles  = async () => {
+    deleteTempFiles(accessToken);
+    // Restablece los estados a los valores predeterminados
+    setSelectedColorBy("samplelocation");
+    setSelectedLocations(['cecum', 'feces', 'ileum']); 
+    setSelectedValues(new Set(['cecum', 'feces', 'ileum'])); 
+setLoadcsv(false)
+setTempFile(false)
+    setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'
+    setActiveIndex(0) 
+    localStorage.removeItem(messageName);
 
-            setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'
-            setActiveIndex(0) 
-            setMessage(null)
-            await fetchData(accessToken).then(() => {setLoadcsv(false)});
+    await fetchData(accessToken).then(() => {setLoadcsv(false)});
+};
 
-        };
 
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
@@ -566,14 +590,30 @@ const [tempfile, setTempFile] = useState<any>();
             const columnIndex = otus?.data?.columns.indexOf(selectedColorBy);
             const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
             const uniqueValuesCheck: Set<string> = new Set(otus?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+            const filterValues = [...uniqueValues].filter(value => value !== null).filter(value => value !== 'null');
+            const filterValuesCheck = [...uniqueValues].filter(value => value !== null).filter(value => value !== 'null');
 
-            setValueOptions([...uniqueValues].filter(value => value !== 'null'));
+            setValueOptions([...filterValues].filter(value => value !== null).filter(value => value !== 'null'));
+            console.log([...filterValues].filter(value => value !== null).filter(value => value !== 'null'))
 
-            // Inicializa 'selectedValues' con todos los valores únicos
-            setSelectedValues(new Set<string>([...uniqueValuesCheck].slice(0, 2)));
+            if (selectedValues.size < 2 || Array.from(selectedValues).some(value => value === null || value === "null" || value === "")) {
+                const filteredValuesCheck = [...filterValuesCheck].filter(value => value !== null && value !== "null");
+                console.log(filteredValuesCheck)
+                setSelectedValues(new Set<string>(filteredValuesCheck.slice(0, 2)));
+            }
+            else {            setSelectedValues(new Set<string>([...filterValuesCheck].slice(0, 2)));
+            }
 
+            console.log([...filterValues].slice(0, 2))
         }
     }, [selectedColorBy]);
+
+    useEffect(() => {
+        if (selectedValues.size < 2 || Array.from(selectedValues).some(value => value === null || value === "null" || value === "")) {
+            // Handle the validation error here
+         console.log(selectedValues)
+        }
+    }, [selectedValues]);
 
     useEffect(() => {
         if (dataUnique) {
@@ -643,7 +683,41 @@ const [tempfile, setTempFile] = useState<any>();
         , [valueOptions]);
 
 
-     
+        const message = (
+
+            <div className="p-6 mb-5 mt-5 bg-gray-100 rounded-lg shadow-sm w-full">
+                <p className="text-lg mb-5 mt-5 text-gray-800">
+                A dataset has been generated containing the following samples per variable. It will be available for one hour before it&apos;s deleted, requiring re-upload.
+                </p>
+                <div className="mb-5">
+                    <DataTable value={messageData}>
+                        <Column field="variable" header="Variable"></Column>
+                        <Column field="samples" header="Number of Samples"></Column>
+                    </DataTable>
+                </div>
+                <div className="text-center mb-5">
+    <i className="pi pi-info-circle text-green-500 text-xl mr-2 align-middle"></i>
+    <p className="text-lg text-gray-800 inline align-middle">
+    Click on the <strong className="text-green-500 animate-pulse">green arrow</strong> above to proceed to the analysis.    </p>
+    
+    </div>
+    
+            
+                <div className="flex justify-center gap-4">
+                <Button
+                        label="Back"
+                        icon="pi pi-arrow-left"
+                        className="p-button-rounded p-button-secondary"
+                        onClick={handleCancelClick}
+                        tooltip="Generate dataset again"
+                    />     <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>
+                    <Button label="Go to analysis" icon="pi pi-arrow-right" iconPos="right"  className="p-button-success p-button-rounded" onClick={undefined} />
+                    </Link> 
+
+      <ConfirmDialog /> {/* Componente para mostrar el diálogo de confirmación */}
+    </div>
+            </div>
+        )
 
     return (
         <div className="h-full">
@@ -739,26 +813,34 @@ const [tempfile, setTempFile] = useState<any>();
     <label htmlFor="samplelocation" className="ml-2 text-md"><p>{"Don't filter"}</p></label>
   </div>
 
-  {colorByOptions.map((option, index) => (
-    <div key={option} className="flex items-center">
-      <RadioButton
-        inputId={`colorByOption-${index}`}
-        name="colorByOption"
-        value={option}
-        onChange={() => handleColorByChange(option)}
-        checked={selectedColorBy === option}
-        disabled={selectedLocations.length < 1}
-      />
-      <label htmlFor={`colorByOption-${index}`} className="ml-2 text-md">
-        {option
-          .replace(/_/g, ' ')
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ')
-          .replace(/^Alphad3level$/i, 'Alpha D3 Level')}
-      </label>
-    </div>
-  ))}
+  {colorByOptions.map((option, index) => {
+  // Verificar si la opción actual está en columnOptions
+if ((columnOptions as string[]).includes(option)) {
+    return (
+      <div key={option} className="flex items-center">
+        <RadioButton
+          inputId={`colorByOption-${index}`}
+          name="colorByOption"
+          value={option}
+          onChange={() => handleColorByChange(option)}
+          checked={selectedColorBy === option}
+          disabled={selectedLocations.length < 1}
+        />
+        <label htmlFor={`colorByOption-${index}`} className="ml-2 text-md">
+          {option
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+            .replace(/^Alphad3level$/i, 'Alpha D3 Level')}
+        </label>
+      </div>
+    );
+  } else {
+    return null; // No renderizar nada si la opción no está en columnOptions
+  }
+})}
+
 </div>
 
                                     </div>

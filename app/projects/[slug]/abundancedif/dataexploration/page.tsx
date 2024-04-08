@@ -31,6 +31,7 @@ import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import React from "react";
 import Link from "next/link";
+import { group } from "console";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -46,8 +47,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [shannonData, setShannonData] = useState([]);
     const [currentLocation, setCurrentLocation] = useState('');
-    const [colorByOptions, setColorByOptions] = useState<string[]>(['age', 'treatment']);
-    const [colorBy, setColorBy] = useState<string>('samplelocation');
+    const [colorByOptions, setColorByOptions] = useState<string[]>(['age', 'treatment', 'samplelocation']);
+    const [colorBy, setColorBy] = useState<string>('treatment');
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
@@ -69,6 +70,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         "feces",
         "ileum",
     ]);
+    const [selectedRank, setSelectedRank] = useState("Genus");
     let colorIndex = 0;
     const initialLocations = ["cecum", "feces", "ileum"]; // Ejemplo de ubicaciones disponibles
     const [allSelected, setAllSelected] = useState(true);
@@ -80,6 +82,15 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [showLefsePlot, setShowLefsePlot] = useState(false);
 const [message, setMessage] = useState<ReactNode | null>(null);
 const [tempfile, setTempFile] = useState<any>();
+const [dataExist, setDataExist] = useState(false);
+const taxonomyOptions = [
+    "Phylum",
+    "Class",
+    "Order",
+    "Family",
+    "Genus",
+    "Species"
+];
 
 
     const colors = [
@@ -124,6 +135,7 @@ const [tempfile, setTempFile] = useState<any>();
         '#9edae5'  // turquesa claro
     ];
     const tooltipTargetId = 'info-icon';
+    const [actualcolumn, setActualcolumn] = useState("treatment")
     const customTemplate = (item: any, options: { index: number; }) => (
         <React.Fragment>
             <Link href={"/abundancedif/dataexploration"}>  <Button 
@@ -220,8 +232,39 @@ const [tempfile, setTempFile] = useState<any>();
                         Authorization: `Bearer ${token}`,
                     },
                 body: JSON.stringify({
-                    "group": "treatment",
-                    "taxa_rank": "Genus",
+                    "group": colorBy,
+                    "taxa_rank": selectedRank,
+                }),
+
+            }
+            );
+
+            const result = await response.json();
+            setAbundanceData(result);
+            setColumnOptions(result.columnsmeta);   
+            console.log(result) 
+            if (result.data.length > 0) {
+                setDataExist(true);
+            }else{setDataExist(false)}
+            return result;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
+
+    const fetchDataAbundanceFilter = async (token: any | undefined) => {
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/loadlefse/${params.slug}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                body: JSON.stringify({
+                    "group": colorBy,
+                    "taxa_rank": selectedRank,
                 }),
 
             }
@@ -230,6 +273,9 @@ const [tempfile, setTempFile] = useState<any>();
             const result = await response.json();
             setAbundanceData(result);
             console.log(result) 
+            if (result.data.length > 0) {
+                setDataExist(true);
+            }else{setDataExist(false)}
             // setIsDatasetReady(true);
             return result;
         } catch (error) {
@@ -433,25 +479,21 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
         , [valueOptions]);
 
    
-        
+        const applyFilters = () => { setActualcolumn(colorBy); fetchDataAbundanceFilter(accessToken)  }
 
           const filter = (
             <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
                 <div className={`tab-content `}>
-                    <div className="flex flex-col items-left space-x-2">
-                        <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Taxa Rank</h3>
-                        <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            disabled
-                            value={currentLocation === "all" ? currentLocation : selectedLocations}
-                            onChange={(e) => handleLocationChange(e.target.value)}>
-                            <option selected value="Genus" disabled>Genus</option>
-                            {availableLocations.map((location) => (
-                                <option key={location} value={location}>
-                                    {location.charAt(0).toUpperCase() + location.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                <div>
+     <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select a rank option</h3>
+                <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    {taxonomyOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                        </option>
+                    ))}
+                </select>
+</div>
     
     
                 </div>
@@ -461,52 +503,51 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group</h3>
                     <ul className="flex flex-wrap justify-between">
               
-                        <li className="w-28 mb-5">
-                            <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
-                                onChange={undefined}
-                                disabled={isColorByDisabled} />
-                            <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full">Treatment</div>
-                                </div>
-    
-                            </label>
-                        </li>
-        
-                        {colorByOptions.map((option, index) => (
-                            <li key={index} className="w-28 mb-5">
-                                <input
-                                    type="radio"
-                                    id={option}
-                                    name={option}
-                                    className="hidden peer"
-                                    value={option}
-                                    checked={isColorByDisabled ? false : selectedColumn === option}
-                                    onChange={undefined}
-                                    disabled={isColorByDisabled}
-                                />
-                                <label
-                                    htmlFor={option}
-                                    className={`flex items-center justify-center ${isColorByDisabled
-                                        ? 'cursor-not-allowed'
-                                        : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                        } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                                >
-                                    <div className="block">
-                                        <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-                                    </div>
-                                </label>
-                            </li>
-                        ))}
+                    <select value={colorBy} onChange={(e) => setColorBy(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        {colorByOptions.map((option, index) => {
+                            if (columnOptions && columnOptions?.includes(option as never)) {
+                                return (
+                                    <option key={index} value={option}>
+                                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                                    </option>
+                                );
+                            }
+                            return null;
+                        })}
+                    </select>
+                        
                     </ul>
                 </div>
     
+
+                <div className="mt-10">
+    
+                    <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Subgroup</h3>
+                    <ul className="flex flex-wrap justify-between">
+              
+
+                    <select value={colorBy} disabled   onChange={(e) => setColorBy(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        {colorByOptions?.map((option, index) => {
+                            if (columnOptions && columnOptions?.includes(option as never)) {
+                                return (
+                                    <option key={index} value={option}>
+                                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                                    </option>
+                                );
+                            }
+                            return null;
+                        })}
+                    </select>
+
+                        
+                    </ul>
+                </div>
     
                 {selectedColumn === "samplelocation" ? "" :
                     (valueChecks)}
                 <div className="flex w-full items-center margin-0 justify-center my-8">
                     <button
-                        onClick={undefined}
+                        onClick={applyFilters}
                         className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-10 rounded-xl"
                     >
                         Apply
@@ -514,6 +555,8 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                 </div>
             </div>
         );
+
+
      
 
     return (
@@ -524,29 +567,79 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <Card title={
                 <div className="flex items-center text-center w-full justify-center">
-                    <span>Differential Abundance</span>
+                            <h1 className="text-3xl my-5 mx-2">Differential abundance: {configFile?.taxonomic_composition?.title ?? "Taxonomy diversity"}</h1>
                     <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
                 </div>
             }>     
+ <div className="px-6 py-8">
+                            <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
+    <p className="text-gray-700 text-justify text-xl">
+        {configFile?.taxonomic_composition?.text}
+    </p>
+</div>
 
+                            </div>
 <div className="flex justify-center items-center">
   {tempfile ? (
-        <GraphicCard filter={filter} legend={"legend"} title={""}>
+    <div className="flex flex-col">   <GraphicCard filter={filter} legend={""} title={""}>
         {abundanceData ? (
+dataExist ? 
     <LefsePlot data={abundanceData} />
-    ) : (
+: (
+    <div className="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-lg shadow">
+    <i className="pi pi-exclamation-triangle text-3xl text-yellow-500"></i> {/* Icono de PrimeReact */}
+    <p className="mt-2 text-base text-gray-700">
+        Our analysis found no significant differences with the current settings.
+    </p>
+    <p className="text-sm text-gray-600">
+        Please try different options for data visualization.
+    </p>
+
+</div>
+
+)    ) : (
             <SkeletonCard width={"500px"} height={"270px"} />
         )}
     </GraphicCard>
+    <div className="w-full flex flex-row ">
+                                <div className="w-1/5"></div>
+                                <div className="px-6 py-8 w-4/5" >
+                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
+                                        if (key === "samplelocation"  && typeof value === 'string') {
+                                        
+                                            return (
+                                              <div key={key} className="col-span-2">
+                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                              </div>
+                                            );
+                                          }
+                                            return null;  // No renderizar nada si no se cumplen las condiciones
+                                        })}
+                                    </div>
+                                    <div className="prose flex flex-row flex-wrap">
+                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
+                                            if (key !== "" && key !== "samplelocation") {
+                                                if (typeof value === 'string' && value !== null) {
+                                                 
+
+                                                    return (  <div key={key} className="col-span-2">
+                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                  </div>);
+                                                } 
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+        </div>
+     
+
+    
   ) : (
     <div className="text-center">
-      <p className="text-lg font-semibold mb-4">To visualize the Lefse plot, please load a dataset first.</p>
-      <Link
-  href={`/projects/${params.slug}/abundancedif/datasetgeneration`} // Ajusta la ruta según tu configuración
-  className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
->
-  Load Dataset
-</Link>
+    loading...
     </div>
   )}
 

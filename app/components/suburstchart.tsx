@@ -22,7 +22,7 @@ const SunburstChart: React.FC<SunburstChartProps> = ({ paths, values }) => {
           if (!labels.includes(fullPath)) {
             labels.push(fullPath);
             parents.push(currentPath);
-            values.push(null); // Añade un valor nulo o el valor real si lo tienes
+            values.push(null as never); // Añade un valor nulo o el valor real si lo tienes
           }
           currentPath = fullPath; // Actualiza el currentPath para el próximo segmento
         });

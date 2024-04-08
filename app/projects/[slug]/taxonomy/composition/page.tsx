@@ -524,43 +524,43 @@ setActualGroup(selectedGroup);
         });
     };
 
-    useEffect(() => {
-        const transformDataForSunburst = (columns, values) => {
-            const paths = [];
-            const valuesOutput = [];
-            const ids = [];
+//     useEffect(() => {
+//         const transformDataForSunburst = (columns, values) => {
+//             const paths = [];
+//             const valuesOutput = [];
+//             const ids = [];
         
-            values?.forEach(row => {
-              // Ignora las columnas 'OTU', 'abundance', y 'prevalence' para construir el path
-              const path = columns.slice(0, -3).map((columnName, index) => {
-                return row[index] || 'Unknown'; // Usa 'Unknown' para valores undefined o null
-              }).join('/');
+//             values?.forEach(row => {
+//               // Ignora las columnas 'OTU', 'abundance', y 'prevalence' para construir el path
+//               const path = columns.slice(0, -3).map((columnName, index) => {
+//                 return row[index] || 'Unknown'; // Usa 'Unknown' para valores undefined o null
+//               }).join('/');
         
-              // Asume que 'OTU' es el identificador único, y 'abundance' es el valor numérico
-              const otuIndex = columns.indexOf('OTU');
-              const abundanceIndex = columns.indexOf('abundance');
-              const otu = row[otuIndex] || 'Unknown OTU';
-              const abundance = row[abundanceIndex] || 0;
+//               // Asume que 'OTU' es el identificador único, y 'abundance' es el valor numérico
+//               const otuIndex = columns.indexOf('OTU');
+//               const abundanceIndex = columns.indexOf('abundance');
+//               const otu = row[otuIndex] || 'Unknown OTU';
+//               const abundance = row[abundanceIndex] || 0;
         
-              ids.push(otu); // Añade 'OTU' como id
-              paths.push(path); // Añade el path construido
-              valuesOutput.push(abundance); // Añade 'abundance' como el valor
-            });
-        console.log({ ids, paths, values: valuesOutput });
-            return { ids, paths, values: valuesOutput };
-          };
+//               ids.push(otu); // Añade 'OTU' como id
+//               paths.push(path); // Añade el path construido
+//               valuesOutput.push(abundance); // Añade 'abundance' como el valor
+//             });
+//         console.log({ ids, paths, values: valuesOutput });
+//             return { ids, paths, values: valuesOutput };
+//           };
         
       
 
       
-          const { ids, paths, values } = transformDataForSunburst(observedData?.columns, observedData?.data);
+//           const { ids, paths, values } = transformDataForSunburst(observedData?.columns, observedData?.data);
 
-           // Actualiza el estado con los nuevos datos
-  setSunburstData({ ids, paths, values });
+//            // Actualiza el estado con los nuevos datos
+//   setSunburstData({ ids, paths, values });
 
-          console.log(observedData)
-        // Aquí puedes actualizar el estado con los paths y values transformados, o hacer algo más con ellos
-      }, [observedData]); // Asegúrate de que las dependencias de useEffect sean correctas
+//           console.log(observedData)
+//         // Aquí puedes actualizar el estado con los paths y values transformados, o hacer algo más con ellos
+//       }, [observedData]); // Asegúrate de que las dependencias de useEffect sean correctas
       
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (

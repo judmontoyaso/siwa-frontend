@@ -25,19 +25,7 @@ const LefsePlot = ({ data }: { data: any }) => {
       newTraces.push(trace);
     });
 
-    const newLayout = {
-      title: 'LefSe Results',
-      xaxis: { title: 'LDA Score' },
-      yaxis: { title: 'Features', automargin: true },
-      barmode: 'group',
-      margin: { l: 120, r: 10, t: 0, b: 20 },
-      height: 900,
-      width: 900,
-      showlegend: true, // Asegura que la leyenda se muestre siempre
-    };
-
-    setTraces(newTraces);
-    setLayout(newLayout);
+    const [traces, setTraces] = useState<{ type: string; orientation: string; x: any; y: any; name: unknown; }[]>([]);
   }, [data]);
 
   return (

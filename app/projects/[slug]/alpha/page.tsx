@@ -14,6 +14,8 @@ import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { AuthProvider, useAuth } from "@/app/components/authContext";
 import { Dropdown } from "primereact/dropdown";
+import { Button } from "primereact/button";
+import { FiActivity, FiBarChart } from "react-icons/fi";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -41,6 +43,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
     const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
     const [loaded, setLoaded] = useState(false);
+    const [graphType, setGraphType] = useState<any>("boxplot");  // 'boxplot' o 'violin'
+
     const [Location, setLocation] = useState<string[]>([
         "cecum",
         "feces",
@@ -189,11 +193,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                     item: any[]
                 ) => {
 
-                    
+
                     const location = item[1];
                     const alphaShannon = item[2];
-                    
-                   
+
+
                     const sampleId = item[0];
                     // Verifica si la locación actual debe ser incluida
                     if (selectedLocations.includes(location)) {
@@ -357,12 +361,12 @@ export default function Page({ params }: { params: { slug: string } }) {
     const handleValueChange = (value: string) => {
         setSelectedValues(prevSelectedValues => {
             const newSelectedValues = new Set(prevSelectedValues);
-    
+
             // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
             if (newSelectedValues.size === 1 && newSelectedValues.has(value)) {
                 return prevSelectedValues;
             }
-    
+
             // Si el valor está presente, lo eliminamos
             if (newSelectedValues.has(value)) {
                 newSelectedValues.delete(value);
@@ -370,20 +374,20 @@ export default function Page({ params }: { params: { slug: string } }) {
                 // Si el valor no está presente y no es null, lo añadimos
                 newSelectedValues.add(value);
             }
-            
+
             return newSelectedValues;
         });
     };
 
     const options = availableLocations.length > 1
-    ? [{ label: 'All Locations', value: 'all' }, ...availableLocations.map(location => ({
-        label: location.charAt(0).toUpperCase() + location.slice(1),
-        value: location
-    }))]
-    : availableLocations.map(location => ({
-        label: location.charAt(0).toUpperCase() + location.slice(1),
-        value: location
-    }));
+        ? [{ label: 'All Locations', value: 'all' }, ...availableLocations.map(location => ({
+            label: location.charAt(0).toUpperCase() + location.slice(1),
+            value: location
+        }))]
+        : availableLocations.map(location => ({
+            label: location.charAt(0).toUpperCase() + location.slice(1),
+            value: location
+        }));
 
 
     // Componente de checks para los valores de la columna seleccionada
@@ -413,12 +417,12 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     useEffect(() => {
         if (availableLocations.length === 1) {
-          // Si solo hay una ubicación disponible, selecciónala automáticamente
-          const uniqueLocation = availableLocations[0];
-          handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
+            // Si solo hay una ubicación disponible, selecciónala automáticamente
+            const uniqueLocation = availableLocations[0];
+            handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
         }
-      }, [availableLocations]); // Dependencia del efecto
-      
+    }, [availableLocations]); // Dependencia del efecto
+
 
     const filter = (
         <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
@@ -426,14 +430,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                 <div className="flex flex-col items-left space-x-2">
                     <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select a sample location</h3>
                     <Dropdown
-    value={currentLocation}
-    options={options}
-    onChange={(e) => handleLocationChange(e.value)}
-    placeholder={availableLocations.length === 1 ? availableLocations[0] : "Select a Location"}
-    disabled={availableLocations.length === 1}
-/>
-
-
+ value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
+                         options={options}
+                        onChange={(e) => handleLocationChange(e.value)}
+                        disabled={availableLocations.length === 1}
+                    />  
 
                 </div>
 
@@ -466,15 +467,15 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                         </label>
                     </li>
-                                                            {
+                    {
                         columnOptions.includes("age" as never) && (
                             <li className="w-28 mb-5">
                                 <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
-                                        onChange={handleLocationChangeColorby} />
+                                    onChange={handleLocationChangeColorby} />
                                 <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                        <div className="block">
-                                                <div className="w-full">Age</div>
-                                        </div>
+                                    <div className="block">
+                                        <div className="w-full">Age</div>
+                                    </div>
                                 </label>
                             </li>
                         )
@@ -524,7 +525,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const title = (
         <div>
-            Alpha Shannon{Location.length === 3  ? " by Sample Location" :  " in " + Location[0] + (actualcolumn !== "samplelocation" ? (" by " + actualcolumn ) : "")}
+            Alpha Shannon{Location.length === 3 ? " by Sample Location" : " in " + Location[0] + (actualcolumn !== "samplelocation" ? (" by " + actualcolumn) : "")}
         </div>
 
     )
@@ -548,7 +549,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     color: scatterColors[entry.name],
                 }))
                 .map((entry, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginLeft:'10px'}}>
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }}>
                         <div className="rounded-full" style={{ width: '10px', height: '10px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
                         <div className="text-sm text-gray-500">{entry.name.charAt(0).toUpperCase() + entry.name.slice(1)}</div>
                     </div>
@@ -638,12 +639,12 @@ export default function Page({ params }: { params: { slug: string } }) {
     console.log('Max alpha shannon:', yAxisRange);
 
     const legend = (<div className="w-full flex flex-row overflow-x-scroll max-h-full  justify-center mt-5 items-center">
-      <div className="">
-      <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualcolumn === "samplelocation" ? "Sample location" : actualcolumn}</h2>
-        </div>  
-     <div className=" flex flex-col w-auto">
-     <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
-        </div>   
+        <div className="">
+            <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualcolumn === "samplelocation" ? "Sample location" : actualcolumn}</h2>
+        </div>
+        <div className=" flex flex-col w-auto">
+            <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
+        </div>
     </div>)
 
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
@@ -651,19 +652,50 @@ export default function Page({ params }: { params: { slug: string } }) {
         <div className="flex flex-row w-full items-center">
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
+                    <> 
+              <div className="flex items-center mb-4 mt-4">
 
-                    <Plot
-                        data={Object.values(shannonData.filter(entry => entry.name !== "null")).map(item => ({ ...(item as object), type: "box", marker: { color: scatterColors[item.name] } }))}
-                        layout={{
-                            width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-                            height: 600,
-                            // title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumnRemove === "" || selectedColumnRemove === "samplelocation" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
-                            showlegend: false,
-                            annotations: annotations,
-                            yaxis: { range: yAxisRange },
-                            margin: { l: 20, r: 10, t: 0, b: 20 } 
-                        }}
-                    />
+<Button
+    className=" p-button-rounded p-button-outlined p-button-sm mb-4 mt-4"
+    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
+    data-tip data-for="botoninterpreteTip" id="botoninterpreteTip" 
+    >Change to {graphType === "boxplot" ? "violin" : "boxplot"} view  
+  </Button>
+               </div>
+
+
+               <Plot
+    data={
+        Object.values(shannonData.filter(entry => entry.name !== "null"))
+            .map(item => ({
+                ...(item as object),
+                type: graphType === "boxplot" ? "box" : "violin",
+                marker: {
+                    color: scatterColors[item.name],
+                    size: 4, // Ajusta el tamaño del marcador según sea necesario para mejorar la legibilidad
+                },
+                boxpoints: graphType === "boxplot" ? "all" : undefined,
+                jitter: 0.3,  // Controla cuánto se dispersan los puntos en la dirección horizontal; ajusta según necesidad
+                pointpos: 0,  // Coloca los puntos directamente en el centro de las cajas
+            }))
+    }
+    layout={{
+        width: plotWidth || undefined,  // Utiliza plotWidth o cae a 'undefined' si es 0
+        height: 600,
+        // title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumnRemove === "" || selectedColumnRemove === "samplelocation" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
+        showlegend: false,
+        xaxis: {
+            showticklabels: false  // Oculta las etiquetas del eje X
+        },
+        annotations: annotations,
+        yaxis: graphType === "boxplot" ? { range: yAxisRange }  : { autorange: true } ,
+        margin:  graphType === "boxplot" ? { l: 20, r: 10, t: 0, b: 20 }  : { l: 20, r: 10, t: 50, b: 50 }
+    }}
+/>
+
+                    </>
+
+
                 )}
             </div>
 
@@ -687,22 +719,22 @@ export default function Page({ params }: { params: { slug: string } }) {
                                     anchorSelect="#interpreteTip">
                                     <div className={`prose single-column w-96 z-50`}>
                                         {configFile?.alphadiversity?.interpretation ? (
-                                          <p className="text-gray-700 text-justify text-xl m-3">
-                                          {configFile.alphadiversity.interpretation}
-                                      </p>
+                                            <p className="text-gray-700 text-justify text-xl m-3">
+                                                {configFile.alphadiversity.interpretation}
+                                            </p>
                                         ) : (""
                                         )}
                                     </div>
                                 </Tooltip>
                             </div>    <div className="px-6 py-8">
-                            <div className={`prose ${configFile?.alphadiversity?.text ? 'single-column' : 'column-text'}`}>
-    <p className="text-gray-700 text-justify text-xl">
-        {configFile?.alphadiversity?.text}
-    </p>
-</div>
+                                <div className={`prose ${configFile?.alphadiversity?.text ? 'single-column' : 'column-text'}`}>
+                                    <p className="text-gray-700 text-justify text-xl">
+                                        {configFile?.alphadiversity?.text}
+                                    </p>
+                                </div>
 
                             </div>
-                            
+
                             <div className="flex">
                                 <GraphicCard filter={filter} legend={legend} title={title}>
                                     {shannonData.length > 0 ? (
@@ -717,14 +749,14 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                        if (key === "samplelocation" && actualcolumn==="samplelocation"  && typeof value === 'string') {
-                                        
-                                            return (
-                                              <div key={key} className="col-span-2">
-                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                              </div>
-                                            );
-                                          }
+                                            if (key === "samplelocation" && actualcolumn === "samplelocation" && typeof value === 'string') {
+
+                                                return (
+                                                    <div key={key} className="col-span-2">
+                                                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                    </div>
+                                                );
+                                            }
                                             return null;  // No renderizar nada si no se cumplen las condiciones
                                         })}
                                     </div>
@@ -732,12 +764,12 @@ export default function Page({ params }: { params: { slug: string } }) {
                                         {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
                                             if (key === actualcolumn && key !== "samplelocation") {
                                                 if (typeof value === 'string' && value !== null) {
-                                                 
 
-                                                    return (  <div key={key} className="col-span-2">
-                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                  </div>);
-                                                } 
+
+                                                    return (<div key={key} className="col-span-2">
+                                                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                    </div>);
+                                                }
                                             }
                                             return null;
                                         })}

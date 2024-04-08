@@ -155,40 +155,43 @@ const Dashboard = () => {
 
   return (
     <>
-    <div className="min-h-screen flex flex-col justify-start ">
-    <div className="mx-auto w-full max-w-4xl p-8">
-  <h1 className="text-center text-2xl font-semibold text-gray-800 mb-2">Hello, {user?.name}!</h1>
-  <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>
-</div>
+    <div className="min-h-screen flex flex-col justify-start bg-gray-100">
       <div className="mx-auto w-full max-w-4xl p-8">
-        <div className="flex w-full items-center justify-center">
+        <h1 className="text-center text-2xl font-semibold text-gray-800 mb-2">Hello, {user?.name}!</h1>
+        <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>
+      </div>
   
+      <div className="mx-auto w-full max-w-4xl px-8 pb-8 flex flex-row gap-8">
+        {/* Ajuste en la imagen para que ocupe todo el espacio asignado a su contenedor */}
+        <div className="w-1/2 flex justify-center items-start">
+          <img src="/perrito.webp" alt="Decorative" className="max-w-full rounded-lg shadow-lg"/>
+        </div>
   
+        {/* Contenedor de la lista de proyectos con un ajuste para ocupar el espacio restante */}
+        <div className="w-1/2 flex flex-col">
           {/* Lista de Proyectos */}
           {!projectsLoading ? (
-            <div className="bg-white shadow rounded-lg overflow-hidden w-80">
+            <div className="bg-white shadow rounded-lg overflow-hidden w-full">
               <div className="p-6">
                 <h3 className="text-xl font-medium text-gray-800 mb-4">Projects</h3>
                 <ul className="divide-y divide-gray-200">
                   {projectIds.map((projectId) => (
-                    
-                          <Link key={projectId}  href={`/projects/${projectId}`}>
-                    <li className={`py-2 flex justify-between items-center ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-50" : "opacity-50"} rounded-lg`}>
-
-                         
-                      <span className="text-lg text-gray-700 flex flex-row items-center">{projectId} {loadedProjects[projectId] ? (
-                        <BsFillCloudCheckFill className="w-5 h-5 text-green-500 ml-2" />
-                        
-                        ) : (                        <IoCloudOffline className="w-5 h-5 text-gray-700 opacity-50 ml-2" />
+                    <Link key={projectId} href={`/projects/${projectId}`}>
+                      <li className={`py-2 flex justify-between items-center ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-50" : "opacity-50"} rounded-lg`}>
+                        <span className="text-lg text-gray-700 flex flex-row items-center">
+                          {projectId}
+                          {loadedProjects[projectId] ? (
+                            <BsFillCloudCheckFill className="w-5 h-5 text-green-500 ml-2" />
+                          ) : (
+                            <IoCloudOffline className="w-5 h-5 text-gray-700 opacity-50 ml-2" />
+                          )}
+                        </span>
+                        {loadedProjects[projectId] ? (
+                          <BsArrowRightShort className="w-5 h-5 text-gray-700" />
+                        ) : (
+                          <GiSpinalCoil className="w-5 h-5 text-gray-400 animate-spin" />
                         )}
-                      </span>
-                      {loadedProjects[projectId] ? (
-                        <BsArrowRightShort className="w-5 h-5 text-gray-700" />
-
-                      ) : (
-                        <GiSpinalCoil className="w-5 h-5 text-gray-400 animate-spin" />
-                      )}
-                    </li>
+                      </li>
                     </Link>
                   ))}
                 </ul>
@@ -202,6 +205,8 @@ const Dashboard = () => {
     </div>
     <ToastContainer />
   </>
+  
+  
   
   
   );

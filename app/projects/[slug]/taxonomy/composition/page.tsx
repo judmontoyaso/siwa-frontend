@@ -16,6 +16,8 @@ import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { GoPlus } from "react-icons/go";
 import { FiMinus } from "react-icons/fi";
 import { useAuth } from "@/app/components/authContext";
+import Plotly from "plotly.js";
+import SunburstChart from "@/app/components/suburstchart";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -53,6 +55,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [isFilterCardVisible, setIsFilterCardVisible] = useState(false);
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
+    const [sunburstData, setSunburstData] = useState();
+
     const [selectedLocations, setSelectedLocations] = useState<string[]>([
         "cecum",
         "feces",
@@ -64,13 +68,14 @@ export default function Page({ params }: { params: { slug: string } }) {
         "ileum",
     ]);
     const taxonomyOptions = [
+        "phylum",
+        "class",
+        "order",
         "family",
         "genus",
-        "order",
-        "phylum",
-        "species",
-        "class"
+        "species"
     ];
+    
     let colorIndex = 0;
     const colors = [
         '#1f77b4', // azul metálico
@@ -226,7 +231,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             setDataResult(result);
             setColumnOptions(result?.meta?.columns);
             setDataUnique(result);
-
+setObservedData(result?.Krona)
             setValueOptions(result?.meta?.data);
             setIsLoaded(true);
             return result;
@@ -519,9 +524,44 @@ setActualGroup(selectedGroup);
         });
     };
 
+    useEffect(() => {
+        const transformDataForSunburst = (columns, values) => {
+            const paths = [];
+            const valuesOutput = [];
+            const ids = [];
+        
+            values?.forEach(row => {
+              // Ignora las columnas 'OTU', 'abundance', y 'prevalence' para construir el path
+              const path = columns.slice(0, -3).map((columnName, index) => {
+                return row[index] || 'Unknown'; // Usa 'Unknown' para valores undefined o null
+              }).join('/');
+        
+              // Asume que 'OTU' es el identificador único, y 'abundance' es el valor numérico
+              const otuIndex = columns.indexOf('OTU');
+              const abundanceIndex = columns.indexOf('abundance');
+              const otu = row[otuIndex] || 'Unknown OTU';
+              const abundance = row[abundanceIndex] || 0;
+        
+              ids.push(otu); // Añade 'OTU' como id
+              paths.push(path); // Añade el path construido
+              valuesOutput.push(abundance); // Añade 'abundance' como el valor
+            });
+        console.log({ ids, paths, values: valuesOutput });
+            return { ids, paths, values: valuesOutput };
+          };
+        
+      
 
+      
+          const { ids, paths, values } = transformDataForSunburst(observedData?.columns, observedData?.data);
 
+           // Actualiza el estado con los nuevos datos
+  setSunburstData({ ids, paths, values });
 
+          console.log(observedData)
+        // Aquí puedes actualizar el estado con los paths y values transformados, o hacer algo más con ellos
+      }, [observedData]); // Asegúrate de que las dependencias de useEffect sean correctas
+      
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
         <div className="mb-5 mt-5">
@@ -551,9 +591,9 @@ setActualGroup(selectedGroup);
 <div>
      <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select a rank option</h3>
                 <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    {taxonomyOptions.map((option, index) => (
+                    {taxonomyOptions?.map((option, index) => (
                         <option key={index} value={option}>
-                            {option}
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
                         </option>
                     ))}
                 </select>
@@ -583,7 +623,7 @@ setActualGroup(selectedGroup);
                         disabled={availableLocations.length === 1}
                     >
                         <option selected value="all">All Locations</option>
-                        {availableLocations.map((location) => (
+                        {availableLocations?.map((location) => (
                             <option key={location} value={location}>
                                 {location.charAt(0).toUpperCase() + location.slice(1)}
                             </option>
@@ -610,9 +650,9 @@ setActualGroup(selectedGroup);
                                 </div>
                             </label>
                         </li>
-                        {colorByOptions.map((option, index) => {
+                        {colorByOptions?.map((option, index) => {
   // Solo renderizar el elemento si 'option' está presente en 'columnOptions'
-if ((columnOptions as string[]).includes(option)) {
+if ((columnOptions as string[])?.includes(option)) {
     return (
       <li key={index}>
         <input
@@ -674,6 +714,7 @@ useEffect(() => {
     }
   }, [availableLocations]); // Dependencia del efecto
   
+  
 
     return (
         <div>
@@ -700,6 +741,11 @@ useEffect(() => {
                             </div>
                         </Tooltip>
                         </div>
+
+<div>
+{/* <SunburstChart paths={sunburstData.paths} values={sunburstData.values} ids={[sunburstData.ids]} /> */}
+</div>
+
                         <div className="px-6 py-8">
                             <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
     <p className="text-gray-700 text-justify text-xl">

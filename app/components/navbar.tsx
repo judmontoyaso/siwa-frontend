@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from "@auth0/nextjs-auth0/client";
@@ -10,6 +10,8 @@ import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { useRouter } from 'next/router';
 import { FaAngleDown, FaAngleUp } from 'react-icons/fa';
+import { Dropdown } from 'primereact/dropdown';
+import ProjectSelector from './projectSelector';
 
 interface NavbarProps {
   slug: string;
@@ -22,29 +24,40 @@ const Navbar: React.FC<NavbarProps> = ({ slug }) => {
   const toast = useRef(null);
   let items = [
     {label: 'Profile', icon: 'pi pi-fw pi-user', url: '/profile'},
-    {label: 'Sing Out', icon: 'pi pi-fw pi-sign-out', url: '/api/auth/logout'}
+    {label: 'Sign Out', icon: 'pi pi-fw pi-sign-out', url: '/api/auth/logout'}
 ];
 
+
+const [projects, setProjects] = useState([]);
   // Maneja la apertura del menú
   const onMenuShow = () => setIsOpen(true);
 
-  // Maneja el cierre del menú
   const onMenuHide = () => setIsOpen(false);
 
 
+  // Maneja el cierre del menú
+  const [selectedProject, setSelectedProject] = useState(slug);
 
+  // Provide type annotation for the user object
+
+  useEffect(() => {
+    console.log(user?.Project);
+    setProjects((user?.roject as any))}, [user]);
+
+  
+  // Manejar cambio de selección
+  const onProjectChange = (e: { value: React.SetStateAction<string> }) => {
+    setSelectedProject(e.value);
+    // Aquí puedes agregar la lógica para manejar el cambio de proyecto, como redirigir al usuario
+  };
+  
   return (
     <nav className="flex justify-end p-4 bg-white align-middle items-center">
 
-          <div className="flex bg-white">
-            {slug !== '' &&   <div>
-              <Tag className="mr-20 ml-20" icon="pi pi-cloud">
-                <span className='font-light'>Project: </span>{slug}
-              </Tag> </div>}
-          
-           
-          </div>
-     
+          <div className="flex bg-white items-center">
+         <ProjectSelector slug={slug} user={user}/>
+    </div>
+
                       
       <div className="relative">
 

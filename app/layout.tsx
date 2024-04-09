@@ -1,6 +1,4 @@
 import './globals.css'
-import 'primereact/resources/themes/lara-light-cyan/theme.css';
-import 'primereact/resources/primereact.min.css';
 import { Inter } from 'next/font/google'
 import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { Roboto } from 'next/font/google'
@@ -25,7 +23,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <>
+      <><head>
+      <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              const style = document.createElement('style')
+              style.innerHTML = '@layer tailwind-base, primereact, tailwind-utilities;'
+              style.setAttribute('type', 'text/css')
+              document.querySelector('head').prepend(style)
+            `,
+          }}
+        />
+</head>
         <UserProvider>
             <PrimeReactProvider>
           <AuthProvider>

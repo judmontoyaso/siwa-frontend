@@ -502,6 +502,7 @@ useEffect(() => {
 
             const temp = result?.status_code === 200 ? true : false;
             setTempFile(temp);
+            
             console.log(result)
             // setIsDatasetReady(true);
             return result;
@@ -511,6 +512,10 @@ useEffect(() => {
     };
 
     useEffect(() => {checktempfile(accessToken)}, [accessToken]);
+
+
+useEffect(() => {if (!tempfile) {localStorage.removeItem(messageName)};}, [tempfile]);
+
 
     // Función para manejar la confirmación de la selección
     const handleConfirmSelection = () => {

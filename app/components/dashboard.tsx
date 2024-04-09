@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { GiSpinalCoil } from "react-icons/gi";
 import { BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
 import { IoCloudOffline } from "react-icons/io5";
+import Spinner from "./pacmanLoader";
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
   const [projectIds, setProjectIds] = useState([]);
@@ -147,15 +148,15 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        {/* Aquí puedes poner un componente de carga o un simple texto */}
-        <div>Cargando...</div>
+    
+        <div><Spinner/></div>
       </div>
     );
   }
 
   return (
     <>
-    <div className="min-h-screen flex flex-col justify-start bg-gray-100">
+    <div className="min-h-screen flex flex-col justify-start rounded-lg bg-gray-50">
       <div className="mx-auto w-full max-w-4xl p-8">
         <h1 className="text-center text-2xl font-semibold text-gray-800 mb-2">Hello, {user?.name}!</h1>
         <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>
@@ -177,7 +178,7 @@ const Dashboard = () => {
                 <ul className="divide-y divide-gray-200">
                   {projectIds.map((projectId) => (
                     <Link key={projectId} href={`/projects/${projectId}`}>
-                      <li className={`py-2 flex justify-between items-center ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-50" : "opacity-50"} rounded-lg`}>
+                      <li className={`py-2 flex mt-4 mb-4 p-4 justify-between items-center bg-slate-50 ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-100" : "opacity-50"} rounded-lg`}>
                         <span className="text-lg text-gray-700 flex flex-row items-center">
                           {projectId}
                           {loadedProjects[projectId] ? (

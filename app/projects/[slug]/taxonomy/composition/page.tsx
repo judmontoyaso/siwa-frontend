@@ -18,6 +18,7 @@ import { FiMinus } from "react-icons/fi";
 import { useAuth } from "@/app/components/authContext";
 import Plotly from "plotly.js";
 import SunburstChart from "@/app/components/suburstchart";
+import Spinner from "@/app/components/pacmanLoader";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -78,45 +79,39 @@ export default function Page({ params }: { params: { slug: string } }) {
     
     let colorIndex = 0;
     const colors = [
-        '#1f77b4', // azul metálico
-        '#ff7f0e', // naranja de seguridad
-        '#2ca02c', // verde cocodrilo
-        '#d62728', // rojo ladrillo
-        '#9467bd', // morado opaco
-        '#8c564b', // marrón cuero
-        '#e377c2', // rosa rasberry
-        '#7f7f7f', // gris medio
-        '#bcbd22', // verde siena
-        '#17becf', // cian claro
-        '#393b79', // azul medianoche
-        '#637939', // verde oliva
-        '#8c6d31', // marrón bambú
-        '#843c39', // rojo oscuro
-        '#7b4173', // morado orquídea
-        '#bd9e39', // dorado tierra
-        '#e7cb94', // amarillo vainilla
-        '#e7ba52', // amarillo dorado
-        '#cedb9c', // verde manzana
-        '#e7969c', // rosa salmón
-        '#a55194', // morado berenjena
-        '#b5cf6b', // lima brillante
-        '#9c9ede', // lavanda suave
-        '#cedb9c', // verde pastel
-        '#f7b6d2', // rosa pastel
-        '#ad494a', // rojo carmín
-        '#8ca252', // verde musgo
-        '#000000', // negro
-        '#5254a3', // azul índigo
-        '#ff9896', // rosa claro
-        '#98df8a', // verde menta
-        '#ffbb78', // naranja melocotón
-        '#aec7e8', // azul cielo
-        '#c5b0d5', // lila
-        '#c49c94', // marrón arena
-        '#f7b6d2', // rosa claro
-        '#c7c7c7', // gris claro
-        '#dbdb8d', // amarillo pastel
-        '#9edae5'  // turquesa claro
+        "#092538", // Azul oscuro principal
+  "#2E4057", // Azul petróleo oscuro
+  "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
+  "#34675C", // Verde azulado más claro
+
+  // Amarillos y naranjas
+  "#FEF282", // Amarillo claro principal
+  "#F6C324", // Amarillo mostaza
+  "#FFA726", // Naranja
+  "#FF7043", // Naranja rojizo
+
+  // Grises y neutrales
+  "#BFBFBF", // Gris claro
+  "#8C8C8C", // Gris medio
+  "#616161", // Gris oscuro
+  "#424242", // Gris muy oscuro
+
+  // Rojos y púrpuras
+  "#E53935", // Rojo
+  "#D81B60", // Fucsia
+  "#8E24AA", // Púrpura
+
+  // Verdes y azules
+  "#43A047", // Verde
+  "#00ACC1", // Cian
+  "#1E88E5", // Azul
+
+  // Colores adicionales para diversidad
+  "#6D4C41", // Marrón
+  "#FDD835", // Amarillo dorado
+  "#26A69A", // Verde azulado claro
+  "#7E57C2", // Lavanda oscuro
+  "#EC407A", // Rosa
     ];
     const [number, setNumber] = useState(12);
     const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
@@ -475,7 +470,7 @@ setActualGroup(selectedGroup);
                                 }
                             },
                             width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-                            height: 600,
+                            height: 700,
                             title: {
                                 text: `Relative abundance ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`, font: { // Añade esta sección para personalizar el título
                                     family: 'Roboto, sans-serif',
@@ -592,11 +587,11 @@ setActualGroup(selectedGroup);
     );
 
     const filter = (
-        <div className={`flex flex-col w-full p-4 bg-white rounded-lg  dark:bg-gray-800 `}>
+        <div className={`flex flex-col w-full p-4 rounded-lg  dark:bg-gray-800 `}>
 
             <div className="flex flex-col items-left space-x-2">
 <div>
-     <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select a rank option</h3>
+     <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a rank option</h3>
                 <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     {taxonomyOptions?.map((option, index) => (
                         <option key={index} value={option}>
@@ -772,7 +767,7 @@ useEffect(() => {
                             </GraphicCard>
                         </div>
                         <div className="w-full flex flex-row ">
-                                <div className="w-1/5"></div>
+                                <div className="w-1/4"></div>
                                 <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
@@ -805,7 +800,7 @@ useEffect(() => {
                             </div>
                     </div>
                 ) : (
-                    <div className="w-full h-full"><Loading type={"cubes"} color={'#0A283D'}/></div>
+                    <div className="w-full h-full"><Spinner/></div>
                     )}
             </Layout>
             </SidebarProvider>

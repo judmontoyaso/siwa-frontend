@@ -216,10 +216,19 @@ const messageName = "messageData_" +  params.slug;
         const { records } = response; // Extrae 'records' de la respuesta
 
         const data = Object.entries(records).map(([key, value]) => {
-            return {
-                variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                samples: Object.entries(value as { [s: string]: unknown }).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')
-            };
+            // Verifica si la clave actual es 'total_samples'
+            if (key === 'total_samples') {
+                return {
+                    variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                    samples: value  // Maneja 'total_samples' directamente
+                };
+            } else {
+                // Maneja los demás campos como antes
+                return {
+                    variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                    samples: Object.entries(value as { [s: string]: unknown }).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')
+                };
+            }
         });
         setMessageData(data);
 
@@ -683,18 +692,21 @@ setTempFile(false)
         , [valueOptions]);
 
         const sumarNumerosDeCadena = (cadena: { match: (arg0: RegExp) => any[]; }) => {
-            const numeros = cadena.match(/\d+/g).map(Number);
-            return numeros.reduce((acc: any, curr: any) => acc + curr, 0);
+            const numeros = cadena.match(/\d+/g)?.map(Number);
+            return numeros?.reduce((acc: any, curr: any) => acc + curr, 0);
         };
     
-        // Agregando una nueva propiedad 'total' a cada objeto en messageData
-        const messageDataConTotal = messageData?.map((item: { samples: any; }) => {
-            const total = sumarNumerosDeCadena(item.samples);
-            return { ...item, total };
-        });
+ 
+        const messageDataConTotal = messageData
+        ?.filter((item: { variable: string; }) => item.variable !== "Total Samples")  // Filtra primero los elementos que no deseas
+        .map((item: { samples: { match: (arg0: RegExp) => any[]; }; }) => ({ ...item, total: sumarNumerosDeCadena(item.samples) }));  // Luego mapea los elementos restantes
+      
     
-        // Calcula la suma total de todos los 'total'
-        const totalSamples = messageDataConTotal?.reduce((acc: any, item: { total: any; }) => acc + item.total, 0);
+     // Buscar el objeto con 'variable' igual a 'total_samples'
+const totalSamplesObj = messageData?.find((item: { variable: string; }) => item.variable === "Total Samples");
+
+// Acceder al valor de 'samples' si el objeto existe
+const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
     
         const message = (
 

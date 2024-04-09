@@ -6,7 +6,7 @@
 @layer tailwind-base, primereact, tailwind-utilities;
 
 @layer tailwind-base {
-  @tailwind base;
+  @tailwind base; 
 }
 
 @layer tailwind-utilities {
@@ -14,6 +14,14 @@
   @tailwind utilities;
 }
 
+@layer reset, primereact;
+
+/* Reset CSS */
+@layer reset {
+    button,
+    input{}
+}
+ 
 
 :root {
   --foreground-rgb: 0, 0, 0;

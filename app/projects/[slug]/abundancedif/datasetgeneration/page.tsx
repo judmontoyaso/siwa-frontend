@@ -704,7 +704,7 @@ setTempFile(false)
                 </p>
                 <div>
             <div className="mb-5">
-                <h2> Selected Samples (Total Number of Samples: {totalSamples})</h2>
+                <h2 className="mt-2 mb-2"> Selected Samples (Total Number of Samples: {totalSamples})</h2>
                 <DataTable value={messageDataConTotal}>
                     <Column field="variable" header="Variable" />
                     <Column field="samples" header="Number of Samples" />

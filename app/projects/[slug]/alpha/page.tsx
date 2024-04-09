@@ -595,14 +595,14 @@ export default function Page({ params }: { params: { slug: string } }) {
 
             return {
                 x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
-                y: maxYValueForLocation(locationValue, otus?.data) + 0.5,
+                y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 7),
                 text: significance, // Convertir 'significance' a cadena
                 xref: 'x',
                 yref: 'y',
-                showarrow: true,
-                arrowhead: 7,
+                showarrow: false,
                 ax: 0,
                 ay: -40,
+                font: { size: 18 }
             };
         });
 
@@ -688,7 +688,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             showticklabels: false  // Oculta las etiquetas del eje X
         },
         annotations: annotations,
-        yaxis: graphType === "boxplot" ? { range: yAxisRange }  : { autorange: true } ,
+        yaxis: graphType === "boxplot" ? { range: yAxisRange }  : { range: [yAxisRange[0], yAxisRange[1] + 5] },
         margin:  graphType === "boxplot" ? { l: 20, r: 10, t: 0, b: 20 }  : { l: 20, r: 10, t: 50, b: 50 }
     }}
 />
@@ -704,7 +704,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     );
 
     return (
-        <div>
+        <div className="w-full h-full">
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} >
 
@@ -780,7 +780,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                         </div>
 
                     ) : (
-                        <div>Loading...</div>
+                        <div className="w-full h-full"><Loading type={"cubes"} color={'#0A283D'}/></div>
                     )}
                     <ToastContainer />
                 </Layout>

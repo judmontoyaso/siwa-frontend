@@ -682,28 +682,40 @@ setTempFile(false)
 
         , [valueOptions]);
 
-
+        const sumarNumerosDeCadena = (cadena: { match: (arg0: RegExp) => any[]; }) => {
+            const numeros = cadena.match(/\d+/g).map(Number);
+            return numeros.reduce((acc: any, curr: any) => acc + curr, 0);
+        };
+    
+        // Agregando una nueva propiedad 'total' a cada objeto en messageData
+        const messageDataConTotal = messageData?.map((item: { samples: any; }) => {
+            const total = sumarNumerosDeCadena(item.samples);
+            return { ...item, total };
+        });
+    
+        // Calcula la suma total de todos los 'total'
+        const totalSamples = messageDataConTotal?.reduce((acc: any, item: { total: any; }) => acc + item.total, 0);
+    
         const message = (
 
             <div className="p-6 mb-5 mt-5 bg-gray-100 rounded-lg shadow-sm w-full">
                 <p className="text-lg mb-5 mt-5 text-gray-800">
                 A dataset has been generated containing the following samples per variable. It will be available for one hour before it&apos;s deleted, requiring re-upload.
                 </p>
-                <div className="mb-5">
-                    <DataTable value={messageData}>
-                        <Column field="variable" header="Variable"></Column>
-                        <Column field="samples" header="Number of Samples"></Column>
-                    </DataTable>
-                </div>
-                <div className="text-center mb-5">
-    <i className="pi pi-info-circle text-green-500 text-xl mr-2 align-middle"></i>
-    <p className="text-lg text-gray-800 inline align-middle">
-    Click on the <strong className="text-green-500 animate-pulse">green arrow</strong> above to proceed to the analysis.    </p>
-    
-    </div>
+                <div>
+            <div className="mb-5">
+                <h2> Selected Samples (Total Number of Samples: {totalSamples})</h2>
+                <DataTable value={messageDataConTotal}>
+                    <Column field="variable" header="Variable" />
+                    <Column field="samples" header="Number of Samples" />
+                    <Column field="total" header="Total" body={(rowData) => rowData.total} />
+                </DataTable>
+            </div>
+        </div>
+      
     
             
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-center gap-4 mb-5 mt-5">
                 <Button
                         label="Back"
                         icon="pi pi-arrow-left"

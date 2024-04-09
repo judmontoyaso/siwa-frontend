@@ -21,14 +21,14 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend }) =
   return (
     <div className="flex flex-row items-start mt-6 bg-white w-full">
       {isFilterVisible && (
-        <div className='flex w-1/4 relative'>
+        <div className='flex w-1/4 relative h-full'>
           <PopupComponent filter={filter} />
         </div>
       )}
 
-<Card className={`${ isFilterVisible ? 'w-3/4 relative' : 'w-full relative m-5' } `}>
+<Card className={`h-full ${ isFilterVisible ? 'w-3/4 relative' : 'w-full relative m-5' } `}>
         {/* Posiciona el botón de manera que sobresalga del contenedor de filtros como una pestaña */}
-        <button onClick={toggleFilterVisibility} className={`absolute top-0 ${isFilterVisible ? '-left-12' : '-left-3'} text-gray-600 bg-white border border-gray-300 rounded-lg p-2`}>
+        <button onClick={toggleFilterVisibility} className={`absolute top-0 ${isFilterVisible ? '-left-14' : '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg p-2`}>
           {isFilterVisible ? <IoCloseOutline size="20" /> : <IoFilterOutline size="20" />}
         </button>
         {title && (

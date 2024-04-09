@@ -2,6 +2,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
+import Spinner from "@/app/components/pacmanLoader";
 import Loading from "@/app/components/loading";
 import Plot from "react-plotly.js";
 import SkeletonCard from "@/app/components/skeletoncard";
@@ -16,6 +17,8 @@ import { AuthProvider, useAuth } from "@/app/components/authContext";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { FiActivity, FiBarChart } from "react-icons/fi";
+import { RiExchangeFundsLine } from "react-icons/ri";
+
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -54,45 +57,39 @@ export default function Page({ params }: { params: { slug: string } }) {
     let colorIndex = 0;
 
     const colors = [
-        '#1f77b4', // azul metálico
-        '#ff7f0e', // naranja de seguridad
-        '#2ca02c', // verde cocodrilo
-        '#d62728', // rojo ladrillo
-        '#9467bd', // morado opaco
-        '#8c564b', // marrón cuero
-        '#e377c2', // rosa rasberry
-        '#7f7f7f', // gris medio
-        '#bcbd22', // verde siena
-        '#17becf', // cian claro
-        '#393b79', // azul medianoche
-        '#637939', // verde oliva
-        '#8c6d31', // marrón bambú
-        '#843c39', // rojo oscuro
-        '#7b4173', // morado orquídea
-        '#bd9e39', // dorado tierra
-        '#e7cb94', // amarillo vainilla
-        '#e7ba52', // amarillo dorado
-        '#cedb9c', // verde manzana
-        '#e7969c', // rosa salmón
-        '#a55194', // morado berenjena
-        '#b5cf6b', // lima brillante
-        '#9c9ede', // lavanda suave
-        '#cedb9c', // verde pastel
-        '#f7b6d2', // rosa pastel
-        '#ad494a', // rojo carmín
-        '#8ca252', // verde musgo
-        '#000000', // negro
-        '#5254a3', // azul índigo
-        '#ff9896', // rosa claro
-        '#98df8a', // verde menta
-        '#ffbb78', // naranja melocotón
-        '#aec7e8', // azul cielo
-        '#c5b0d5', // lila
-        '#c49c94', // marrón arena
-        '#f7b6d2', // rosa claro
-        '#c7c7c7', // gris claro
-        '#dbdb8d', // amarillo pastel
-        '#9edae5'  // turquesa claro
+        "#092538", // Azul oscuro principal
+        "#34675C", // Verde azulado más claro
+        "#2E4057", // Azul petróleo oscuro
+        
+        // Amarillos y naranjas
+        "#FEF282", // Amarillo claro principal
+        "#F6C324", // Amarillo mostaza
+        "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
+        "#FFA726", // Naranja
+        "#FF7043", // Naranja rojizo
+      
+        // Grises y neutrales
+        "#BFBFBF", // Gris claro
+        "#8C8C8C", // Gris medio
+        "#616161", // Gris oscuro
+        "#424242", // Gris muy oscuro
+      
+        // Rojos y púrpuras
+        "#E53935", // Rojo
+        "#D81B60", // Fucsia
+        "#8E24AA", // Púrpura
+      
+        // Verdes y azules
+        "#43A047", // Verde
+        "#00ACC1", // Cian
+        "#1E88E5", // Azul
+      
+        // Colores adicionales para diversidad
+        "#6D4C41", // Marrón
+        "#FDD835", // Amarillo dorado
+        "#26A69A", // Verde azulado claro
+        "#7E57C2", // Lavanda oscuro
+        "#EC407A", // Rosa
     ];
 
 
@@ -425,10 +422,10 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
     const filter = (
-        <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
+        <div className={`flex flex-col w-full  rounded-lg  dark:bg-gray-800 `}>
             <div className={`tab-content `}>
                 <div className="flex flex-col items-left space-x-2">
-                    <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select a sample location</h3>
+                    <h3 className="mb-5 text-lg font-bold text-gray-900 dark:text-white">Select a Sample Location</h3>
                     <Dropdown
  value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
                          options={options}
@@ -515,7 +512,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             <div className="flex w-full items-center margin-0 justify-center my-8">
                 <button
                     onClick={applyFilters}
-                    className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-10 rounded-xl"
+                    className="bg-custom-green-700 hover:bg-custom-green-500 text-white font-bold py-2 px-14 rounded-xl text-lg"
                 >
                     Apply
                 </button>
@@ -595,7 +592,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
             return {
                 x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
-                y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 7),
+                y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 4),
                 text: significance, // Convertir 'significance' a cadena
                 xref: 'x',
                 yref: 'y',
@@ -607,7 +604,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         });
 
         setAnnotations(annotations as never[]);
-    }, [otus]);
+    }, [otus, graphType]);
 
     const calculateMaxAlphaShannon = () => {
         if (!otus?.data) return 0;
@@ -653,15 +650,18 @@ export default function Page({ params }: { params: { slug: string } }) {
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <> 
-              <div className="flex items-center mb-4 mt-4">
+                    <div className="flex w-full justify-end">
+                      <div className="flex items-center">
 
 <Button
-    className=" p-button-rounded p-button-outlined p-button-sm mb-4 mt-4"
+    className=" p-button-rounded p-button-outlined p-button-sm"
     onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
     data-tip data-for="botoninterpreteTip" id="botoninterpreteTip" 
-    >Change to {graphType === "boxplot" ? "violin" : "boxplot"} view  
+    ><RiExchangeFundsLine className="text-lg mr-1"/> Change to {graphType === "boxplot" ? "violin" : "boxplot"} view  
   </Button>
-               </div>
+               </div>   
+                    </div>
+             
 
 
                <Plot
@@ -675,6 +675,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     size: 4, // Ajusta el tamaño del marcador según sea necesario para mejorar la legibilidad
                 },
                 boxpoints: graphType === "boxplot" ? "all" : undefined,
+                points: graphType !== "boxplot" ? "all" : undefined,
                 jitter: 0.3,  // Controla cuánto se dispersan los puntos en la dirección horizontal; ajusta según necesidad
                 pointpos: 0,  // Coloca los puntos directamente en el centro de las cajas
             }))
@@ -745,7 +746,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 </GraphicCard>
                             </div>
                             <div className="w-full flex flex-row ">
-                                <div className="w-1/5"></div>
+                                <div className="w-1/4"></div>
                                 <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
@@ -780,7 +781,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                         </div>
 
                     ) : (
-                        <div className="w-full h-full"><Loading type={"cubes"} color={'#0A283D'}/></div>
+                        <div className="w-full h-full"><Spinner /></div>
                     )}
                     <ToastContainer />
                 </Layout>

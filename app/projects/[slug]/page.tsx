@@ -70,7 +70,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       {/* Contenedor de texto */}
       <div className="px-6 py-8 md:w-1/2">
       {configFile?.summary?.image ? (
-        <div className="prose lg:prose-lg max-w-none space-y-4">
+        <div className="prose lg:prose-lg max-w-none space-y-4 text-start">
           {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
             <p key={key} className="text-gray-700">{value as ReactNode}</p>
           ))}

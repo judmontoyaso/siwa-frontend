@@ -14,6 +14,7 @@ import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { useAuth } from "@/app/components/authContext";
+import Spinner from "@/app/components/pacmanLoader";
 
 
 
@@ -59,50 +60,46 @@ export default function Page({ params }: { params: { slug: string } }) {
   let colorIndex = 0;
   const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
   const colorsLocation = [
-    '#1f77b4', // azul metálico
-    '#ff7f0e', // naranja de seguridad
-    '#2ca02c', // verde cocodrilo
+
+    "#FFA726", // Naranja
+
+    "#8C8C8C", // Gris medio
+    "#FF7043", // Naranja rojizo
   ];
   const colors = [
-    '#1f77b4', // azul metálico
-    '#ff7f0e', // naranja de seguridad
-    '#2ca02c', // verde cocodrilo
-    '#d62728', // rojo ladrillo
-    '#9467bd', // morado opaco
-    '#8c564b', // marrón cuero
-    '#e377c2', // rosa rasberry
-    '#7f7f7f', // gris medio
-    '#bcbd22', // verde siena
-    '#17becf', // cian claro
-    '#393b79', // azul medianoche
-    '#637939', // verde oliva
-    '#8c6d31', // marrón bambú
-    '#843c39', // rojo oscuro
-    '#7b4173', // morado orquídea
-    '#bd9e39', // dorado tierra
-    '#e7cb94', // amarillo vainilla
-    '#e7ba52', // amarillo dorado
-    '#cedb9c', // verde manzana
-    '#e7969c', // rosa salmón
-    '#a55194', // morado berenjena
-    '#b5cf6b', // lima brillante
-    '#9c9ede', // lavanda suave
-    '#cedb9c', // verde pastel
-    '#f7b6d2', // rosa pastel
-    '#ad494a', // rojo carmín
-    '#8ca252', // verde musgo
-    '#000000', // negro
-    '#5254a3', // azul índigo
-    '#ff9896', // rosa claro
-    '#98df8a', // verde menta
-    '#ffbb78', // naranja melocotón
-    '#aec7e8', // azul cielo
-    '#c5b0d5', // lila
-    '#c49c94', // marrón arena
-    '#f7b6d2', // rosa claro
-    '#c7c7c7', // gris claro
-    '#dbdb8d', // amarillo pastel
-    '#9edae5'  // turquesa claro
+
+    "#FFA726", // Naranja
+
+    "#8C8C8C", // Gris medio
+    "#FF7043", // Naranja rojizo
+    "#616161", // Gris oscuro
+    "#092538", // Azul oscuro principal
+  "#2E4057", // Azul petróleo oscuro
+  "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
+
+
+  // Amarillos y naranjas
+  "#FEF282", // Amarillo claro principal
+  "#F6C324", // Amarillo mostaza
+ 
+  "#424242", // Gris muy oscuro
+
+  // Rojos y púrpuras
+  "#E53935", // Rojo
+  "#D81B60", // Fucsia
+  "#8E24AA", // Púrpura
+
+  // Verdes y azules
+  "#43A047", // Verde
+  "#00ACC1", // Cian
+  "#1E88E5", // Azul
+
+  // Colores adicionales para diversidad
+  "#6D4C41", // Marrón
+  "#FDD835", // Amarillo dorado
+  "#26A69A", // Verde azulado claro
+  "#7E57C2", // Lavanda oscuro
+  "#EC407A", // Rosa
   ];
   const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
@@ -572,11 +569,11 @@ const valueChecks = (
 
 
   const filter = (
-    <div className={`flex flex-col w-full bg-white rounded-lg  dark:bg-gray-800 `}>
+    <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
 
         <div className="flex flex-col items-left space-x-2">
 
-          <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select an option</h3>
+          <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select an option</h3>
           <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={selectedLocation === "all" ? selectedLocation : selectedLocations}
             onChange={(e) => handleLocationChange(e.target.value)}
@@ -791,7 +788,7 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
     </GraphicCard>
   </div>
   <div className="w-full flex flex-row ">
-                                <div className="w-1/5"></div>
+                                <div className="w-1/4"></div>
                                 <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
@@ -826,7 +823,7 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
 </div>
 
         ) : (
-          <div className="w-full h-full"><Loading type={"cubes"} color={'#0A283D'}/></div>
+          <div className="w-full h-full"><Spinner/></div>
           )}
         <ToastContainer />
       </Layout>

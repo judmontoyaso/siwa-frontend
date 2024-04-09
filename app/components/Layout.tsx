@@ -9,6 +9,8 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 
 import 'primeicons/primeicons.css';
 import Loading from './loading';
+import { CgSpinnerTwoAlt } from 'react-icons/cg';
+import Spinner from './pacmanLoader';
 
 type LayoutProps = {
   children: ReactNode;
@@ -20,7 +22,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter:any }> = ({ children
   useEffect(() => {console.log("layout", isSidebarOpen)}, [isSidebarOpen]);
   return (
     <div className="flex flex-row h-full">
-{isLoading ? <><Loading type={"cubes"} color={'#0A283D'}/></> : <>   <Sidebar slug={slug} filter={filter}/>
+{isLoading ? <><Spinner/></> : <>   <Sidebar slug={slug} filter={filter}/>
       <div className={`flex flex-col h-full ${isSidebarOpen ? "w-full" : "w-full"}`}>
       <Navbar slug={slug} ></Navbar>
 

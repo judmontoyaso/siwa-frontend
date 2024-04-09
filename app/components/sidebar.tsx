@@ -18,6 +18,8 @@ import { FaAngleDown } from "react-icons/fa6";
 import { FaAngleUp } from "react-icons/fa6"
 import { Sidebar } from "primereact/sidebar";
 import { FaAnglesRight } from "react-icons/fa6";
+import Spinner from "./pacmanLoader";
+import { TbReportAnalytics } from "react-icons/tb";
 const BearerContext = createContext('');
 
 export default function Home({ slug, filter }: { slug: string, filter: any }) {
@@ -31,14 +33,15 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
 
   useEffect(() => { setIsSidebarOpen(visible)}, [visible]);
 
+
   useEffect(() => {console.log("sidebar", isSidebarOpen)}, [isSidebarOpen]);
 
 console.log(user)
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex items-center h-full justify-center">
         {/* Aquí puedes poner un componente de carga o un simple texto */}
-        <div>Cargando...</div>
+        <div><Spinner /></div>
       </div>
     );
   }
@@ -127,11 +130,11 @@ console.log(user)
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/beta` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
                             <Link href={`/projects/${slug}/beta`} className="block px-3 ">
-                              Beta diversity</Link>
+                            Community make-up</Link>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/taxonomy/composition` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
                             <Link href={`/projects/${slug}/taxonomy/composition`} className="block px-3 ">
-                              Taxonomy Composition</Link>
+                            Taxonomic abundance</Link>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/abundancedif/datasetgeneration` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
                             <Link href={`/projects/${slug}/abundancedif/datasetgeneration`} className="block px-3 ">
@@ -150,6 +153,14 @@ console.log(user)
                         <div className="bg-navy-900 cursor-not-allowed flex flex-col  my-4 p-4 rounded-lg rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center">
                           <span className="ms-3 text-gray-500 ">Histopathology</span>
                         </div></div></li>
+                        <li>
+
+
+<Link aria-disabled={true} href={''} className="block px-1  ">
+  <div className={`cursor-not-allowed flex flex-row  mt-4  mb-2 p-4  ${router === `/projects/${slug}` ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
+    <TbReportAnalytics  className="text-siwa-yellow"/><span className="ms-3">Personalized analyses</span>
+  </div></Link></li>
+
 
 
                   </ul>

@@ -163,16 +163,16 @@ const Dashboard = () => {
   
       <div className="mx-auto w-full max-w-4xl px-8 pb-8 flex flex-row gap-8">
         {/* Ajuste en la imagen para que ocupe todo el espacio asignado a su contenedor */}
-        <div className="w-1/2 flex justify-center items-start">
-          <img src="/perrito.webp" alt="Decorative" className="max-w-full rounded-lg shadow-lg"/>
+        <div className="w-1/2 h-full flex justify-center items-start">
+          <img src="/perrito.webp" alt="Decorative" className="max-w-full rounded-lg shadow-lg h-96"/>
         </div>
   
         {/* Contenedor de la lista de proyectos con un ajuste para ocupar el espacio restante */}
-        <div className="w-1/2 flex flex-col">
+        <div className="w-1/2 h-full flex flex-col">
           {/* Lista de Proyectos */}
           {!projectsLoading ? (
-            <div className="bg-white shadow rounded-lg overflow-hidden w-full">
-              <div className="p-6">
+            <div className="bg-white shadow rounded-lg overflow-hidden h-96 w-full">
+              <div className="p-6 h-full">
                 <h3 className="text-xl font-medium text-gray-800 mb-4">Projects</h3>
                 <ul className="divide-y divide-gray-200">
                   {projectIds.map((projectId) => (

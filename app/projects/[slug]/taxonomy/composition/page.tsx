@@ -347,7 +347,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
         0: string; // Para el label
         1: number; // Para el valor de X
         3: number; // Para el valor de Y
-        // Agrega más propiedades según sea necesario
+     
     }
     useEffect(() => {
 
@@ -371,6 +371,13 @@ fetchConfigFile(accessToken); fetchData(accessToken);
 
                 newScatterColors[label as string] = color;
             });
+
+            // Ordenando los traces basados en la suma total de los valores de Y de cada uno, de mayor a menor
+            traces.sort((a, b) => {
+            const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
+            const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
+            return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
+        });
 
             setPlotData(traces);
             console.log("Traces:", plotData);
@@ -717,7 +724,7 @@ useEffect(() => {
   
 
     return (
-        <div>
+        <div className="w-full h-full">
             <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
                 {isLoaded ? (
@@ -798,8 +805,8 @@ useEffect(() => {
                             </div>
                     </div>
                 ) : (
-                    <div>Loading...</div>
-                )}
+                    <div className="w-full h-full"><Loading type={"cubes"} color={'#0A283D'}/></div>
+                    )}
             </Layout>
             </SidebarProvider>
         </div>

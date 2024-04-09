@@ -138,9 +138,9 @@ export default function Page({ params }: { params: { slug: string } }) {
       }
       const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
       console.log(configfile);
-      setconfigFile(configfile.configFile);
-      setBetaText(configfile.configFile.betadiversity);
-      setColorByOptions(configfile.configFile.columns); // Actualiza el estado con las nuevas opciones
+      setconfigFile(configfile?.configFile);
+      setBetaText(configfile?.configFile?.betadiversity);
+      setColorByOptions(configfile?.configFile?.columns); // Actualiza el estado con las nuevas opciones
     } catch (error) {
       console.error("Error al cargar las opciones del dropdown:", error);
     }
@@ -204,10 +204,10 @@ console.log(colorBy)
         const result = await response.json();
         console.log(result);
         setDataResult(result);
-        setColumnOptions(result.data.columns);
+        setColumnOptions(result?.data?.columns);
         setDataUnique(result);
 
-        setValueOptions(result.data.data);
+        setValueOptions(result?.data?.data);
         return result; // Devolver los datos obtenidos
   
       } catch (error) {
@@ -321,7 +321,7 @@ const handleValueChange = (value: string) => {
 const valueChecks = (
     <div className="mb-5 mt-5">
         <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
-        {valueOptions.map((value, index) => (
+        {valueOptions?.map((value, index) => (
             <div key={index} className="flex items-center mb-2">
                 <input
                     id={`value-${index}`}
@@ -357,7 +357,7 @@ const valueChecks = (
       selectedLocations.includes(item[3])
     );
 
-    const groupedData = filteredData.reduce(
+    const groupedData = filteredData?.reduce(
       (
         acc: {
           [x: string]: {
@@ -383,7 +383,7 @@ const valueChecks = (
       {}
     );
 
-    const scatterPlotData = filteredData.reduce(
+    const scatterPlotData = filteredData?.reduce(
       (
         acc: {
           [x: string]: {
@@ -426,8 +426,8 @@ const valueChecks = (
       {} // Asegura que el valor inicial del acumulador es un objeto
     );
     setScatterColors(prevColors => ({ ...prevColors, ...newScatterColors }));
-    setScatterData(Object.values(scatterPlotData));
-    const plotData = Object.keys(groupedData)
+    setScatterData(Object.values(scatterPlotData || {}));
+    const plotData = Object.keys(groupedData || {})
       .filter((location: string) => selectedLocation.includes(location))
       .map((location: string) => ({
         type: "box",
@@ -438,7 +438,7 @@ const valueChecks = (
       }));
 
     setPlotData(
-      Object.keys(groupedData).map((location) => ({
+      Object.keys(groupedData || {})?.map((location) => ({
         ...groupedData[location],
         type: "box",
         name: location,
@@ -568,7 +568,7 @@ const valueChecks = (
       fetchData(accessToken).then((result) => { console.log(result); fetchProjectIds(result) })
     
   }
-    , [params.slug]);
+    , [params.slug, accessToken]);
 
 
   const filter = (
@@ -613,7 +613,7 @@ const valueChecks = (
                 </div>
               </label>
             </li>
-           { columnOptions.includes("age" as never) && (
+           { columnOptions?.includes("age" as never) && (
             <li>
               <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'age'}
                 onChange={handleLocationChangeColorby} />
@@ -623,7 +623,7 @@ const valueChecks = (
                 </div>
               </label>
             </li>)}
-            {colorByOptions.map((option, index) => (
+            {colorByOptions?.map((option, index) => (
               <li key={index}>
                 <input
                   type="radio"
@@ -749,7 +749,7 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
 </div>)
 
   return (
-    <div>
+    <div className="w-full h-full">
       <SidebarProvider>
       <Layout slug={params.slug} filter={""} >
         {isLoaded ? (
@@ -826,8 +826,8 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
 </div>
 
         ) : (
-          <div>Loading...</div>
-        )}
+          <div className="w-full h-full"><Loading type={"cubes"} color={'#0A283D'}/></div>
+          )}
         <ToastContainer />
       </Layout>
       </SidebarProvider>

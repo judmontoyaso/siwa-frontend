@@ -6813,3 +6813,90 @@ body {
     color: #ffffff;
   }
 }
+
+
+
+/* Estilos para el loader de Pacman comiendo bacterias :D -.-'*/
+.pacman-loader > span:nth-child(3),
+.pacman-loader > span:nth-child(4),
+.pacman-loader > span:nth-child(5),
+.pacman-loader > span:nth-child(6) {
+  background-image: url('/bacteria.png');
+  background-size: contain;
+  background-repeat: no-repeat!important;
+  background-color: transparent!important; /* Para ocultar el fondo circular original */
+  width: 20px!important; /* Ajusta el tamaño según la imagen de bacteria */
+  height: 20px!important;
+}
+
+.react-spinners-PacmanLoader-ball {
+  background-color: transparent!important; /* Para ocultar el fondo circular original */
+}
+
+.pacman-loader > span:nth-child(3),
+.pacman-loader > span:nth-child(4),
+.pacman-loader > span:nth-child(5),
+.pacman-loader > span:nth-child(6) {
+  animation: 2s linear 0.5s infinite normal both running react-spinners-PacmanLoader-ball!important;
+}
+
+.pacman-loader > span:nth-child(4) {
+  animation: 2s linear 1s infinite normal both running react-spinners-PacmanLoader-ball!important;
+}
+
+.pacman-loader > span:nth-child(5) {
+  animation: 2s linear 1.5s infinite normal both running react-spinners-PacmanLoader-ball!important;
+}
+
+.pacman-loader > span:nth-child(6) {
+  animation: 2s linear 2s infinite normal both running react-spinners-PacmanLoader-ball!important;
+}
+
+
+
+
+
+
+@keyframes react-spinners-PacmanLoader-pacman-1 {
+  0% {
+    transform: rotate(0deg);
+}
+0% {
+    transform: rotate(0deg);
+}
+
+50% {
+    transform: rotate(-44deg);
+}
+
+}
+
+
+
+@keyframes react-spinners-PacmanLoader-pacman-2 {
+  
+
+
+0% {
+  transform: rotate(0deg);
+}
+
+50% {
+  transform: rotate(44deg);
+}
+
+}
+
+@keyframes react-spinners-PacmanLoader-ball {
+  
+
+75% {
+    opacity: 0.9;
+}
+
+
+100% {
+    transform: translate(-100px, -6.25px);
+}
+
+}

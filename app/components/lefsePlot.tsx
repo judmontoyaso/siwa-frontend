@@ -26,11 +26,11 @@ const LefsePlot = ({ data }: { data: any }) => {
     });
 
     const newLayout = {
-      title: 'LefSe Results',
+      // title: 'LefSe Results',
       xaxis: { title: 'LDA Score' },
-      yaxis: { title: 'Features', automargin: true },
+      // yaxis: { title: 'Features'},
       barmode: 'group',
-      margin: { l: 120, r: 10, t: 0, b: 20 },
+      margin: { l: 200, r: 20, t: 40, b: 80 },
       height: 900,
       width: 900,
       showlegend: true, // Asegura que la leyenda se muestre siempre

@@ -778,7 +778,6 @@ useEffect(() => {
 <div>
 
         
-<div id="contendor-html" dangerouslySetInnerHTML={{ __html: htmlContent }} />
 <iframe src="/api/components/innerHtml" frameBorder="0" width="100%" height="500px" allowFullScreen></iframe>
 
 {/* <SunburstChart paths={sunburstData.paths} values={sunburstData.values} ids={[sunburstData.ids]} /> */}
@@ -843,3 +842,5 @@ useEffect(() => {
         </div>
     );
 }
+
+

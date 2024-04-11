@@ -6,5 +6,14 @@ module.exports = {
     sassOptions: {
       includePaths: [path.join(__dirname, 'styles')],
     },
+
+    rewrites: async () => [
+      {
+        source: "/public/myfile.html",
+        destination: "/pages/api/myfile.js",
+      },
+    ],
   }
+
+  
   

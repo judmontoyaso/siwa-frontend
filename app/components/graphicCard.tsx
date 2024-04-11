@@ -8,9 +8,10 @@ type CardProps = {
   title?: any;
   filter: any; // Para pasar el contenido del filtro al PopupComponent
   legend: any; // Para la leyenda del gráfico
+  orientation?: 'horizontal' | 'vertical';
 };
 
-const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend }) => {
+const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, orientation = "vertical" }) => {
   const [isFilterVisible, setIsFilterVisible] = useState(true); // Estado para controlar la visibilidad del PopupComponent
 
   // Función para alternar la visibilidad del filtro
@@ -21,7 +22,7 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend }) =
   return (
     <div className="flex flex-row items-start mt-6 bg-white w-full">
       {isFilterVisible && (
-        <div className='flex w-1/4 relative h-full'>
+        <div className='flex w-1/4 relative' style={{ height: '800px' }}>
           <PopupComponent filter={filter} />
         </div>
       )}
@@ -36,12 +37,15 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend }) =
             {title}
           </div>
         )}
-        <div className='flex justify-center w-full'>
+        <div className={`flex ${orientation === 'horizontal' ? 'flex-row-reverse' : 'flex-col'}`}>
+           <div className={`flex justify-center  ${orientation === 'horizontal' ? 'w-2/5' : 'w-full'}`}>
           {legend}
         </div>
-        <div className="flex flex-col items-center justify-center">
+        <div className={`flex flex-col items-center justify-center  ${orientation === 'horizontal' ? 'w-3/5' : 'w-full'}`}>
           {children}
         </div>
+        </div>
+       
       </Card>
 
 

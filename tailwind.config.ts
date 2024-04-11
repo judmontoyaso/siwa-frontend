@@ -53,7 +53,10 @@ const config: Config = {
           900: '#331800',
         },
         'siwa-blue': { DEFAULT: '#0A283D' },
-        'siwa-yellow': { DEFAULT: '#FEF282' }
+        'siwa-yellow': { DEFAULT: '#FEF282' },
+        'siwa-green-1': { DEFAULT: '#435c54' },
+        'siwa-green-2': { DEFAULT: '#d3d1ab' },
+        'siwa-green-3': { DEFAULT: '#8c9479' },
       }
     },
   },

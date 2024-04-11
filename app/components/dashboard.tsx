@@ -8,7 +8,7 @@ import Navbar from "@/app/components/navbar";
 import Layout from "@/app/components/Layout";
 import { useRouter } from "next/router";
 import SkeletonCard from "./skeletoncard";
-import { Bounce, ToastContainer, toast } from "react-toastify";
+import { Bounce, Slide, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { GiSpinalCoil } from "react-icons/gi";
 import { BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
@@ -81,15 +81,15 @@ const Dashboard = () => {
       // Iniciar un temporizador para mostrar el tostify después de 2 segundos
       tostifyTimeout = setTimeout(() => {
         toast.info(`Please wait, the ${projectId} project data is being processed`, {
-          position: "top-center",
+          position: "top-right",
           autoClose: 5000,
           hideProgressBar: false,
           closeOnClick: true,
-          pauseOnHover: true,
+          pauseOnHover: false,
           draggable: true,
           progress: undefined,
           theme: "light",
-          transition: Bounce,
+          transition: Slide,
         });
       }, 2000); // 2 segundos
   

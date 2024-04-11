@@ -730,7 +730,7 @@ useEffect(() => {
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} >
 
-                    {!isLoaded ? (
+                    {isLoaded ? (
                         <div className="flex flex-col w-full">
 
                             <div className="flex flex-row w-full text-center justify-center items-center">

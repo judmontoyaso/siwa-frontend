@@ -15,6 +15,8 @@ import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { useAuth } from "@/app/components/authContext";
 import Spinner from "@/app/components/pacmanLoader";
+import { Button } from "primereact/button";
+import { Divider } from "primereact/divider";
 
 
 
@@ -55,6 +57,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
   const [dataUnique, setDataUnique] = useState<any>();
   const [columnOptions, setColumnOptions] = useState<string[]>([]);
+  const[filterPeticion, setFilterPetition] = useState(false);
 
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
@@ -183,17 +186,17 @@ console.log(colorBy)
         }),        }
         );
         if (!response.ok) {
-          toast.warn('The data needs to be loaded again!', {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            transition: Bounce,
-          });
+          // toast.warn('The data needs to be loaded again!', {
+          //   position: "top-center",
+          //   autoClose: 5000,
+          //   hideProgressBar: false,
+          //   closeOnClick: true,
+          //   pauseOnHover: true,
+          //   draggable: true,
+          //   progress: undefined,
+          //   theme: "light",
+          //   transition: Bounce,
+          // });
           // setTimeout(() => { window.location.href = "/"; }, 5000);
           // throw new Error("Respuesta no válida desde el servidor");
         }
@@ -231,17 +234,17 @@ console.log(colorBy)
       }),      }
       );
       if (!response.ok) {
-        toast.warn('The data needs to be loaded again!', {
-          position: "top-center",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          transition: Bounce,
-        });
+        // toast.warn('The data needs to be loaded again!', {
+        //   position: "top-center",
+        //   autoClose: 5000,
+        //   hideProgressBar: false,
+        //   closeOnClick: true,
+        //   pauseOnHover: true,
+        //   draggable: true,
+        //   progress: undefined,
+        //   theme: "light",
+        //   transition: Bounce,
+        // });
         // setTimeout(() => { window.location.href = "/"; }, 5000);
         // throw new Error("Respuesta no válida desde el servidor");
       }
@@ -272,6 +275,7 @@ console.log(colorBy)
     isColorByDisabled || colorBy === "samplelocation" ? SetTittleVariable('location') : SetTittleVariable(colorBy.replace('_', ' '));
     setLocation(selectedLocations);
     setSelectedColorBy(colorBy);
+    setFilterPetition(true);
 
   };
 
@@ -543,8 +547,10 @@ const valueChecks = (
       console.log(newScatterColors)
       console.log(scatterColors)
       setIsLoaded(true);
+      setFilterPetition(false);
     } catch (error) {
       console.error("Error al obtener projectIds:", error);
+      setFilterPetition(false);
     }
   };
 
@@ -571,9 +577,9 @@ const valueChecks = (
   const filter = (
     <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
 
-        <div className="flex flex-col items-left space-x-2">
+        <div className="flex flex-col items-left  mt-4 mb-4">
 
-          <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select an option</h3>
+          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location</h3>
           <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={selectedLocation === "all" ? selectedLocation : selectedLocations}
             onChange={(e) => handleLocationChange(e.target.value)}
@@ -587,10 +593,11 @@ const valueChecks = (
             ))}
           </select>
         </div>  
-        <div className="mt-10">
+        <Divider />
+        <div className=" mt-4 mb-4">
           <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-          <ul className="grid w-full gap-6 md:grid-cols-2">
-            <li>
+          <ul className="w-full flex flex-wrap items-center content-center justify-around">
+            <li className="w-48 m-2 mb-1 p-1">
               <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
@@ -600,7 +607,7 @@ const valueChecks = (
                 </div>
               </label>
             </li>
-            <li>
+            <li className="w-48 m-2 mb-1 p-1">
               <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'treatment'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
@@ -611,8 +618,8 @@ const valueChecks = (
               </label>
             </li>
            { columnOptions?.includes("age" as never) && (
-            <li>
-              <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'age'}
+            <li className="w-48 m-2 mb-1 p-1">
+            <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'age'}
                 onChange={handleLocationChangeColorby} />
               <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
@@ -621,7 +628,7 @@ const valueChecks = (
               </label>
             </li>)}
             {colorByOptions?.map((option, index) => (
-              <li key={index}>
+              <li className="w-48 m-2 mb-1 p-1" key={index}>
                 <input
                   type="radio"
                   id={option}
@@ -650,15 +657,26 @@ const valueChecks = (
         <div>
 {isColorByDisabled ? "" :
         colorBy === "samplelocation" ? "" :
-                (valueChecks)}
+        <>
+        <Divider />
+        <div className=" mt-4 mb-4">
+        {valueChecks}
+
+        </div>
+        </>
+                }
           </div>
-          <div className="flex w-full items-center margin-0 justify-center my-8">
-          <button
+          <Divider />
+          <div className="flex w-full items-center margin-0 justify-center my-10">
+          <Button
             onClick={applyFilters}
-            className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
-          >
-            Apply Filter
-          </button>
+            loading={filterPeticion}
+            iconPos="right"
+            icon="pi pi-check-square"
+            loadingIcon="pi pi-spin pi-spinner" 
+            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Apply"
+          />
         </div>
     </div>
     );
@@ -687,7 +705,14 @@ const valueChecks = (
     </div>
   );
 
-const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`)
+  useEffect(() => {
+    console.log(Location)
+    console.log(selectedLocations)
+    
+    setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
+}, [params.slug, scatterData]);
+
+const title = ( `Beta diversity ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (selectedColorBy === "samplelocation" ? "" : " by " + selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1))}`)
 
 
   const MyPlotComponent = ({ scatterData, scatterColors }: { scatterData: any[]; scatterColors: any }) => (
@@ -737,7 +762,7 @@ const title = ( `Beta diversity ${isColorByDisabled ? " por Ubicación" : " en "
 
   const legend =(      <div className="w-full flex flex-row overflow-x-scroll max-h-full items-start justify-center mt-5">
  <div>
-  <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
+  <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{selectedColorBy === "samplelocation" ? "Sample Location" : selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1)}</h2>
   </div> 
   <div>
 

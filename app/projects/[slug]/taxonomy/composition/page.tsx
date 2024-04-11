@@ -1,24 +1,24 @@
 "use client";
-import { JSXElementConstructor, Key, PromiseLikeOfReactNode, ReactElement, ReactNode, SetStateAction, useEffect, useRef, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
-import Loading from "@/app/components/loading";
 import Plot from "react-plotly.js";
 import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
-import { Bounce, toast } from "react-toastify";
-import { renderToStaticMarkup } from "react-dom/server";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
-import TagsInput from "@/app/components/tags";
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { GoPlus } from "react-icons/go";
 import { FiMinus } from "react-icons/fi";
 import { useAuth } from "@/app/components/authContext";
-import Plotly from "plotly.js";
-import SunburstChart from "@/app/components/suburstchart";
 import Spinner from "@/app/components/pacmanLoader";
+import { Divider } from "primereact/divider";
+import { Button } from "primereact/button";
+import { Tooltip as PrimeToolTip } from 'primereact/tooltip';
+import { Dropdown } from "primereact/dropdown";
+import { Card } from "primereact/card";
+
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -37,7 +37,6 @@ export default function Page({ params }: { params: { slug: string } }) {
         { type: string; y: any; name: string }[]
     >([]);
     const [otus, setOtus] = useState<any>();
-    const [scatterData, setScatterData] = useState([]);
     const [selectedValue, setSelectedValue] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [valueOptions, setValueOptions] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [selectedLocation, setSelectedLocation] = useState<string>('');
@@ -47,17 +46,12 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [selectedGroup, setSelectedGroup] = useState("samplelocation");
     const [selectedRank, setSelectedRank] = useState("genus");
-    const [columnName, setColumnName] = useState("samplelocation");
-    const [shannonData, setShannonData] = useState([]);
     const [observedData, setObservedData] = useState({});
-    const [currentLocation, setCurrentLocation] = useState('');
     const [colorByOptions, setColorByOptions] = useState<string[]>(['age', 'treatment']);
     const [colorBy, setColorBy] = useState<string>('samplelocation');
-    const [isFilterCardVisible, setIsFilterCardVisible] = useState(false);
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
-    const [sunburstData, setSunburstData] = useState();
-
+    const [filterPeticion, setFilterPeticion] = useState(false);
     const [selectedLocations, setSelectedLocations] = useState<string[]>([
         "cecum",
         "feces",
@@ -76,8 +70,6 @@ export default function Page({ params }: { params: { slug: string } }) {
         "genus",
         "species"
     ];
-    
-    let colorIndex = 0;
     const colors = [
         "#092538", // Azul oscuro principal
   "#2E4057", // Azul petróleo oscuro
@@ -122,20 +114,55 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [dataUnique, setDataUnique] = useState<any>();
     const [dataResult, setDataResult] = useState<any>(null);
     const [actualGroup, setActualGroup] = useState<any>('samplelocation');
-
+const [actualRank, setActualRank] = useState<any>('genus');
     const [columnOptions, setColumnOptions] = useState([]);
+    const [htmlContent, setHtmlContent] = useState('');
+    const containerRef = useRef<HTMLDivElement>(null); // Update the type of containerRef to HTMLDivElement
 
-    // Manejador para actualizar el estado cuando el valor del input cambia
-    const handleChangeNumber = (e: any) => {
-        setNumber(e.target.value);
-    };
+
+    useEffect(() => {
+        fetch('/api/components/innerHtml')
+          .then(res => res.json())
+          .then(data => {
+            setHtmlContent(data.content); // Establece el contenido HTML en el estado
+          });
+      }, []);
+
+      
+      
+    //   useEffect(() => {
+    //     if (htmlContent) { // Asegúrate de que htmlContent ya esté establecido
+    //         const container = document.getElementById('contendor-html'); // Asegúrate de que este sea el ID de tu contenedor
+            
+    //         if (container) { // Add a null check for the container
+    //             const scripts = container.querySelectorAll('script');
+
+    //             scripts.forEach((oldScript) => {
+    //                 const newScript = document.createElement('script');
+    //                 newScript.type = 'text/javascript';
+    //                 if (oldScript.src) {
+    //                     newScript.src = oldScript.src;
+    //                 } else {
+    //                     newScript.textContent = oldScript.textContent;
+    //                 }
+    //                 if (oldScript.parentNode) { // Add a null check for the parentNode
+    //                     oldScript.parentNode.replaceChild(newScript, oldScript);
+    //                 }
+    //             });
+    //         }
+    //     }
+    //   }, [htmlContent]); // Este useEffect depende de htmlContent
+      
+
+
+      
 
     useEffect(() => {
         // Función para actualizar el ancho del gráfico con un pequeño retraso
         const updatePlotWidth = () => {
             setTimeout(() => {
                 if (plotContainerRef.current) {
-                    setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 100);
+                    setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
                     setLoaded(true)
                 }
             }, 800); // Retraso de 10 ms
@@ -199,17 +226,17 @@ export default function Page({ params }: { params: { slug: string } }) {
             }
             );
             if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+                // toast.warn('The data needs to be loaded again!', {
+                //     position: "top-center",
+                //     autoClose: 5000,
+                //     hideProgressBar: false,
+                //     closeOnClick: true,
+                //     pauseOnHover: true,
+                //     draggable: true,
+                //     progress: undefined,
+                //     theme: "light",
+                //     transition: Bounce,
+                // });
                 // setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
@@ -255,17 +282,17 @@ setObservedData(result?.Krona)
             }
             );
             if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+                // toast.warn('The data needs to be loaded again!', {
+                //     position: "top-center",
+                //     autoClose: 5000,
+                //     hideProgressBar: false,
+                //     closeOnClick: true,
+                //     pauseOnHover: true,
+                //     draggable: true,
+                //     progress: undefined,
+                //     theme: "light",
+                //     transition: Bounce,
+                // });
                 // setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
@@ -274,60 +301,13 @@ setObservedData(result?.Krona)
             console.log("Datos obtenidos:", result);
             setOtus(result);
             setIsLoaded(true);
+            setFilterPeticion(false);
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
+            setFilterPeticion(false);
         }
     };
-
-    const fetchDataGroup = async (token: any) => {
-
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${params.slug}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    "selectedColumn": selectedColumn,
-                    "selectedLocation": selectedLocations,
-                    "selectedRank": selectedRank,
-                    "selectedGroup": selectedGroup,
-                    "columnValues": colorBy === 'samplelocation' ? selectedLocations : [...selectedValues],
-                    "top": number.toString()
-                })
-            }
-            );
-            if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
-                setTimeout(() => { window.location.href = "/"; }, 5000);
-                throw new Error("Respuesta no válida desde el servidor");
-            }
-            const result = await response.json();
-
-            console.log("Datos obtenidos:", result);
-            setOtus(result);
-            setIsLoaded(true);
-            return result;
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
-        }
-    };
-
-
-
 
     // Manejar cambio de locación
 
@@ -405,6 +385,8 @@ fetchConfigFile(accessToken); fetchData(accessToken);
             setSelectedGroup("samplelocation"); // Restablecer el valor de tratamiento si se selecciona 'All'
         } 
 setActualGroup(selectedGroup);
+setActualRank(selectedRank);
+setFilterPeticion(true);
 
     };
 
@@ -441,11 +423,18 @@ setActualGroup(selectedGroup);
         </div>
     );
 
-
+    const legend = (<div className="w-full flex flex-col overflow-x-scroll max-h-full  justify-center mt-5 items-center">
+    <div className="mb-2">
+        <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualRank.charAt(0).toUpperCase() + actualRank.slice(1)}</h2>
+    </div>
+    <div className=" flex flex-col w-auto mt-2">
+    <CustomLegend plotData={plotData} scatterColors={scatterColors} />
+    </div>
+</div>)
 
     const MyPlotComponent = ({ plotData, scatterColors }: { plotData: any[]; scatterColors: any }) => (
         <div className="flex flex-row w-full items-start">
-            <div className="w-9/12 flex " ref={plotContainerRef}>
+            <div className="w-full flex " ref={plotContainerRef}>
                 {loaded && (
                     <Plot
                         data={plotData}
@@ -463,7 +452,7 @@ setActualGroup(selectedGroup);
                             },
                             xaxis: {
                                 title: {
-                                    text: selectedColumn, font: { 
+                                    text: '', font: { 
                                         family: 'Roboto, sans-serif',
                                         size: 18,
                                     }
@@ -471,21 +460,19 @@ setActualGroup(selectedGroup);
                             },
                             width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
                             height: 700,
-                            title: {
-                                text: `Relative abundance ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`, font: { // Añade esta sección para personalizar el título
-                                    family: 'Roboto, sans-serif',
-                                    size: 26,
-                                }
-                            },
+                            // title: {
+                            //     text: `Relative abundance ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`, font: { // Añade esta sección para personalizar el título
+                            //         family: 'Roboto, sans-serif',
+                            //         size: 26,
+                            //     }
+                            // },
                             showlegend: false,
+                            margin: { l: 50, r: 10, t: 20, b: 50 } 
+
                         }}
                     />)}
             </div>
-            <div className="w-3/12 flex flex-col  border border-gray-100 rounded-3xl p-5 overflow-auto max-h-full">
-                <h2 className="mb-3 text-xl ">{colorBy === "samplelocation" ? "Sample location" : colorBy}</h2>
 
-                <CustomLegend plotData={plotData} scatterColors={scatterColors} />
-            </div>
         </div>);
 
 
@@ -567,7 +554,7 @@ setActualGroup(selectedGroup);
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
         <div className="mb-5 mt-5">
-            <h3 className="mb-5 text-base font-medium text-gray-900 dark:text-white">Select the values to keep</h3>
+            <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select the values to keep</h3>
             {valueOptions?.map((value, index) => (
                 <div key={index} className="flex items-center mb-2">
                     <input
@@ -586,22 +573,52 @@ setActualGroup(selectedGroup);
         </div>
     );
 
+    const dropdownOptions = taxonomyOptions.map((option, index) => ({
+        label: option.charAt(0).toUpperCase() + option.slice(1),
+        value: option
+    }));
+
+    const allLocationsOption = { label: 'All Locations', value: 'all' };
+
+    // Convertir availableLocations a un formato que Dropdown pueda entender
+    const locationOptions = availableLocations.map(location => ({
+        label: location.charAt(0).toUpperCase() + location.slice(1),
+        value: location
+    }));
+
+    // Asegúrate de incluir la opción "All Locations" al principio
+    const dropdownLocationOptions = [allLocationsOption, ...locationOptions];
+
+    // Determinar el valor seleccionado para el Dropdown
+    const selectedDropdownValue = selectedLocations.length === 3 ? selectedLocation : selectedLocations;
+
+
     const filter = (
         <div className={`flex flex-col w-full p-4 rounded-lg  dark:bg-gray-800 `}>
 
-            <div className="flex flex-col items-left space-x-2">
-<div>
-     <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a rank option</h3>
-                <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    {taxonomyOptions?.map((option, index) => (
-                        <option key={index} value={option}>
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                        </option>
-                    ))}
-                </select>
-</div>
-<div className="max-w-xs mx-auto flex flex-col items-center mt-5">
-    <label htmlFor="topInput" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Top</label>
+            <div className="flex flex-col items-left mt-4 mb-4 ">
+     <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
+     <Dropdown 
+            value={selectedRank} 
+            options={dropdownOptions} 
+            onChange={(e) => setSelectedRank(e.value)} 
+            placeholder="Select a Rank"
+            className="w-full"
+        />
+
+
+<Divider/>
+<div className="max-w-xs mx-auto flex flex-col items-center mt-4 mb-4">
+    <PrimeToolTip target=".topInputText" />
+    <label htmlFor="topInput" className="block mb-5 text-lg font-medium text-gray-900 dark:text-white">
+        <div className="flex flex-row">
+    Top <AiOutlineInfoCircle className="topInputText ml-2  text-lg cursor-pointer text-gray-500 p-text-secondary p-overlay-badge" data-pr-tooltip="This graph displays the most abundant taxa for each rank"
+    data-pr-position="right"
+    data-pr-at="right+5 top"
+    data-pr-my="left center-2"/>
+        </div>
+        
+ </label>
     <div className="relative flex items-center max-w-[8rem]">
         <button type="button" id="decrement-button" onClick={() => setNumber(Math.max(1, number - 1))} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-l-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
             {/* SVG para el icono de decremento */}
@@ -612,41 +629,37 @@ setActualGroup(selectedGroup);
         <GoPlus />
         </button>
     </div>
-    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Select a number for the top taxa.</p>
+    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
 </div>
  
+<Divider/>
+                <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
 
-                <div className="flex flex-col items-left space-x-2 mt-5">
-
-                    <h3 className="mb-5 mt-2 text-base font-medium text-gray-900 dark:text-white">Select a sample location</h3>
-                    <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        value={selectedLocation === "all" ? selectedLocation : selectedLocations}
-                        onChange={(e) => handleLocationChange(e.target.value)}
-                        disabled={availableLocations.length === 1}
-                    >
-                        <option selected value="all">All Locations</option>
-                        {availableLocations?.map((location) => (
-                            <option key={location} value={location}>
-                                {location.charAt(0).toUpperCase() + location.slice(1)}
-                            </option>
-                        ))}
-                    </select>
+                    <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location (if applicable)</h3>
+                    <Dropdown 
+            id="location"
+            value={selectedDropdownValue}
+            options={dropdownLocationOptions}
+            onChange={(e) => handleLocationChange(e.value)}
+            disabled={availableLocations.length === 1}
+            className="w-full"
+        />
               
 
 
                 </div>
+<Divider/>
+                <div className="mt-4 mb-4">
+                <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group By</h3>
 
-                <div className="mt-5">
-                <h3 className="mb-5 mt-2 text-base font-medium text-gray-900 dark:text-white">Select a group option</h3>
+                <ul className="w-full flex flex-wrap items-center content-center justify-around ">
 
-                    <ul className="grid w-full gap-6 md:grid-cols-2">
-
-                        <li>
+                        <li className="w-48 m-2 mb-1 p-1">
                             <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={selectedGroup === 'samplelocation'}
                                 onChange={(e) => setSelectedGroup(e.target.value)}
                                 disabled={isColorByDisabled}
                               />
-                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                                 <div className="block">
                                     <div className="w-full text-center flex justify-center">Sample location</div>
                                 </div>
@@ -656,7 +669,7 @@ setActualGroup(selectedGroup);
   // Solo renderizar el elemento si 'option' está presente en 'columnOptions'
 if ((columnOptions as string[])?.includes(option)) {
     return (
-      <li key={index}>
+      <li className="w-48 m-2 mb-1 p-1" key={index}>
         <input
           type="radio"
           id={option}
@@ -673,7 +686,7 @@ if ((columnOptions as string[])?.includes(option)) {
           ${isColorByDisabled
               ? 'cursor-not-allowed'
               : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-custom-green-400 peer-checked:text-custom-green-500  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
         >
           <div className="block">
             <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
@@ -693,17 +706,29 @@ if ((columnOptions as string[])?.includes(option)) {
             </div>
             <div>
 
-            {selectedGroup!== "samplelocation" ? valueChecks : ""}
+            {selectedGroup!== "samplelocation" ?
+            <>
+            <Divider/>
+            <div className="mt-4 mb-4">
+{valueChecks}
+            </div>
+            </>
+             : ""}
             </div>
 
-            <div className="flex w-full items-center margin-0 justify-center my-8">
-                <button
-                    onClick={applyFilters}
-                    className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-4 rounded-xl"
-                >
-                    Apply
-                </button>
-            </div>
+            <Divider/>
+
+            <div className="flex w-full items-center margin-0 justify-center my-10">
+          <Button
+            onClick={applyFilters}
+            loading={filterPeticion}
+            iconPos="right"
+            icon="pi pi-check-square"
+            loadingIcon="pi pi-spin pi-spinner" 
+            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Apply"
+          />
+        </div>
 
         </div>);
 
@@ -715,8 +740,14 @@ useEffect(() => {
       handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
     }
   }, [availableLocations]); // Dependencia del efecto
+
+  useEffect(() => {
+    
+    
+    setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
+}, [params.slug, plotData]);
   
-  
+  const title = ( <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " by Location" : " in " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualGroup === "samplelocation" ? "" : " by " + actualGroup.charAt(0).toUpperCase() + actualGroup.slice(1).replace('_', ' ')))}</div>  );
 
     return (
         <div className="w-full h-full">
@@ -745,6 +776,11 @@ useEffect(() => {
                         </div>
 
 <div>
+
+        
+<div id="contendor-html" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+<iframe src="/api/components/innerHtml" frameBorder="0" width="100%" height="500px" allowFullScreen></iframe>
+
 {/* <SunburstChart paths={sunburstData.paths} values={sunburstData.values} ids={[sunburstData.ids]} /> */}
 </div>
 
@@ -757,8 +793,8 @@ useEffect(() => {
 
                             </div>
 
-                        <div className="flex">
-                            <GraphicCard filter={filter} legend={undefined}>
+                        <div className="flex flex-row">
+                            <GraphicCard filter={filter} legend={legend} title={title} orientation="horizontal">
                                 {plotData.length > 0 ? (
                                     <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
                                 ) : (

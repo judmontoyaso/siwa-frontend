@@ -33,6 +33,7 @@ import React from "react";
 import Link from "next/link";
 import { group } from "console";
 import Spinner from "@/app/components/pacmanLoader";
+import { Divider } from "primereact/divider";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -45,7 +46,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [dataUnique, setDataUnique] = useState<any>();
     const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
-    const [selectedColumn, setSelectedColumn] = useState("samplelocation");
+    const [selectedColumn, setSelectedColumn] = useState("treatment");
     const [shannonData, setShannonData] = useState([]);
     const [currentLocation, setCurrentLocation] = useState('');
     const [colorByOptions, setColorByOptions] = useState<string[]>(['age', 'treatment', 'samplelocation']);
@@ -77,13 +78,14 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [allSelected, setAllSelected] = useState(true);
     const [confirmedLocations, setConfirmedLocations] = useState([]);
     const [loadcsv, setLoadcsv] = useState(false);
-    const [selectedColorBy, setSelectedColorBy] = useState("samplelocation");
+    const [selectedColorBy, setSelectedColorBy] = useState("Genus");
     const [activeIndex, setActiveIndex] = useState(0);
     const [abundanceData, setAbundanceData] = useState<any>();
     const [showLefsePlot, setShowLefsePlot] = useState(false);
 const [message, setMessage] = useState<ReactNode | null>(null);
 const [tempfile, setTempFile] = useState<any>();
 const [dataExist, setDataExist] = useState(false);
+const [filterPeticion, setFilterPeticion] = useState(false);
 const taxonomyOptions = [
     "Phylum",
     "Class",
@@ -271,9 +273,11 @@ const taxonomyOptions = [
                 setDataExist(true);
             }else{setDataExist(false)}
             // setIsDatasetReady(true);
+            setFilterPeticion(false);
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
+            setFilterPeticion(false);
         }
     };
 
@@ -309,50 +313,10 @@ const taxonomyOptions = [
         fetchDataAbundance(accessToken);
 
 }, [params.slug, accessToken]);
-    const handleLocationChange = (location: string) => {
-        let updatedSelectedLocations: string | any[] | ((prevState: string[]) => string[]);
 
-        if (location === "Todas") {
 
-            if (allSelected) {
-                updatedSelectedLocations = [];
-                console.log("jjjnkjnbkl")
+ 
 
-            } else {
-                updatedSelectedLocations = [...initialLocations];
-            }
-            setAllSelected(!allSelected);
-        } else {
-            // Verifica si la ubicación ya está seleccionada
-            if (selectedLocations.includes(location)) {
-                // Asegúrate de que no estás desmarcando la última ubicación
-                if (selectedLocations.length === 1) {
-                    return; // No permitir desmarcar si es la última seleccionada
-                }
-                updatedSelectedLocations = selectedLocations.filter(loc => loc !== location);
-            } else {
-                updatedSelectedLocations = [...selectedLocations, location];
-            }
-            setAllSelected(updatedSelectedLocations.length === initialLocations.length);
-        }
-        if (updatedSelectedLocations.length >= 2) {
-            setSelectedColorBy("samplelocation"); // Fix: Update the argument to be an array of strings
-            setSelectedValues(new Set(updatedSelectedLocations)); // Fix: Convert the array to a Set
-        }
-        setSelectedLocations(updatedSelectedLocations);
-
-    };
-    // Función para manejar la confirmación de la selección
-    const handleConfirmSelection = () => {
-        console.log("Ubicaciones seleccionadas:", selectedLocations);
-        console.log("ColorBy seleccionado:", selectedColorBy);
-        console.log("Valores seleccionados:", selectedValues);
-        // Aquí puedes realizar más acciones como enviar los datos a un API, etc.
-    };
-
-    const handleColorByChange = (option: SetStateAction<string>) => {
-        setSelectedColorBy(option);
-    };
 
     const handleValueChange = (value: string) => {
         setSelectedValues(prevSelectedValues => {
@@ -473,14 +437,18 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
         , [valueOptions]);
 
    
-        const applyFilters = () => { setActualcolumn(colorBy); fetchDataAbundanceFilter(accessToken)  }
+    const applyFilters = () => { setActualcolumn(colorBy); 
+        setSelectedColorBy(selectedRank);
+         fetchDataAbundanceFilter(accessToken)
+         setFilterPeticion(true);
+         }
 
           const filter = (
             <div className={`flex flex-col w-full h-full  rounded-lg  dark:bg-gray-800 `}>
                 <div className={`tab-content `}>
-                <div>
-     <h3 className="mb-5 text-lg font-semibold text-gray-900 dark:text-white">Select a rank option</h3>
-                <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <div className="mt-4 mb-4">
+     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
+                <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer">
                     {taxonomyOptions.map((option, index) => (
                         <option key={index} value={option}>
                       {option.charAt(0).toUpperCase() + option.slice(1)}
@@ -491,13 +459,15 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
     
     
                 </div>
+
+                <Divider/>
     
-                <div className="mt-10">
+                <div className="mt-4 mb-4">
     
                     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group</h3>
                     <ul className="flex flex-wrap justify-between">
               
-                    <select value={colorBy} onChange={(e) => setColorBy(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <select value={colorBy} onChange={(e) => setColorBy(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer">
                         {colorByOptions.map((option, index) => {
                             if (columnOptions && columnOptions?.includes(option as never)) {
                                 return (
@@ -513,8 +483,8 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                     </ul>
                 </div>
     
-
-                <div className="mt-10">
+<Divider/>
+                <div className="mt-4 mb-4 opacity-50" aria-disabled={true}>
     
                     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Subgroup</h3>
                     <ul className="flex flex-wrap justify-between">
@@ -537,19 +507,22 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                     </ul>
                 </div>
     
-                {selectedColumn === "samplelocation" ? "" :
-                    (valueChecks)}
-                <div className="flex w-full items-center margin-0 justify-center my-8">
-                    <button
-                        onClick={applyFilters}
-                        className="bg-custom-green-400 hover:bg-custom-green-500 text-white font-bold py-2 px-10 rounded-xl"
-                    >
-                        Apply
-                    </button>
-                </div>
+        <Divider/>
+                 <div className="flex w-full items-center margin-0 justify-center my-10">
+          <Button
+            onClick={applyFilters}
+            loading={filterPeticion}
+            iconPos="right"
+            icon="pi pi-check-square"
+            loadingIcon="pi pi-spin pi-spinner" 
+            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Apply"
+          />
+        </div>
             </div>
         );
 
+        const title = (<div>{`LEfSe: Differentiation of ${selectedColorBy} based on ${actualcolumn}`}</div>)
 
      
 
@@ -575,7 +548,7 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                             </div>
 <div className="flex justify-center items-center">
   {tempfile ? (
-    <div className="flex flex-col h-full">   <GraphicCard filter={filter} legend={""} title={""}>
+    <div className="flex flex-col h-full">   <GraphicCard filter={filter} legend={""} title={title}>
         {abundanceData ? (
 dataExist ? 
     <LefsePlot data={abundanceData} />

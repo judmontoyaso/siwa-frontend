@@ -22,7 +22,7 @@ import Spinner from "./pacmanLoader";
 import { TbReportAnalytics } from "react-icons/tb";
 const BearerContext = createContext('');
 
-export default function Home({ slug, filter }: { slug: string, filter: any }) {
+export default function Home({ slug, filter }: { slug: string, filter: any,  }) {
 
   const { user, error, isLoading } = useUser();
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
@@ -31,7 +31,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any }) {
   const [visible, setVisible] = useState(false);
   const router = usePathname();
 
-  useEffect(() => { setIsSidebarOpen(visible)}, [visible]);
+  useEffect(() => { setVisible(isSidebarOpen)}, [isSidebarOpen]);
 
 
   useEffect(() => {console.log("sidebar", isSidebarOpen)}, [isSidebarOpen]);
@@ -178,16 +178,16 @@ console.log(user)
 
      </Sidebar>  </div>
      <div className="flex bg-siwa-blue flex-col justify-between items-center cursor-pointer" onClick={() => setVisible(true)}>
-     <div className="" ><span className="">
+     <div className="m-2" ><span className="">
             <Image src={wSiwa}
               alt={""}
               width={50}
               height={50}
-              className="m-2"></Image>
+              className="m-2 mt-4"></Image>
           </span>
       </div>
-      <div className="w-full flex justify-center m-5 fixed bottom-3">
-      <FaAnglesRight className="text-siwa-yellow"/>
+      <div className="w-full flex justify-center m-5 fixed bottom-10">
+      <FaAnglesRight className="text-siwa-yellow text-xl"/>
       </div>
       </div>
       </>

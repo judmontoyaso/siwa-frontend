@@ -12,6 +12,7 @@ import { useRouter } from 'next/router';
 import { FaAngleDown, FaAngleUp } from 'react-icons/fa';
 import { Dropdown } from 'primereact/dropdown';
 import ProjectSelector from './projectSelector';
+import { Avatar } from 'primereact/avatar';
 
 interface NavbarProps {
   slug: string;
@@ -62,13 +63,8 @@ const [projects, setProjects] = useState([]);
       <div className="relative">
 
         <button onClick={(e) => (menu.current as any)?.toggle(e)}  aria-controls="popup_menu_left" aria-haspopup className='flex flex-row items-center justify-center'>
-          <img
-            src={user?.picture ?? ""}
-            alt={""}
-            width={50}
-            height={50}
-            className="bg-gray-200 w-10 h-10 rounded-full"
-          ></img>
+        <Avatar image={user?.picture ?? ""} icon="pi pi-user" size="large" shape="circle" />
+        
                  <div className="flex items-center text-center mr-1">
         {/* Usa el estado isOpen para determinar qué ícono de flecha mostrar */}
         {isOpen ? <FaAngleUp className="ml-1 mt-1 w-6 h-6"/> : <FaAngleDown className="ml-1 mt-1 w-6 h-6"/>}

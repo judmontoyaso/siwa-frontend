@@ -8,6 +8,7 @@ import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
 import { Bounce, toast } from "react-toastify";
 import { renderToStaticMarkup } from "react-dom/server";
+import { useSidebar } from "@/app/components/context/sidebarContext";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -21,6 +22,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [accessToken, setAccessToken] = useState();
     const [isLoaded, setIsLoaded] = useState(false);
     const [plotData, setPlotData] = useState<any[]>([]);
+    const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
 
     const [plotDataObserved, setPlotDataObserved] = useState<
         { type: string; y: any; name: string }[]
@@ -117,6 +119,8 @@ export default function Page({ params }: { params: { slug: string } }) {
             console.error("Error al obtener token:", error);
         }
     };
+
+    
     const toggleFilterCardVisibility = () => {
         setIsFilterCardVisible(!isFilterCardVisible);
     };
@@ -160,17 +164,17 @@ export default function Page({ params }: { params: { slug: string } }) {
             }
             );
             if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+                // toast.warn('The data needs to be loaded again!', {
+                //     position: "top-center",
+                //     autoClose: 5000,
+                //     hideProgressBar: false,
+                //     closeOnClick: true,
+                //     pauseOnHover: true,
+                //     draggable: true,
+                //     progress: undefined,
+                //     theme: "light",
+                //     transition: Bounce,
+                // });
                 setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
@@ -209,17 +213,17 @@ export default function Page({ params }: { params: { slug: string } }) {
             }
             );
             if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+                // toast.warn('The data needs to be loaded again!', {
+                //     position: "top-center",
+                //     autoClose: 5000,
+                //     hideProgressBar: false,
+                //     closeOnClick: true,
+                //     pauseOnHover: true,
+                //     draggable: true,
+                //     progress: undefined,
+                //     theme: "light",
+                //     transition: Bounce,
+                // });
                 setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
@@ -258,17 +262,17 @@ export default function Page({ params }: { params: { slug: string } }) {
             }
             );
             if (response.status === 404) {
-                toast.warn('The data needs to be loaded again!', {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+                // toast.warn('The data needs to be loaded again!', {
+                //     position: "top-center",
+                //     autoClose: 5000,
+                //     hideProgressBar: false,
+                //     closeOnClick: true,
+                //     pauseOnHover: true,
+                //     draggable: true,
+                //     progress: undefined,
+                //     theme: "light",
+                //     transition: Bounce,
+                // });
                 setTimeout(() => { window.location.href = "/"; }, 5000);
                 throw new Error("Respuesta no válida desde el servidor");
             }
@@ -360,6 +364,9 @@ export default function Page({ params }: { params: { slug: string } }) {
             setSelectedLocations([event]);
         }
     };
+
+useEffect(() => {setIsSidebarOpen(true)}, [params.slug]);
+
     return (
         <div>
             <Layout slug={params.slug} filter={""}>

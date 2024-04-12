@@ -22,7 +22,6 @@ import { Divider } from "primereact/divider";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
-    const { user, error, isLoading } = useUser();
     const [isLoaded, setIsLoaded] = useState(false);
     const [plotData, setPlotData] = useState<
         { type: string; y: any; name: string }[]
@@ -49,6 +48,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [loaded, setLoaded] = useState(false);
     const [graphType, setGraphType] = useState<any>("boxplot");  // 'boxplot' o 'violin'
     const [filterPeticion, setFilterPeticion] = useState(false);
+    const { accessToken, isLoading, error } = useAuth();
 
     const [Location, setLocation] = useState<string[]>([
         "cecum",
@@ -95,7 +95,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     ];
 
 
-    const { accessToken } = useAuth();
+    
     const fetchConfigFile = async (token: any) => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {

@@ -68,7 +68,7 @@ console.log(user)
             <div className={`flex hover:bg-navy-500 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/" ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`} >
 
               <RiDashboardFill className="text-siwa-yellow"/>
-              <span className="ms-3">Home</span>
+              <span className="ms-3">Projects</span>
 
             </div>
             </Link>

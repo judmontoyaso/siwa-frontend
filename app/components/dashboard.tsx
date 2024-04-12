@@ -162,11 +162,21 @@ const Dashboard = () => {
         <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>
       </div>
   
-      <div className="mx-auto w-full max-w-4xl px-8 pb-8 flex flex-row gap-8">
+      <div className="mx-auto w-full max-w-4xl px-8 pb-8 flex flex-row-reverse gap-8">
         {/* Ajuste en la imagen para que ocupe todo el espacio asignado a su contenedor */}
-        <div className="w-1/2 h-full flex justify-center items-start">
-          <img src="/perrito.webp" alt="Decorative" className="max-w-full rounded-lg shadow-lg h-96"/>
-        </div>
+        <div className="flex justify-center items-center">
+  <div className="relative w-96 h-96">
+    <div className="perspective-container">
+      <div className="absolute w-full h-full transform backface-hidden">
+        <img src="/perrito.webp" alt="Decorative" className="w-full h-full object-cover rounded-lg shadow-lg" />
+      </div>
+      <div className="absolute w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+        <p className="text-white text-center font-semibold text-lg">Decoding the Mysteries of the Gut</p>
+      </div>
+    </div>
+  </div>
+</div>
+
   
         {/* Contenedor de la lista de proyectos con un ajuste para ocupar el espacio restante */}
         <div className="w-1/2 h-full flex flex-col">
@@ -174,8 +184,9 @@ const Dashboard = () => {
           {!projectsLoading ? (
             <div className="bg-white shadow rounded-lg overflow-hidden h-96 w-full">
               <div className="p-6 h-full">
-                <h3 className="text-xl font-medium text-gray-800 mb-4">Projects</h3>
-                <ul className="divide-y divide-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Projects</h3>
+                <p className="text-sm text-gray-600 mb-6">Select any of the loaded projects below to explore detailed analysis results.</p>
+                               <ul className="divide-y divide-gray-200">
                   {projectIds.map((projectId) => (
                     <Link key={projectId} href={`/projects/${projectId}`}>
                       <li className={`py-2 flex mt-4 mb-4 p-4 justify-between items-center bg-slate-50 ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-100" : "opacity-50"} rounded-lg`}>

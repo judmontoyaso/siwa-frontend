@@ -41,7 +41,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [otus, setOtus] = useState<any>();
     const [dataUnique, setDataUnique] = useState<any>();
     const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
-    const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+    const [availableLocations, setAvailableLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [shannonData, setShannonData] = useState([]);
     const [currentLocation, setCurrentLocation] = useState('');
@@ -185,36 +185,14 @@ const messageName = "messageData_" +  params.slug;
 
     const toast = useRef<any>(null);
 
-      // Función que simula el proceso de generación del dataset y activa el botón "Ver gráfico"
-      const simulateDatasetGeneration = () => {
-        // Simula la generación del dataset
-        setIsDatasetReady(true);
-    };
-
-    const accept = () => {
-        if (toast.current) {
-            toast.current.show({ severity: 'info', summary: 'Confirmed', detail: 'You have accepted', life: 3000 });
-        }
-    };
-
-    const reject = () => {
-        if (toast.current) {
-            toast.current.show({ severity: 'warn', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-        }
-    };
-
-    const handleViewGraph = () => {
-     setActiveIndex(2)
-        console.log(abundanceData)
-    };
 
 
 
     const confirm1 = async (event: { currentTarget: any; }) => {
 
         const response = await fetchData(accessToken);
-        const { records } = response; // Extrae 'records' de la respuesta
-
+        const  records  = response?.records; // Extrae 'records' de la respuesta
+console.log(records)
         const data = Object.entries(records).map(([key, value]) => {
             // Verifica si la clave actual es 'total_samples'
             if (key === 'total_samples') {
@@ -291,17 +269,11 @@ useEffect(() => {
         }
     };
 
-    useEffect(() => {
 
-            fetchDataAbundance(accessToken);
-        
-    }, [params.slug]);
 
     useEffect(() => {
         if (loadcsv) {
-            console.log("loadcsv true")
-        fetchDatacsv(accessToken)}
-    else{console.log("loadcsv false")}}, [loadcsv]);
+        fetchDatacsv(accessToken)}}, [loadcsv]);
 
 
     const fetchConfigFile = async (token: any) => {
@@ -364,7 +336,7 @@ useEffect(() => {
 
             if (!otus) {
                 const locations = new Set(
-                    result.data.data.map((item: any[]) => item[1])
+                    result.data.data.map((item: any[]) => item[2])
                 );
                 const uniqueLocations = Array.from(locations) as string[];
 
@@ -418,36 +390,6 @@ useEffect(() => {
         }
       };
       
-      // Llamada de ejemplo a deleteTempFiles, asegúrate de reemplazar 'your_token_here' y 'your_project_id_here' con valores reales
-      // deleteTempFiles('your_token_here', 'your_project_id_here');
-      
-
-    const fetchDataAbundance = async (token: any | undefined) => {
-
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/loadlefse/${params.slug}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                body: JSON.stringify({
-                    "group": "treatment",
-                    "taxa_rank": "Genus",
-                }),
-
-            }
-            );
-
-            const result = await response.json();
-            setAbundanceData(result);
-            // setIsDatasetReady(true);
-            return result;
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
-        }
-    };
 
     const handleLocationChange = (location: string) => {
         let updatedSelectedLocations: string | any[] | ((prevState: string[]) => string[]);
@@ -513,17 +455,7 @@ useEffect(() => {
 
     useEffect(() => {checktempfile(accessToken)}, [accessToken]);
 
-
 useEffect(() => {if (!tempfile) {localStorage.removeItem(messageName)};}, [tempfile]);
-
-
-    // Función para manejar la confirmación de la selección
-    const handleConfirmSelection = () => {
-        console.log("Ubicaciones seleccionadas:", selectedLocations);
-        console.log("ColorBy seleccionado:", selectedColorBy);
-        console.log("Valores seleccionados:", selectedValues);
-        // Aquí puedes realizar más acciones como enviar los datos a un API, etc.
-    };
 
     const handleColorByChange = (option: SetStateAction<string>) => {
         setSelectedColorBy(option);
@@ -536,7 +468,7 @@ useEffect(() => {if (!tempfile) {localStorage.removeItem(messageName)};}, [tempf
             const newSelectedValues = new Set(prevSelectedValues);
 
             // Si el valor está presente, lo eliminamos (excepto si es uno de los últimos 2, para asegurar el mínimo de 2)
-            if (newSelectedValues.has(value) && newSelectedValues.size > 2) {
+            if (newSelectedValues.has(value) && newSelectedValues.size > 1) {
                 newSelectedValues.delete(value);
             } else if (!newSelectedValues.has(value) && newSelectedValues.size < 3) {
                 // Si el valor no está presente, lo añadimos (hasta un máximo de 3)
@@ -687,14 +619,9 @@ setTempFile(false)
     useEffect(() => {
         fetchData(accessToken)
     }
-        , [accessToken]);
+        , [configFile]);
 
-    useEffect(() => {
-        console.log(valueOptions);
-        console.log(colorByOptions)
-    }
 
-        , [valueOptions]);
 
         const sumarNumerosDeCadena = (cadena: { match: (arg0: RegExp) => any[]; }) => {
             const numeros = cadena.match(/\d+/g)?.map(Number);
@@ -717,7 +644,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
 
             <div className="p-6 mb-5 mt-5 bg-gray-100 rounded-lg shadow-sm w-full">
                 <p className="text-lg mb-5 mt-5 text-gray-800">
-                A dataset has been generated containing the following samples per variable. It will be available for one hour before it&apos;s deleted, requiring re-upload.
+                The following dataset has been generated. It will be available for exploration for one hour before requiring re-upload.
                 </p>
                 <div>
             <div className="mb-5">
@@ -770,19 +697,24 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
             </div>
             {showInstructions && (
                 <>
-    <p className="mt-2 text-gray-700">To prepare your dataset for Differential Abundance (DA) analysis, please adhere to the following steps:</p>
+    <p className="mt-2 text-gray-700">To prepare your dataset for Differential Abundance (DA) analysis, please follow to the following steps:</p>
     <ul className="list-disc list-inside space-y-2 mt-4 flex flex-col items-start text-start">
     <li>
-  <strong>Select Sample Locations:</strong> You can explore the microbiome by specific locations. It&apos;s advisable to examine locations separately. However, if your aim is to identify biomarkers distinguishing between locations, you may select more than one. Options include CECUM, ILEUM, FECES.
+  <strong>Select Sample Locations:</strong> You can explore the microbiome by specific locations. It&apos;s advisable to examine locations separately. However, if your aim is to identify biomarkers distinguishing between locations, you may select more than one.
 </li>
 <li>
-  <strong>Select a Variable (Optional):</strong> Only select the variable you wish to filter in/out groups from. 
+  <strong>Select a Variable (Optional):</strong> Select only the variable from which you wish to filter groups. 
 </li>
 
         <li>
             <strong>Select Your Groups of Interest:</strong> If a variable has been chosen, select at least 2 and at most 3 categories for the analysis. This will form the basis of your DA comparison.
         </li>
     </ul>
+    <div className="mt-6 p-4 bg-yellow-200 rounded-md border border-yellow-300 w-full">
+      <p className="text-sm">
+        <strong>Example:</strong> If you have 4 treatment groups, and you want to compare just two of the 4 rather than including all, select the Treatment variable, then select the groups of interest within the variable.
+      </p>
+    </div>
 
 </> )}
 </div>
@@ -804,7 +736,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
                                 <div className="flex-grow min-w-[25%] border p-4 rounded-lg">
                                     <h2 className="mb-4 font-semibold text-lg">Sample Location:</h2>
                                     <div className="flex flex-wrap gap-4">
-                                    {initialLocations.map((location) => (
+                                    {availableLocations.map((location) => (
   <div key={location} className="flex items-center">
     <Checkbox
       inputId={location}

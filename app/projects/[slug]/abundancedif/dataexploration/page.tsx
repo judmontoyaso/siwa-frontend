@@ -3,49 +3,31 @@
 import { ReactNode, SetStateAction, use, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
-import Loading from "@/app/components/loading";
-import Plot from "react-plotly.js";
 import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
-import { Bounce, ToastContainer, toast } from "react-toastify";
-import { renderToStaticMarkup } from "react-dom/server";
-import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineInfoCircle } from "react-icons/ai";
+import {  AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'primereact/tooltip';
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { AuthProvider, useAuth } from "@/app/components/authContext";
 import LefsePlot from "@/app/components/lefsePlot";
-import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
-
-import { ConfirmDialog } from 'primereact/confirmdialog'; // For <ConfirmDialog /> component
-import { confirmDialog } from 'primereact/confirmdialog'; // For confirmDialog method
 import { Button } from 'primereact/button'; // For <Button /> component
 import { Toast } from 'primereact/toast'; // For <Toast /> component
 import { Card } from 'primereact/card';
 import { Steps } from "primereact/steps";
-import { TriStateCheckbox } from 'primereact/tristatecheckbox';
 import { Checkbox } from "primereact/checkbox";
-import { RadioButton } from "primereact/radiobutton";
-import { ProgressSpinner } from "primereact/progressspinner";
-import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
 import React from "react";
 import Link from "next/link";
-import { group } from "console";
 import Spinner from "@/app/components/pacmanLoader";
 import { Divider } from "primereact/divider";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
     const [isLoaded, setIsLoaded] = useState(false);
-    const [plotData, setPlotData] = useState<
-        { type: string; y: any; name: string }[]
-    >([]);
-    const [showInstructions, setShowInstructions] = useState(true);
+
     const [otus, setOtus] = useState<any>();
     const [dataUnique, setDataUnique] = useState<any>();
-    const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
-    const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+
     const [selectedColumn, setSelectedColumn] = useState("treatment");
     const [shannonData, setShannonData] = useState([]);
     const [currentLocation, setCurrentLocation] = useState('');
@@ -86,6 +68,7 @@ const [message, setMessage] = useState<ReactNode | null>(null);
 const [tempfile, setTempFile] = useState<any>();
 const [dataExist, setDataExist] = useState(false);
 const [filterPeticion, setFilterPeticion] = useState(false);
+const[columnGroupLoading, setColumnGroupLoading] = useState(false);
 const taxonomyOptions = [
     "Phylum",
     "Class",
@@ -132,61 +115,11 @@ const taxonomyOptions = [
     ];
     const tooltipTargetId = 'info-icon';
     const [actualcolumn, setActualcolumn] = useState("treatment")
-    const customTemplate = (item: any, options: { index: number; }) => (
-        <React.Fragment>
-            <Link href={"/abundancedif/dataexploration"}>  <Button 
-                    className="p-button-rounded p-button-success bg-gray-100" 
-                    icon="pi pi-arrow-right" 
 
-                    style={{width: '2rem', height: '2rem'}} 
-                />
-            </Link>
-              
-            </React.Fragment>
-    );
-        
-    const items = [
-        {
-            label: 'Select Filters'
-        },
-        {
-            label: 'Filtered Results',
-        },
-        {
-            // El tercer item es más grande y actúa como un botón con un icono
-            label: 'Go to analysis',
-            template: customTemplate
-        }
-    ];
+    const { accessToken } = useAuth();  
 
-    const { accessToken } = useAuth();
 
-    const toast = useRef<any>(null);
 
-      // Función que simula el proceso de generación del dataset y activa el botón "Ver gráfico"
-      const simulateDatasetGeneration = () => {
-        // Simula la generación del dataset
-        setIsDatasetReady(true);
-    };
-
-    const accept = () => {
-        if (toast.current) {
-            toast.current.show({ severity: 'info', summary: 'Confirmed', detail: 'You have accepted', life: 3000 });
-        }
-    };
-
-    const reject = () => {
-        if (toast.current) {
-            toast.current.show({ severity: 'warn', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
-        }
-    };
-
-    const handleViewGraph = () => {
-     setActiveIndex(2)
-        console.log(abundanceData)
-    };
-
-  
     useEffect(() => {if(message!== null){ setLoadcsv(true)}}, [message])
 
 
@@ -216,8 +149,38 @@ const taxonomyOptions = [
     };
 
 
+    const fetchcolumnscsv = async (token: any | undefined) => {
 
-    const fetchDataAbundance = async (token: any | undefined) => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/abundancedifdata/checkcolumns/${params.slug}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+
+
+            }
+            );
+
+            const { valid_columns } = await response.json();
+    
+    if (valid_columns?.length === 0) {
+      console.log('No valid columns with at least two unique values');
+      return;
+    }
+console.log(valid_columns)
+setColumnGroupLoading(true);
+            return valid_columns;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
+
+
+
+    const fetchDataAbundance = async (token: any | undefined, group : string) => {
 
         try {
             const response = await fetch(
@@ -228,7 +191,7 @@ const taxonomyOptions = [
                         Authorization: `Bearer ${token}`,
                     },
                 body: JSON.stringify({
-                    "group": colorBy,
+                    "group": group,
                     "taxa_rank": selectedRank,
                 }),
 
@@ -306,56 +269,29 @@ const taxonomyOptions = [
         }
     };
 
-    useEffect(() => {checktempfile(accessToken)}, [accessToken]);
-    useEffect(() => {console.log(tempfile)}, [tempfile]);   
 
     useEffect(() => {
-        fetchDataAbundance(accessToken);
+        fetchConfigFile(accessToken);
+    }, [accessToken]);
 
-}, [params.slug, accessToken]);
+    useEffect(() => {checktempfile(accessToken)}, [configFile]);
 
+    useEffect(() => {
+        fetchcolumnscsv(accessToken).then((result) => {
+          if (Array.isArray(result) && result.length > 0) {
+            fetchDataAbundance(accessToken, result[0]);
+          } else {
+            console.error('Received invalid or empty response:', result);
+            // Aquí puedes manejar el caso de error, como mostrar un mensaje al usuario
+          }
+        }).catch(error => {
+          console.error('Error fetching columns:', error);
+          // Manejar el error de la promesa aquí, como mostrar un mensaje de error al usuario
+        });
+      }, [tempfile]);
+      
 
  
-
-
-    const handleValueChange = (value: string) => {
-        setSelectedValues(prevSelectedValues => {
-            const newSelectedValues = new Set(prevSelectedValues);
-
-            // Si el valor está presente, lo eliminamos (excepto si es uno de los últimos 2, para asegurar el mínimo de 2)
-            if (newSelectedValues.has(value) && newSelectedValues.size > 2) {
-                newSelectedValues.delete(value);
-            } else if (!newSelectedValues.has(value) && newSelectedValues.size < 3) {
-                // Si el valor no está presente, lo añadimos (hasta un máximo de 3)
-                newSelectedValues.add(value);
-            }
-
-            return newSelectedValues;
-        });
-    };
-
-
-    // Componente de checks para los valores de la columna seleccionada
-    const valueChecks = (
-        <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
-            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select your groups of interest</h3>
-            <div className="flex w-full flex-col overflow-x-scroll items-start">
-                {valueOptions.filter(value => value !== null).map((value, index) => (
-                    <div key={index} className="flex w-full items-start overflow-x-scroll mb-2 ">
-                        <div key={`value-${index}`} className="flex items-center">
-                        <Checkbox
-                id={`value-${index}`}
-                onChange={() => handleValueChange(value)}
-                checked={selectedValues.has(value)}
-                className="mr-2"
-            />
-                            <label htmlFor={`value-${index}`} className="ml-2 text-md">{value}</label>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
 
 
     useEffect(() => {
@@ -373,68 +309,12 @@ const taxonomyOptions = [
         }
     }, [selectedColorBy]);
 
-    useEffect(() => {
-        if (dataUnique) {
-            // Iterar sobre cada columna en los datos
-            const columnsWithFewValues = otus.data.columns.filter((column: any, columnIndex: string | number) => {
-                // Crear un Set para almacenar los valores únicos de la columna actual
-                const uniqueValuesSet = new Set(otus.data.data.map((item: { [x: string]: any; }) => item[columnIndex]));
 
-                // Filtrar valores 'null' o 'undefined'
-                const filteredUniqueValues = [...uniqueValuesSet].filter(value => value != null && value !== 'null');
-
-                // Devuelve true si la columna tiene menos de dos valores únicos
-                return filteredUniqueValues.length < 2;
-            });
-
-            // Actualizar el estado con las columnas que tienen menos de dos valores únicos
-            setColumnsWithFewerThanTwoUniqueValues(columnsWithFewValues);
-
-            // Acciones basadas en el resultado
-            if (columnsWithFewValues.length > 0) {
-                console.log("Columnas con menos de dos valores únicos:", columnsWithFewValues);
-                // Puedes manejar aquí lo que necesites hacer con esta información
-            } else {
-                console.log("Todas las columnas tienen al menos dos valores únicos.");
-            }
-        }
-    }, [dataUnique]);
 
 
 useEffect(() => {console.log(abundanceData)}, [abundanceData]);
 
-    useEffect(() => {
-        if (columnsWithFewerThanTwoUniqueValues.length > 0) {
-            const columnIndex = otus?.data?.columns.indexOf(selectedColorBy);
 
-            const filteredValueOptions = colorByOptions.filter(option =>
-                !columnsWithFewerThanTwoUniqueValues.includes(option as never) // Assuming 'columnName' is the property that indicates the name of the column in your valueOptions objects
-            );
-
-            // Update colorByOptions with the filtered list
-            console.log(filteredValueOptions);
-            
-            setColorByOptions(filteredValueOptions);
-        }
-    }, [configFile])
-
-
-    useEffect(() => {
-        console.log(columnsWithFewerThanTwoUniqueValues)
-    }, [selectedValues]);
-
-    useEffect(() => {
-        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        fetchConfigFile(accessToken);
-    }, [accessToken]);
-
-
-    useEffect(() => {
-        console.log(valueOptions);
-        console.log(colorByOptions)
-    }
-
-        , [valueOptions]);
 
    
     const applyFilters = () => { setActualcolumn(colorBy); 

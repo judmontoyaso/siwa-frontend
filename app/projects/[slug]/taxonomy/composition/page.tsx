@@ -18,6 +18,7 @@ import { Button } from "primereact/button";
 import { Tooltip as PrimeToolTip } from 'primereact/tooltip';
 import { Dropdown } from "primereact/dropdown";
 import { Card } from "primereact/card";
+import { TabView, TabPanel } from "primereact/tabview";
 
 
 
@@ -775,13 +776,7 @@ useEffect(() => {
                         </Tooltip>
                         </div>
 
-<div>
 
-        
-<iframe src="/api/components/innerHtml" frameBorder="0" width="100%" height="500px" allowFullScreen></iframe>
-
-{/* <SunburstChart paths={sunburstData.paths} values={sunburstData.values} ids={[sunburstData.ids]} /> */}
-</div>
 
                         <div className="px-6 py-8">
                             <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
@@ -789,6 +784,38 @@ useEffect(() => {
         {configFile?.taxonomic_composition?.text}
     </p>
 </div>
+
+
+<div>
+            <TabView>
+            <TabPanel  header=" Taxonomic Composition" leftIcon="pi pi-info-circle mr-2">
+    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+        This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
+    </p>
+    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+        Each concentric ring in the chart represents a different taxonomic level, starting from the highest level of classification in the innermost ring and moving to more specific classifications in the outer rings. This arrangement helps visualize the relative proportions of each taxonomic category within the sample, providing insights into the biological diversity and possible ecological relationships within the sample.
+    </p>
+    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+        By hovering over any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total sample it represents, and its relationship to adjacent segments. This interactive feature allows for an in-depth exploration of the complex taxonomic landscape, making it easier to identify predominant or rare taxa within the sample.
+    </p>
+    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+        The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. Researchers and educators can utilize this visualization to discuss and analyze patterns of biodiversity, evolutionary relationships, or the impact of environmental changes on taxonomic distributions.
+    </p>
+</TabPanel>
+                <TabPanel header=" Sunburst Chart " leftIcon="pi pi-chart-bar mr-2">
+                    <iframe 
+                        src="/api/components/innerHtml" 
+                        frameBorder="0" 
+                        width="100%" 
+                        height="500px" 
+                        allowFullScreen
+                        title="Taxonomy Composition Sunburst Chart">
+                    </iframe>
+                </TabPanel>
+          
+
+            </TabView>
+        </div>
 
                             </div>
 

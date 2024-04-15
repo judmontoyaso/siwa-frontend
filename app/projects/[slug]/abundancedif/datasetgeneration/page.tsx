@@ -60,7 +60,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [loaded, setLoaded] = useState(false);
     const [selectAll, setSelectAll] = useState(false);
     const [isGeneratingDataset, setIsGeneratingDataset] = useState(false);
-    const [records, setRecords] = useState(0);
+    const [records, setRecords] = useState({});
     const [isDatasetReady, setIsDatasetReady] = useState(false);
     const [columnsWithFewerThanTwoUniqueValues, setColumnsWithFewerThanTwoUniqueValues] = useState([]);
     const [Location, setLocation] = useState<string[]>([
@@ -80,7 +80,14 @@ export default function Page({ params }: { params: { slug: string } }) {
 const [tempfile, setTempFile] = useState<any>(false);
 const [messageData, setMessageData] = useState<any>(null);
 const messageName = "messageData_" +  params.slug;
+const [nickname, setNickname] = useState('');
+interface SelectedValuesByVariable {
+    [key: string]: Set<string>;
+}
 
+const [loadLefse, setLoadLefse] = useState(false);
+
+const [selectedValuesByVariable, setSelectedValuesByVariable] = useState<SelectedValuesByVariable>({});
 
 
     const colors = [
@@ -133,6 +140,8 @@ const messageName = "messageData_" +  params.slug;
                 <Button 
                     className={`p-button-rounded ${activeIndex === 2 ? 'animate-bounce' : ''} ${activeIndex >= 2 ? 'p-steps-complete p-button-success' : 'bg-gray-100 border-gray-100'}`} 
                     icon="pi pi-arrow-right"
+                    loading={loadLefse}
+                    loadingIcon="pi pi-spin pi-spinner"
                     style={{width: activeIndex === 2 ? '3rem' : '2rem', height: activeIndex === 2 ? '3rem' : '2rem'}}
                     data-pr-tooltip="Explore Data" // Mensaje del tooltip
                     data-pr-position="top" // Posición del tooltip
@@ -171,13 +180,19 @@ const messageName = "messageData_" +  params.slug;
     
     useEffect(() => {
         // Verifica si 'tempfile' tiene algún contenido significativo
-        const datasetExists = !!tempfile;
-    
+    console.log("dsajkhakjdhasjkdhaskjdhjashdkaskjdhasjkhdlahs",tempfile)
         // Si existe un dataset, ajusta 'activeIndex' al último paso
-        if (datasetExists) {
+        if (tempfile) {
             setActiveIndex(2); // Asumiendo que 2 es el índice del último paso
             setIsDatasetReady(true); // Asume que el dataset está listo si 'tempfile' existe
+        }else{setActiveIndex(0);
+            setIsDatasetReady(false);
+            setLoadcsv(false)
+setTempFile(false)
+    setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'
+    setActiveIndex(0)  // Asume que el dataset está listo si 'tempfile' existe
         }
+
     }, [tempfile]);
     
 
@@ -186,6 +201,7 @@ const messageName = "messageData_" +  params.slug;
     const toast = useRef<any>(null);
 
 
+    useEffect(() => {if(user?.nickname){setNickname(user?.nickname)}}, [user])
 
 
     const confirm1 = async (event: { currentTarget: any; }) => {
@@ -208,38 +224,32 @@ console.log(records)
                 };
             }
         });
-        setMessageData(data);
-
-        localStorage.setItem(messageName, JSON.stringify(data));
-   
+        fetchDatacsv(accessToken).then((result: any) => {setMessageData(data);setRecords(records);setLoadcsv(true);console.log("reeeeeeecords",result)});
+setMessageData(data)
+setRecords(records)
     };
 
     useEffect(() => {if(messageData!== null){ setLoadcsv(true)}}, [messageData])
 
-useEffect(() => {
-    const storedData = localStorage.getItem(messageName);
-    if (storedData) {
-      setMessageData(JSON.parse(storedData));
-    }
-  }, [params.slug]);
+
 
   
-    const fetchDatacsv = async (token: any | undefined) => {
-        setActiveIndex(1)
-        setIsGeneratingDataset(true);
+
+  
+    const fetchRecords = async (token: any | undefined) => {
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/abundancedifdata/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/${params.slug}/load_records_from_csv`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    "samplelocation": selectedLocations,
-                    "column": selectedColorBy,
-                    "columnValues": selectedColorBy === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    "nickname": nickname,
                 }),
+             
 
             }
             );
@@ -258,22 +268,29 @@ useEffect(() => {
             //     setTimeout(() => { window.location.href = "/"; }, 5000);
             //     throw new Error("Respuesta no válida desde el servidor");
             // }
+            if (!response.ok) {
+            return null}
             const result = await response.json();
-            setActiveIndex(2)
-// setLoadcsv(false)
         console.log(result)
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
-            setIsGeneratingDataset(false); 
+
         }
     };
 
 
 
     useEffect(() => {
-        if (loadcsv) {
-        fetchDatacsv(accessToken)}}, [loadcsv]);
+        if (accessToken && nickname) {
+            fetchRecords(accessToken).then((result: any) => {setRecords(result);console.log("reeeeeeecords",result)});
+        }
+        console.log(accessToken, nickname, records)
+    }, [accessToken, nickname]); // Ensure to include all dependencies here
+
+
+
+
 
 
     const fetchConfigFile = async (token: any) => {
@@ -311,7 +328,8 @@ useEffect(() => {
                 body: JSON.stringify({
                     "samplelocation": selectedLocations,
                     "column": selectedColorBy,
-                    "columnValues": selectedColorBy === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    "columnValues": selectedColorBy === 'samplelocation' ? selectedLocations : [...selectedValuesByVariable[selectedColorBy]],
+                    "nickname": nickname,   
                 }),
 
             }
@@ -360,6 +378,57 @@ useEffect(() => {
         }
     };
 
+
+    const fetchDatacsv = async (token: any | undefined) => {
+        setActiveIndex(1)
+        setIsGeneratingDataset(true);
+        console.log("aqui", accessToken)
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/abundancedifdata/${params.slug}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    "samplelocation": selectedLocations,
+                    "column": selectedColorBy,
+                    "columnValues": selectedColorBy === 'samplelocation' ? selectedLocations : [...selectedValuesByVariable[selectedColorBy]],
+                    "nickname": nickname,
+                }),
+
+            }
+            );
+            // if (response.status === 500 && accessToken !== undefined) {
+            //     toast.warn('The data needs to be loaded again!', {
+            //         position: "top-center",
+            //         autoClose: 4000,
+            //         hideProgressBar: false,
+            //         closeOnClick: true,
+            //         pauseOnHover: true,
+            //         draggable: true,
+            //         progress: undefined,
+            //         theme: "light",
+            //         transition: Bounce,
+            //     });
+            //     setTimeout(() => { window.location.href = "/"; }, 5000);
+            //     throw new Error("Respuesta no válida desde el servidor");
+            // }
+            const result = await response.json();
+            setActiveIndex(2)
+// setLoadcsv(false)
+        console.log(result)
+            return result;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+            setIsGeneratingDataset(false); 
+        }
+    };
+
+
+
+
     const deleteTempFiles = async (token: any | undefined) => {
         try {
           // Construir la URL del endpoint para borrar los archivos temporales
@@ -371,6 +440,9 @@ useEffect(() => {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`, // Asumiendo que la autenticación es necesaria
             },
+            body: JSON.stringify({
+                "nickname": nickname,   
+            }),
             // No es necesario enviar un cuerpo (body) para la petición DELETE en este caso
           });
       
@@ -436,6 +508,9 @@ useEffect(() => {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
+                    body: JSON.stringify({
+                        "nickname": nickname,
+                    }),
 
             }
             );
@@ -444,7 +519,7 @@ useEffect(() => {
 
             const temp = result?.status_code === 200 ? true : false;
             setTempFile(temp);
-            
+       
             console.log(result)
             // setIsDatasetReady(true);
             return result;
@@ -455,29 +530,36 @@ useEffect(() => {
 
     useEffect(() => {checktempfile(accessToken)}, [accessToken]);
 
-useEffect(() => {if (!tempfile) {localStorage.removeItem(messageName)};}, [tempfile]);
+// useEffect(() => {if (!tempfile) {setRecords({})};}, [tempfile]);
 
     const handleColorByChange = (option: SetStateAction<string>) => {
         setSelectedColorBy(option);
     };
 
-    const handleValueChange = (value: string) => {
-        const filteredSelectedValues = Array.from(selectedValues).filter(value => value !== null);
+    useEffect(() => {if (tempfile){setActiveIndex(2)}}, [tempfile]);
 
-        setSelectedValues(prevSelectedValues => {
-            const newSelectedValues = new Set(prevSelectedValues);
-
-            // Si el valor está presente, lo eliminamos (excepto si es uno de los últimos 2, para asegurar el mínimo de 2)
-            if (newSelectedValues.has(value) && newSelectedValues.size > 1) {
-                newSelectedValues.delete(value);
-            } else if (!newSelectedValues.has(value) && newSelectedValues.size < 3) {
-                // Si el valor no está presente, lo añadimos (hasta un máximo de 3)
-                newSelectedValues.add(value);
+    const handleValueChange = (value: string, variable: string) => {
+        const currentValues = new Set(selectedValuesByVariable[variable] || []);
+        const minSelectionsRequired = Object.keys(selectedValuesByVariable).length > 1 ? 1 : 2;
+    
+        if (currentValues.has(value)) {
+            if (currentValues.size > minSelectionsRequired) {
+                currentValues.delete(value);
             }
-
-            return newSelectedValues;
-        });
+        } else {
+            currentValues.add(value);
+            if (currentValues.size > 3) {
+                currentValues.delete([...currentValues][0]);
+            }
+        }
+    
+        setSelectedValuesByVariable(prev => ({
+            ...prev,
+            [variable]: currentValues
+        }));
     };
+    
+
     const handleCancelClick = () => {
         confirmDialog({
           message: 'Are you sure you want to cancel? This will delete all temporary data files.',
@@ -490,6 +572,42 @@ useEffect(() => {if (!tempfile) {localStorage.removeItem(messageName)};}, [tempf
         });
       };
 
+      interface UniqueValuesByVariable {
+        [key: string]: string[];
+    }
+
+      const initializeSelections = () => {
+        const uniqueValuesByVariable: UniqueValuesByVariable = {};    
+        colorByOptions.forEach(variable => {
+            if (variable !== 'sampleid' && variable !== 'samplelocation') {
+                const columnIndex = otus.data.columns.indexOf(variable);
+                const uniqueValues = new Set(otus.data.data.map((row: { [x: string]: any; }) => row[columnIndex]));
+                const validOptions: string[] = Array.from(uniqueValues).filter((opt: unknown) => opt !== null && opt !== 'null' && opt !== "") as string[];
+    
+                // Guardar los valores únicos filtrados por variable
+                uniqueValuesByVariable[variable] = validOptions;
+            }
+        });
+    
+        // Inicializar las selecciones con los dos primeros valores útiles
+        Object.keys(uniqueValuesByVariable).forEach(variable => {
+            if (!selectedValuesByVariable[variable] || selectedValuesByVariable[variable].size < 2) {
+                const initialSelection = new Set(uniqueValuesByVariable[variable].slice(0, 2));
+                selectedValuesByVariable[variable] = initialSelection;
+            }
+        });
+    
+        // Actualizar el estado con todos los valores iniciales
+        setSelectedValuesByVariable({...selectedValuesByVariable});
+    };
+    
+    useEffect(() => {
+        if (otus && colorByOptions) {
+            initializeSelections();
+        }
+    }, [otus, colorByOptions]);
+    
+
         // Función para manejar la eliminación de archivos temporales
   const handleDeleteTempFiles  = async () => {
     deleteTempFiles(accessToken);
@@ -501,7 +619,7 @@ setLoadcsv(false)
 setTempFile(false)
     setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'
     setActiveIndex(0) 
-    localStorage.removeItem(messageName);
+  setRecords({}) // Restablece el estado de 'isDatasetReady'
 
     await fetchData(accessToken).then(() => {setLoadcsv(false)});
 };
@@ -511,21 +629,25 @@ setTempFile(false)
     const valueChecks = (
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
             <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select your groups of interest</h3>
-            <div className="flex w-full flex-col overflow-x-scroll items-start">
-                {valueOptions.filter(value => value !== null).map((value, index) => (
-                    <div key={index} className="flex w-full items-start overflow-x-scroll mb-2 ">
-                        <div key={`value-${index}`} className="flex items-center">
-                        <Checkbox
-                id={`value-${index}`}
-                onChange={() => handleValueChange(value)}
-                checked={selectedValues.has(value)}
-                className="mr-2"
-            />
-                            <label htmlFor={`value-${index}`} className="ml-2 text-md">{value}</label>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            // Al renderizar los checkbox de valores para la variable actual
+<div className={`border p-4 rounded-lg flex-grow min-w-[45%] ml-1 ${selectedColorBy !== "samplelocation" ? "" : "opacity-50 pointer-events-none"}`}>
+    {valueOptions.length > 1 && selectedColorBy !== "samplelocation" ? (
+        <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
+            {valueOptions.map((value, index) => (
+                <div key={index} className="flex items-center">
+                    <Checkbox
+                        id={`value-${index}`}
+                        onChange={() => handleValueChange(value, selectedColorBy)}
+                        checked={selectedValuesByVariable[selectedColorBy]?.has(value)}
+                        className="mr-2"
+                    />
+                    <label htmlFor={`value-${index}`} className="ml-2 text-md">{value}</label>
+                </div>
+            ))}
+        </div>
+    ) : <p className="text-md">Select a Variable to view options.</p>}
+</div>
+
         </div>
     );
 
@@ -552,7 +674,7 @@ setTempFile(false)
 
             console.log([...filterValues].slice(0, 2))
         }
-    }, [selectedColorBy]);
+    }, [otus,selectedColorBy]);
 
     useEffect(() => {
         if (selectedValues.size < 2 || Array.from(selectedValues).some(value => value === null || value === "null" || value === "")) {
@@ -621,7 +743,22 @@ setTempFile(false)
     }
         , [configFile]);
 
-
+useEffect(() => {if (records !== null) {
+    const data = Object.entries(records).map(([key, value]) => {
+    // Verifica si la clave actual es 'total_samples'
+    if (key === 'total_samples') {
+        return {
+            variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            samples: value  // Maneja 'total_samples' directamente
+        };
+    } else {
+        // Maneja los demás campos como antes
+        return {
+            variable: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            samples: Object.entries(value as { [s: string]: unknown }).map(([subKey, subValue]) => `${subKey}: ${subValue}`).join(', ')
+        };
+    }}
+);setMessageData(data)}}, [records])
 
         const sumarNumerosDeCadena = (cadena: { match: (arg0: RegExp) => any[]; }) => {
             const numeros = cadena.match(/\d+/g)?.map(Number);
@@ -629,8 +766,7 @@ setTempFile(false)
         };
     
  
-        const messageDataConTotal = messageData
-        ?.filter((item: { variable: string; }) => item.variable !== "Total Samples")  // Filtra primero los elementos que no deseas
+        const messageDataConTotal = messageData?.filter((item: { variable: string; }) => item.variable !== "Total Samples")  // Filtra primero los elementos que no deseas
         .map((item: { samples: { match: (arg0: RegExp) => any[]; }; }) => ({ ...item, total: sumarNumerosDeCadena(item.samples) }));  // Luego mapea los elementos restantes
       
     
@@ -666,8 +802,21 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
                         className="p-button-rounded p-button-secondary"
                         onClick={handleCancelClick}
                         tooltip="Generate dataset again"
-                    />     <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>
-                    <Button label="Go to analysis" icon="pi pi-arrow-right" iconPos="right"  className="p-button-success p-button-rounded" onClick={undefined} />
+                    />    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                     <Link aria-disabled={activeIndex !== 2} href={`/projects/${params.slug}/abundancedif/dataexploration`}>
+                    <Button disabled={activeIndex !== 2} label="Go to analysis"                         icon="pi pi-arrow-right"
+ iconPos="right"                loading={loadLefse}
+
+
+ loadingIcon="pi pi-spin pi-spinner"               className={`p-button-rounded ${activeIndex === 2 ? "p-button-success" : "p-button-secondary"}`}
+  onClick={()=>setLoadLefse(true)} />
                     </Link> 
 
       <ConfirmDialog /> {/* Componente para mostrar el diálogo de confirmación */}
@@ -730,7 +879,9 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
 {message}
 
 </>
- ): (loadcsv ? message : (
+ ): (loadcsv && records !== null ? 
+    message : 
+    (
                             <div className="p-4 flex flex-wrap justify-between gap-4">
                                 {/* Selección de ubicaciones */}
                                 <div className="flex-grow min-w-[25%] border p-4 rounded-lg">
@@ -823,7 +974,7 @@ if ((columnOptions as string[]).includes(option)) {
                                     <ConfirmPopup />
                                     <div className="w-full mt-6 flex flex-wrap gap-2 justify-center button-generate-cont">
 
-                                        <Button onClick={confirm1} outlined icon="pi pi-arrow-right" iconPos="right" type="submit" label="Generate dataset" className="p-button-rounded" />
+                                        <Button onClick={confirm1} outlined icon="pi pi-arrow-right" iconPos="right" type="submit"  loadingIcon="pi pi-spin pi-spinner"    label="Generate dataset" loading={isGeneratingDataset}  className="p-button-rounded" />
                                     </div>
                                 </div>
 

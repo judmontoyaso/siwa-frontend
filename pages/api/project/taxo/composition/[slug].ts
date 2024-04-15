@@ -25,7 +25,6 @@
       const top  = req.body.top.toString();
       const columnValues  = req.body.columnValues;
 
-  console.log(req.body.samplelocation, token)
       try {
         const response = await fetch(
             `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${slug}`, {
@@ -46,7 +45,6 @@
         }
         );
     
-  console.log(response)
       if (!response.ok) throw new Error(`Error: ${response.statusText}`);
       const data = await response.json();
       res.status(200).json(data);

@@ -69,6 +69,8 @@ const [tempfile, setTempFile] = useState<any>();
 const [dataExist, setDataExist] = useState(false);
 const [filterPeticion, setFilterPeticion] = useState(false);
 const[columnGroupLoading, setColumnGroupLoading] = useState(false);
+const[userNickname, setUserNickname] = useState("");
+const[columns, setColumns] = useState([]);
 const taxonomyOptions = [
     "Phylum",
     "Class",
@@ -118,12 +120,12 @@ const taxonomyOptions = [
 
     const { accessToken } = useAuth();  
 
-
+useEffect(() => {if (columns.length > 0) {setActualcolumn(columns[0])}}, [columns])
 
     useEffect(() => {if(message!== null){ setLoadcsv(true)}}, [message])
 
 
-
+useEffect(() => {if(user?.nickname){setUserNickname(user?.nickname)}}, [user])
 
 
     const fetchConfigFile = async (token: any) => {
@@ -154,11 +156,15 @@ const taxonomyOptions = [
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/abundancedifdata/checkcolumns/${params.slug}`, {
-                    method: 'GET',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
+                    body: JSON.stringify({
+                        "nickname": userNickname
+                    }),
+
 
 
             }
@@ -171,6 +177,7 @@ const taxonomyOptions = [
       return;
     }
 console.log(valid_columns)
+    setColumns(valid_columns);
 setColumnGroupLoading(true);
             return valid_columns;
         } catch (error) {
@@ -178,7 +185,7 @@ setColumnGroupLoading(true);
         }
     };
 
-
+console.log(user?.nickname)
 
     const fetchDataAbundance = async (token: any | undefined, group : string) => {
 
@@ -193,6 +200,7 @@ setColumnGroupLoading(true);
                 body: JSON.stringify({
                     "group": group,
                     "taxa_rank": selectedRank,
+                    "nickname": userNickname
                 }),
 
             }
@@ -224,6 +232,7 @@ setColumnGroupLoading(true);
                 body: JSON.stringify({
                     "group": colorBy,
                     "taxa_rank": selectedRank,
+                    "nickname": userNickname
                 }),
 
             }
@@ -254,6 +263,7 @@ setColumnGroupLoading(true);
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
+                body: JSON.stringify({"nickname": userNickname}),
 
             }
             );
@@ -277,17 +287,20 @@ setColumnGroupLoading(true);
     useEffect(() => {checktempfile(accessToken)}, [configFile]);
 
     useEffect(() => {
-        fetchcolumnscsv(accessToken).then((result) => {
-          if (Array.isArray(result) && result.length > 0) {
-            fetchDataAbundance(accessToken, result[0]);
-          } else {
-            console.error('Received invalid or empty response:', result);
-            // Aquí puedes manejar el caso de error, como mostrar un mensaje al usuario
-          }
-        }).catch(error => {
-          console.error('Error fetching columns:', error);
-          // Manejar el error de la promesa aquí, como mostrar un mensaje de error al usuario
-        });
+        // Verificar si `tempfile` es true antes de ejecutar la lógica
+        if (tempfile === true) {
+          fetchcolumnscsv(accessToken).then((result) => {
+            if (Array.isArray(result) && result.length > 0 && userNickname !== "" && userNickname !== undefined) {
+              fetchDataAbundance(accessToken, result[0]);
+            } else {
+              console.error('Received invalid or empty response:', result);
+              // Aquí puedes manejar el caso de error, como mostrar un mensaje al usuario
+            }
+          }).catch(error => {
+            console.error('Error fetching columns:', error);
+            // Manejar el error de la promesa aquí, como mostrar un mensaje de error al usuario
+          });
+        }
       }, [tempfile]);
       
 
@@ -310,12 +323,17 @@ setColumnGroupLoading(true);
     }, [selectedColorBy]);
 
 
-
+    useEffect(() => {
+        if (actualcolumn) {
+          setColorBy(actualcolumn);
+        }
+      }, [actualcolumn]);
+    
 
 useEffect(() => {console.log(abundanceData)}, [abundanceData]);
 
 
-
+const filteredOptions = colorByOptions.filter(option => !columnOptions || columnOptions.includes(option as never));
    
     const applyFilters = () => { setActualcolumn(colorBy); 
         setSelectedColorBy(selectedRank);
@@ -347,7 +365,11 @@ useEffect(() => {console.log(abundanceData)}, [abundanceData]);
                     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group</h3>
                     <ul className="flex flex-wrap justify-between">
               
-                    <select value={colorBy} onChange={(e) => setColorBy(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer">
+                    <select 
+                    value={colorBy}
+                     onChange={(e) => setColorBy(e.target.value)}
+                     disabled = {filteredOptions.length <= 1}
+                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer">
                         {colorByOptions.map((option, index) => {
                             if (columnOptions && columnOptions?.includes(option as never)) {
                                 return (

@@ -9,6 +9,7 @@ const handler = async (req: {
         group: { group: any; };
         taxa_rank: { taxa_rank: any; }; 
         columnValues: { columnValues: any; };
+        nickname: { nickname: any; };
         samplelocation: { selectedLocations: any; }; selectedLocations: any; selectedColumn: any; 
     }; query: { slug: any; }; headers: { authorization: any; };
 }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { error: any; }): void; new(): any; }; }; }) => {
@@ -16,6 +17,7 @@ const handler = async (req: {
     const token = req.headers.authorization;
     const group = req.body.group;
     const taxa_rank = req.body.taxa_rank;
+    const nickname = req.body.nickname;
     const  selectedLocations  = req.body.samplelocation;
     const column  = req.body.column;
     const columnValues  = req.body.columnValues;
@@ -31,12 +33,12 @@ const handler = async (req: {
             body: JSON.stringify({
                 "group": group,
                 "taxa_rank": taxa_rank,
+                "nickname": nickname,
             }),
 
         }
         );
 
-        console.log(response)
         if (!response.ok) throw new Error(`Error: ${response.statusText}`);
         const data = await response.json();
         res.status(200).json(data);

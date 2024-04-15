@@ -9,6 +9,7 @@ const handler = async (req: {
         group: { group: any; };
         taxa_rank: { taxa_rank: any; }; 
         columnValues: { columnValues: any; };
+        nickname: { nickname: any; };
         samplelocation: { selectedLocations: any; }; selectedLocations: any; selectedColumn: any; 
     }; query: { slug: any; }; headers: { authorization: any; };
 }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { error: any; }): void; new(): any; }; }; }) => {
@@ -19,7 +20,9 @@ const handler = async (req: {
     const  selectedLocations  = req.body.samplelocation;
     const column  = req.body.column;
     const columnValues  = req.body.columnValues;
+    const nickname  = req.body.nickname;
     try {
+        console.log("nickname", nickname)
         const response = await fetch(
             `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/abundancedifdata/${slug}`, {
             method: 'POST',
@@ -33,7 +36,8 @@ const handler = async (req: {
                 "taxa_rank": taxa_rank,
                 "samplelocation": selectedLocations,
                 "column": column,
-                "columnValues" : columnValues
+                "columnValues" : columnValues,
+                "nickname": nickname
             }),
 
         }

@@ -39,7 +39,6 @@ const handler = async (req: {
         }
         );
 
-        console.log(response)
         if (!response.ok) throw new Error(`Error: ${response.statusText}`);
         const data = await response.json();
         res.status(200).json(data);

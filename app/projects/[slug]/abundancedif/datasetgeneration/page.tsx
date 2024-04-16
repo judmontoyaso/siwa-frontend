@@ -241,7 +241,7 @@ setRecords(records)
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/${params.slug}/load_records_from_csv`, {
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/loadrecords/${params.slug}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -434,7 +434,7 @@ setRecords(records)
     const deleteTempFiles = async (token: any | undefined) => {
         try {
           // Construir la URL del endpoint para borrar los archivos temporales
-          const url = `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/delete-temp-files/${params.slug}`;
+          const url = `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/deletetempfile/${params.slug}`;
       
           const response = await fetch(url, {
             method: 'POST', // Usar método DELETE

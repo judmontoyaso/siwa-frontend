@@ -837,7 +837,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
                     <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
                 </div>
             }>                        
-     {showLefsePlot? <LefsePlot data={abundanceData}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 opacity-60 relative">
+     {showLefsePlot? <LefsePlot data={abundanceData} width={""}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 opacity-60 relative">
             <div className="flex items-center text-yellow-600 mb-2 w-full">
                 <AiOutlineInfoCircle size={24} />
                 <p className="text-lg font-semibold ml-2">Instructions for Dataset Generation:</p>

@@ -9,6 +9,7 @@ import Layout from "@/app/components/Layout";
 import Dashboard from "@/app/components/dashboard";
 import { useRouter } from "next/router";
 import { SidebarProvider } from "./components/context/sidebarContext";
+import PopupComponent from "./components/popUpContent";
 
 export default function Home() {
   const [accessToken, setAccessToken] = useState("");
@@ -22,6 +23,7 @@ export default function Home() {
   return (
     <>
 {isLoading ? (<><SidebarProvider>
+  
         <Layout slug={""} filter={undefined}> cargando...      </Layout>
         </SidebarProvider></> ) : (   <>
   {user ? (

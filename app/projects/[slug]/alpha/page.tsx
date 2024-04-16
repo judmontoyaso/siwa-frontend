@@ -19,6 +19,7 @@ import { Button } from "primereact/button";
 import { FiActivity, FiBarChart } from "react-icons/fi";
 import { RiExchangeFundsLine } from "react-icons/ri";
 import { Divider } from "primereact/divider";
+import { usePopup } from "@/app/popupContext";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -49,14 +50,15 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [graphType, setGraphType] = useState<any>("boxplot");  // 'boxplot' o 'violin'
     const [filterPeticion, setFilterPeticion] = useState(false);
     const { accessToken, isLoading, error } = useAuth();
-
+    const { isWindowVisible } = usePopup();
+    const [layout, setLayout] = useState({});
     const [Location, setLocation] = useState<string[]>([
         "cecum",
         "feces",
         "ileum",
     ]);
     const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
-    let colorIndex = 0;
+
 
     const colors = [
         "#092538", // Azul oscuro principal
@@ -94,7 +96,19 @@ export default function Page({ params }: { params: { slug: string } }) {
         "#EC407A", // Rosa
     ];
 
+    const [colorOrder, setColorOrder] = useState<string[]>([]);
+  // Función para aleatorizar la paleta de colores
+  const shuffleColors = () => {
+    let shuffled = colors
+      .map(value => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+    setColorOrder(shuffled);
+  };
 
+  useEffect(() => {
+    shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
+  }, [otus]);
     
     const fetchConfigFile = async (token: any) => {
         try {
@@ -177,6 +191,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Usa el token pasado como argumento
         try {
+            let colorIndex = 0;
             // Filtrar los datos basados en la locación seleccionada, si se ha seleccionado una
             const filteredData = result?.data?.data?.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
             const groupedData = filteredData.reduce(
@@ -200,13 +215,12 @@ export default function Page({ params }: { params: { slug: string } }) {
                     const sampleId = item[0];
                     // Verifica si la locación actual debe ser incluida
                     if (selectedLocations.includes(location)) {
+                        
                         if (!acc[location]) {
                             acc[location] = {
-                                y: [], text: [], marker: { color: colors[colorIndex % colors.length] }
+                                y: [], text: [], marker: { color: colorOrder[colorIndex % colorOrder.length] }
                             };
-                            console.log(location)
-                            newScatterColors[location] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
-                            colorIndex++;
+                         
                         }
                         acc[location].y.push(alphaShannon);
                         acc[location].text.push(`Sample ID: ${sampleId}`);
@@ -216,7 +230,6 @@ export default function Page({ params }: { params: { slug: string } }) {
                 },
                 {}
             );
-            setScatterColors(newScatterColors);
             const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), columnIndex || 1);
             setShannonData(shannonData as never[]);
             setPlotData(
@@ -224,6 +237,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     ...groupedData[location],
                     type: "box",
                     name: location,
+                    marker: { color: newScatterColors[colorIndex] }
                 }))
             );
             console.log('shannonData:', shannonData);
@@ -235,8 +249,11 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
-    const processData = (data: any[], index: number): any[] => {
+ 
+    
 
+    const processData = (data: any[], index: number): any[] => {
+        let colorIndex = 0;
         if (!Array.isArray(data)) {
             console.error('Expected an array for data, received:', data);
             return [];
@@ -250,18 +267,18 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                 if (!acc[key]) {
                     acc[key] = {
-                        y: [], text: [], name: `${value === undefined ? location : value}`, marker: { color: colors[colorIndex % colors.length] }
+                        y: [], text: [], name: `${value === undefined ? location : value}`, marker: { color: colorOrder[colorIndex % colorOrder.length] }
                     };
-                    newScatterColors[value] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
+                    newScatterColors[value] = colorOrder[colorIndex % colorOrder.length]; // Actualiza la copia con el nuevo color
                     colorIndex++;
+                   
                 }
 
                 acc[key].y.push(item[2]); // Asumiendo que el valor de interés está en el índice 9
                 acc[key].text.push(`Sample ID: ${item[0]}`);
-            }
+            }        setScatterColors(newScatterColors);
             return acc;
         }, {});
-        setScatterColors(newScatterColors);
 
         // Convertir el objeto resultante en un arreglo de sus valores
         return Object.values(result);
@@ -278,9 +295,14 @@ export default function Page({ params }: { params: { slug: string } }) {
         };
     };
 
+    useEffect(() => {console.log("isWindowVisible", isWindowVisible)}, [isWindowVisible]);
+
+
     useEffect(() => {
         updatePlotWidth(); // Establece el ancho inicial
-    }, [otus]);
+        console.log('plotWidth:', plotWidth);
+        console.log(isWindowVisible)
+    }, [otus, isWindowVisible]);
 
     window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
 
@@ -331,8 +353,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     const handleLocationChangeColorby = (event: any) => {
         setSelectedColumn(event.target.value);
-        console.log(newScatterColors)
-        console.log(scatterColors)
+
     };
 
     // Función para aplicar los filtros seleccionados
@@ -658,16 +679,44 @@ useEffect(() => {
 
     const legend = (<div className="w-full flex flex-row overflow-x-scroll max-h-full  justify-center mt-5 items-center">
         <div className="">
-            <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualcolumn === "samplelocation" ? "Sample location" : actualcolumn}</h2>
+            {/* <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualcolumn === "samplelocation" ? "Sample location" : actualcolumn}</h2> */}
         </div>
         <div className=" flex flex-col w-auto">
             <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
         </div>
     </div>)
 
-    const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
 
+useEffect(() => {
+    const newLayout = {
+        width: plotWidth || undefined,  // Utiliza plotWidth o cae a 'undefined' si es 0
+        height: 600,
+        showlegend: true,  // Activa la visualización de la leyenda
+        legend: {
+            orientation: "h", // Horizontal
+            x: 0.5, // Centrado respecto al ancho del gráfico
+            xanchor: "center", // Ancla en el centro
+            y: 1.1, // Posición en y un poco por encima del gráfico
+            yanchor: "top", // Ancla la leyenda en la parte superior
+            
+        },
+        xaxis: {
+            showticklabels: false  // Oculta las etiquetas del eje X
+        },
+        yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
+        margin: {
+            l: 20, r: 10,
+            t: 60, // Incrementa el margen superior para evitar solapamientos con la leyenda
+            b: 50
+        }
+    };
+    setLayout(newLayout);
+}, [isWindowVisible, graphType, plotWidth, shannonData]);
+
+
+    const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         <div className="flex flex-row w-full items-center">
+
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <> 
@@ -688,31 +737,23 @@ useEffect(() => {
                <Plot
     data={
         Object.values(shannonData.filter(entry => entry.name !== "null"))
-            .map(item => ({
+            .map((item, index) => ({
                 ...(item as object),
                 type: graphType === "boxplot" ? "box" : "violin",
                 marker: {
-                    color: scatterColors[item.name],
+                    color: colorOrder[index % colorOrder.length],
                     size: 4, // Ajusta el tamaño del marcador según sea necesario para mejorar la legibilidad
                 },
                 boxpoints: graphType === "boxplot" ? "all" : undefined,
                 points: graphType !== "boxplot" ? "all" : undefined,
                 jitter: 0.3,  // Controla cuánto se dispersan los puntos en la dirección horizontal; ajusta según necesidad
                 pointpos: 0,  // Coloca los puntos directamente en el centro de las cajas
-            }))
+            } ),(   
+            console.log(scatterColors)  ,
+            console.log(colorOrder)))
     }
-    layout={{
-        width: plotWidth || undefined,  // Utiliza plotWidth o cae a 'undefined' si es 0
-        height: 600,
-        // title: `Alpha Shannon${isColorByDisabled ? " por Ubicación" : (selectedColumnRemove === "" || selectedColumnRemove === "samplelocation" ? " en " + selectedLocations : (" por " + selectedColumn + " en ") + selectedLocations)}`,
-        showlegend: false,
-        xaxis: {
-            showticklabels: false  // Oculta las etiquetas del eje X
-        },
-        annotations: annotations,
-        yaxis: graphType === "boxplot" ? { range: yAxisRange }  : { range: [yAxisRange[0], yAxisRange[1] + 5] },
-        margin:  graphType === "boxplot" ? { l: 20, r: 10, t: 0, b: 20 }  : { l: 20, r: 10, t: 50, b: 50 }
-    }}
+    layout={
+        layout    }
 />
 
                     </>
@@ -758,7 +799,7 @@ useEffect(() => {
                             </div>
 
                             <div className="flex">
-                                <GraphicCard filter={filter} legend={legend} title={title}>
+                                <GraphicCard filter={filter} legend={""} title={title}>
                                     {shannonData.length > 0 ? (
                                         <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
                                     ) : (

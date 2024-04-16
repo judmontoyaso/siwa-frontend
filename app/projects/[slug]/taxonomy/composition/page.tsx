@@ -120,7 +120,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
     const [columnOptions, setColumnOptions] = useState([]);
     const [htmlContent, setHtmlContent] = useState('');
     const containerRef = useRef<HTMLDivElement>(null); // Update the type of containerRef to HTMLDivElement
-
+    const [activeIndex, setActiveIndex] = useState(0); 
 
     useEffect(() => {
         fetch('/api/components/innerHtml')
@@ -177,7 +177,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
         return () => {
             window.removeEventListener('resize', updatePlotWidth);
         };
-    }, [params.slug, plotData]);
+    }, [params.slug, plotData, ]);
 
 
 
@@ -598,8 +598,11 @@ setFilterPeticion(true);
     const filter = (
         <div className={`flex flex-col w-full p-4 rounded-lg  dark:bg-gray-800 `}>
 
-            <div className="flex flex-col items-left mt-4 mb-4 ">
-     <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
+            <div className="flex xl:flex-col md:flex-row md:flex-wrap xl:flex-nowrap items-left mt-4 mb-4 ">
+                <div className="xl:w-full md:w-1/2 md:flex md:flex-row xl:flex-col md:justify-between">
+                    <div className="w-full flex flex-col">
+
+                    <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
      <Dropdown 
             value={selectedRank} 
             options={dropdownOptions} 
@@ -607,10 +610,13 @@ setFilterPeticion(true);
             placeholder="Select a Rank"
             className="w-full"
         />
+        </div>
 
-
-<Divider/>
-<div className="max-w-xs mx-auto flex flex-col items-center mt-4 mb-4">
+                </div>
+<Divider layout="vertical" className="md:block xl:hidden" />
+<Divider className="w-full md:hidden xl:block"/>   
+                <div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between">
+    <div className="max-w-xs mx-auto flex flex-col items-center mt-4 mb-4">
     <PrimeToolTip target=".topInputText" />
     <label htmlFor="topInput" className="block mb-5 text-lg font-medium text-gray-900 dark:text-white">
         <div className="flex flex-row">
@@ -634,8 +640,11 @@ setFilterPeticion(true);
     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
 </div>
  
-<Divider/>
-                <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
+<Divider className="md:hidden xl:block"/>
+  </div>
+  <Divider className="md:block xl:hidden w-full"/>
+  <div className="xl:w-full md:w-1/2 md:flex md:flex-col md:justify-between">
+    <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
 
                     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location (if applicable)</h3>
                     <Dropdown 
@@ -650,7 +659,12 @@ setFilterPeticion(true);
 
 
                 </div>
-<Divider/>
+<Divider className="xl:block md:hidden"/>
+</div>
+<Divider layout="vertical" className="md:block xl:hidden" />
+<div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between">
+
+     
                 <div className="mt-4 mb-4">
                 <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group By</h3>
 
@@ -706,7 +720,7 @@ if ((columnOptions as string[])?.includes(option)) {
                 </div>
 
             </div>
-            <div>
+            <div className="xl:w-full md:w-full">
 
             {selectedGroup!== "samplelocation" ?
             <>
@@ -719,6 +733,8 @@ if ((columnOptions as string[])?.includes(option)) {
             </div>
 
             <Divider/>
+</div>
+               
 
             <div className="flex w-full items-center margin-0 justify-center my-10">
           <Button
@@ -757,7 +773,7 @@ useEffect(() => {
             <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
                 {isLoaded ? (
-                    <div className="flex flex-col w-full">
+                    <div className="flex flex-col w-11/12 mx-auto">
 
                         <div className="flex flex-row w-full text-center justify-center items-center">
                             <h1 className="text-3xl my-5 mx-2">{configFile?.taxonomic_composition?.title ?? "Taxonomy diversity"}</h1>
@@ -788,9 +804,9 @@ useEffect(() => {
 </div>
 
 <div className="mt-5">
-            <Accordion>
+            <Accordion activeIndex={activeIndex}>
               
-                <AccordionTab header={<><i className="pi pi-info-circle mr-2"></i>  Hierarchical visualization</>}>
+                <AccordionTab header={<>  Hierarchical visualization<i className="pi pi-info-circle ml-2"></i></>}>
 
                     <div>          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
                         This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
@@ -819,7 +835,7 @@ useEffect(() => {
                             </div>
 
                         <div className="flex flex-row">
-                            <GraphicCard filter={filter} legend={legend} title={title} orientation="horizontal">
+                            <GraphicCard filter={filter} legend={legend} title={title} orientation="horizontal" slug={params.slug}>
                                 {plotData.length > 0 ? (
                                     <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
                                 ) : (

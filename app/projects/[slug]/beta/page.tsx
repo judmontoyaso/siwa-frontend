@@ -17,6 +17,7 @@ import { useAuth } from "@/app/components/authContext";
 import Spinner from "@/app/components/pacmanLoader";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
+import { BiScatterChart } from "react-icons/bi";
 
 
 
@@ -104,6 +105,9 @@ export default function Page({ params }: { params: { slug: string } }) {
   "#7E57C2", // Lavanda oscuro
   "#EC407A", // Rosa
   ];
+
+  const [colorOrder, setColorOrder] = useState<string[]>([]);
+
   const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
   const [loaded, setLoaded] = useState(false);
@@ -124,7 +128,17 @@ export default function Page({ params }: { params: { slug: string } }) {
   }, [plotData]);
 
 
+  const shuffleColors = () => {
+    let shuffled = colors
+      .map(value => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+    setColorOrder(shuffled);
+  };
 
+  useEffect(() => {
+    shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
+  }, [scatterData]);
   const fetchConfigFile = async (token: any) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
@@ -410,10 +424,10 @@ const valueChecks = (
             type: "scatter",
             name: sampleLocation,
             text: [],
-            marker: { size: 8, color: colors[colorIndex % colorsLocation.length] }
+            marker: { size: 8, color: colorOrder[colorIndex % colorOrder.length] }
           };
           const key = sampleLocation; // Declare 'key' variable
-          newScatterColors[key] = colorsLocation[colorIndex % colorsLocation.length]; // Actualiza la copia con el nuevo color
+          newScatterColors[key] = colorOrder[colorIndex % colorOrder.length]; // Actualiza la copia con el nuevo color
           colorIndex++;
         }
 
@@ -480,9 +494,9 @@ const valueChecks = (
             type: "scatter",
             name: name,
             text: [],
-            marker: { size: 8, color: colors[colorIndex % colors.length] }
+            marker: { size: 8, color: colorOrder[colorIndex % colorOrder.length] }
           };
-          newScatterColors[key] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
+          newScatterColors[key] = colorOrder[colorIndex % colorOrder.length]; // Actualiza la copia con el nuevo color
           colorIndex++;
         }
 
@@ -529,16 +543,16 @@ const valueChecks = (
             type: "scatter",
             name: name,
             text: [],
-            marker: { size: 8, color: colors[colorIndex % colors.length] }
+            marker: { size: 8, color: colorOrder[colorIndex % colorOrder.length] }
           };
-          newScatterColors[key] = colors[colorIndex % colors.length]; // Actualiza la copia con el nuevo color
+          newScatterColors[key] = colorOrder[colorIndex % colorOrder.length]; // Actualiza la copia con el nuevo color
           colorIndex++;
         }
 
         acc[key].x.push(PC1);
         acc[key].y.push(PC2);
         acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy === "samplelocation" ? "location" : colorBy}: ${colorValue}`);
-        scatterColors[key] = colors[colorIndex % colors.length];
+        scatterColors[key] = colorOrder[colorIndex % colorOrder.length];
         return acc;
       }, {});
 
@@ -749,7 +763,15 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
               }
             }
           },
-                    showlegend: false,
+          showlegend: true,  // Activa la visualización de la leyenda
+          legend: {
+              orientation: "h", // Horizontal
+              x: 0.5, // Centrado respecto al ancho del gráfico
+              xanchor: "center", // Ancla en el centro
+              y: 1.1, // Posición en y un poco por encima del gráfico
+              yanchor: "top", // Ancla la leyenda en la parte superior
+              
+          },
                     margin: { l: 40, r: 10, t: 0, b: 40 } 
 
         }}
@@ -762,7 +784,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
 
   const legend =(      <div className="w-full flex flex-row overflow-x-scroll max-h-full items-start justify-center mt-5">
  <div>
-  <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{selectedColorBy === "samplelocation" ? "Sample Location" : selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1)}</h2>
+  {/* <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{selectedColorBy === "samplelocation" ? "Sample Location" : selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1)}</h2> */}
   </div> 
   <div>
 
@@ -804,7 +826,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
 
     </div>
   <div className="flex">
-    <GraphicCard legend={legend} filter={filter} title={title}>
+    <GraphicCard legend={""} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <MyPlotComponent scatterData={scatterData} scatterColors={scatterColors} />
       ) : (

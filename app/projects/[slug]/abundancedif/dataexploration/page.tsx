@@ -118,6 +118,26 @@ const taxonomyOptions = [
     const tooltipTargetId = 'info-icon';
     const [actualcolumn, setActualcolumn] = useState("treatment")
 
+    const updatePlotWidth = () => {
+
+        if (plotContainerRef.current) {
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth -75);
+            console.log(plotWidth)
+            console.log(plotContainerRef.current)
+            setLoaded(true)
+
+        };
+    };
+
+
+
+    useEffect(() => {
+        updatePlotWidth(); // Establece el ancho inicial
+        console.log('plotWidth:', plotWidth);
+    }, [abundanceData]);
+
+    window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
+
     const { accessToken } = useAuth();  
 
 useEffect(() => {if (columns.length > 0) {setActualcolumn(columns[0])}}, [columns])
@@ -432,7 +452,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
         <div className="h-full">
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} >
-                    <div className="">
+                    <div className="w-11/12">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <Card title={
                 <div className="flex items-center text-center w-full justify-center">
@@ -441,9 +461,9 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
                 </div>
             }>     
  <div className="px-6 py-8">
-                            <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
+                            <div className={`prose single-column`}>
     <p className="text-gray-700 text-justify text-xl">
-        {configFile?.taxonomic_composition?.text}
+   This tools uses linear discriminant analysis, which allows you to make comparisons between any combination of groups to identify microbiome members that are more associated with one group vs others.  In cases with multiple treatments, sample sites, or other grouping variables, many different comparisons are possible.
     </p>
 </div>
 
@@ -453,7 +473,10 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
     <div className="flex flex-col h-full">   <GraphicCard filter={filter} legend={""} title={title}>
         {abundanceData ? (
 dataExist ? 
-    <LefsePlot data={abundanceData} />
+<div className="w-full" ref={plotContainerRef}>
+
+    <LefsePlot data={abundanceData} width={plotWidth} />
+</div>
 : (
     <div className="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-lg shadow">
     <i className="pi pi-exclamation-triangle text-3xl text-yellow-500"></i> {/* Icono de PrimeReact */}

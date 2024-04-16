@@ -6923,3 +6923,30 @@ body {
 
 }
 
+.heightGraph {
+  height: 800px;
+
+}
+
+.taxograph {
+  height: 100%;
+}
+
+@media (min-width: 768px) { 
+  .taxograph {
+    height: 100%!important;
+    margin-top: 20px;
+    margin-bottom: 40px;
+  }
+  
+ }
+
+@media (min-width: 1280px) { 
+ .taxograph {
+    height: 800px!important;
+  }
+
+  
+}
+
+.p-accordion-header-text{text-align: start;}

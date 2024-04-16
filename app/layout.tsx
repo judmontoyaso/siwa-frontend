@@ -4,6 +4,7 @@ import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { Roboto } from 'next/font/google'
 import { AuthProvider } from './components/authContext';
 import { PrimeReactProvider } from "primereact/api";
+import { PopupProvider } from './popupContext';
 // theme
 
 const roboto = Roboto({
@@ -40,7 +41,13 @@ export default function RootLayout({
             <PrimeReactProvider>
           <AuthProvider>
 
-              <body className={`h-screen ${roboto.className}`}>{children}</body>   
+              <body className={`h-screen ${roboto.className}`}>
+                <PopupProvider>
+
+                {children}
+                </PopupProvider>
+                
+                </body>   
           </AuthProvider>
               </PrimeReactProvider>
 

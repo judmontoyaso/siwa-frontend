@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IoCloseOutline, IoFilterOutline } from "react-icons/io5";
+import { usePopup } from '../popupContext';
 
 const PopupComponent = ({filter}: any) => {
-  const [isWindowVisible, setIsWindowVisible] = useState(true);
+  const { isWindowVisible, setIsWindowVisible } = usePopup();
+
   const popupRef = useRef(null); // Ref para el contenedor del popup
 
   const toggleWindow = () => {

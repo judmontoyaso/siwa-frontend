@@ -11,6 +11,7 @@ import 'primeicons/primeicons.css';
 import Loading from './loading';
 import { CgSpinnerTwoAlt } from 'react-icons/cg';
 import Spinner from './pacmanLoader';
+import { PopupProvider } from '../popupContext';
 
 type LayoutProps = {
   children: ReactNode;
@@ -25,12 +26,15 @@ const Layout: React.FC<LayoutProps & { slug: string, filter:any }> = ({ children
 {isLoading ? <><Spinner/></> : <>   <Sidebar slug={slug} filter={filter}/>
       <div className={`flex flex-col h-full ${isSidebarOpen ? "w-full" : "w-full"}`}>
       <Navbar slug={slug} ></Navbar>
+      <PopupProvider>
+
 
         <main className="overflow-auto text-center items-start justify-center block bg-white p-5 h-full">
 
     {children}
 
         </main>
+      </PopupProvider>
         <div className='w-full flex flex-row justify-between border border-t-gray-100'>
         <div>
           <Tag severity="success" className="m-2 ml-5" icon='pi pi-fw pi-user' >

@@ -156,8 +156,8 @@ console.log(user)
                         <li>
 
 
-<Link aria-disabled={true} href={''} className="block px-1  ">
-  <div className={`cursor-not-allowed flex flex-row  mt-4  mb-2 p-4  ${router === `/projects/${slug}` ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
+<Link aria-disabled={true} href={`/projects/${slug}/personalizedAnalyses`} className="block px-1  ">
+  <div className={`flex flex-row  mt-4  mb-2 p-4  ${router === `/projects/${slug}/personalizedAnalyses` ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
     <TbReportAnalytics  className="text-siwa-yellow"/><span className="ms-3">Personalized analyses</span>
   </div></Link></li>
 

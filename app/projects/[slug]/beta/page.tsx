@@ -110,7 +110,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [valueOptions, setValueOptions] = useState<any[]>([]);
   const updatePlotWidth = () => {
         if (plotContainerRef.current) {
-          setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
+          setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
           setLoaded(true)
         }
     };
@@ -775,7 +775,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
       <SidebarProvider>
       <Layout slug={params.slug} filter={""} >
         {isLoaded ? (
-<div className="flex flex-col w-full">
+<div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">
 <h1 className="text-3xl my-5 mx-2">Beta diversity</h1>
 <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip"/> 

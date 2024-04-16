@@ -756,113 +756,88 @@ useEffect(() => {
         <div className="w-full h-full">
             <SidebarProvider>
             <Layout slug={params.slug} filter={""}>
-                {isLoaded ? (
-                    <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full">
 
-                        <div className="flex flex-row w-full text-center justify-center items-center">
-                            <h1 className="text-3xl my-5 mx-2">{configFile?.taxonomic_composition?.title ?? "Taxonomy diversity"}</h1>
-                            {configFile?.taxonomy?.interpretation && (
-                                <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
-                            )}
-                            <Tooltip
-                            style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                            anchorSelect="#interpreteTip">
-                            <div className={`prose single-column w-96 z-50`}>
-                                {configFile?.taxonomic_composition?.interpretation ? (
-                                  <p className="text-gray-700 text-justify text-xl m-3">
-                                  {configFile.taxonomic_composition?.interpretation}
-                              </p>
-                                ) : (""
-                                )}
-                            </div>
-                        </Tooltip>
-                        </div>
-
-
-
-                        <div className="px-6 py-8">
-                            <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
-    <p className="text-gray-700 text-justify text-xl">
-        {configFile?.taxonomic_composition?.text}
-    </p>
+<div className="flex flex-row w-full text-center justify-center items-center">
+    <h1 className="text-3xl my-5 mx-2">{"Personalized Analyses"}</h1>
+    {/* {configFile?.taxonomy?.interpretation && (
+        <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
+    )}
+    <Tooltip
+    style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+    anchorSelect="#interpreteTip">
+    <div className={`prose single-column w-96 z-50`}>
+        {configFile?.taxonomic_composition?.interpretation ? (
+          <p className="text-gray-700 text-justify text-xl m-3">
+          {configFile.taxonomic_composition?.interpretation}
+      </p>
+        ) : (""
+        )}
+    </div>
+</Tooltip> */}
 </div>
 
-<div className="mt-5">
-            <Accordion>
-              
-                <AccordionTab header={<><i className="pi pi-info-circle mr-2"></i>  Hierarchical visualization</>}>
 
-                    <div>          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
-                    </p>
-                    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        Each concentric ring in the chart represents a different taxonomic level, starting from the highest level of classification in the innermost ring and moving to more specific classifications in the outer rings. This arrangement helps visualize the relative proportions of each taxonomic category within the sample, providing insights into the biological diversity and possible ecological relationships within the sample.
-                    </p>
-                    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        By hovering over any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total sample it represents, and its relationship to adjacent segments. This interactive feature allows for an in-depth exploration of the complex taxonomic landscape, making it easier to identify predominant or rare taxa within the sample.
-                    </p>
-                    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. Researchers and educators can utilize this visualization to discuss and analyze patterns of biodiversity, evolutionary relationships, or the impact of environmental changes on taxonomic distributions.
-                    </p></div>
-                    <iframe 
-                        src="/api/components/innerHtml" 
-                        frameBorder="0" 
-                        width="100%" 
-                        height="500px" 
-                        allowFullScreen
-                        title="Taxonomy Composition Sunburst Chart">
-                    </iframe>
-                </AccordionTab>
-            </Accordion>
+
+<div className="px-6 py-8">
+            <div className="w-full">
+                <p className="text-left">This section provides an overview of customized analyses with static charts of particular interest in scientific research, showcasing complex data in a visually digestible format.</p>
+            </div>
+            <div className="mt-5">
+                <TabView>
+                    <TabPanel header={<><i className="pi pi-chart-bar mr-2"></i> Hierarchical Visualization</>}>
+                        <div>
+                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                                This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
+                            </p>
+                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                                Each concentric ring in the chart represents a different taxonomic level, starting from the highest level of classification in the innermost ring and moving to more specific classifications in the outer rings. This arrangement helps visualize the relative proportions of each taxonomic category within the sample, providing insights into the biological diversity and possible ecological relationships within the sample.
+                            </p>
+                            <iframe 
+                                src="/api/components/innerHtml" 
+                                frameBorder="0" 
+                                width="100%" 
+                                height="500px" 
+                                allowFullScreen
+                                title="Taxonomy Composition Sunburst Chart">
+                            </iframe>
+                        </div>
+                    </TabPanel>
+                    <TabPanel header={<><i className="pi pi-chart-line mr-2"></i> Genetic Diversity Analysis</>}>
+                        <div>
+                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                                Explore the genetic diversity within a population through our detailed charts. This analysis helps identify genetic variations and can be critical in understanding evolutionary patterns and processes.
+                            </p>
+                            <iframe 
+                                src="/api/components/geneticDiversity" 
+                                frameBorder="0" 
+                                width="100%" 
+                                height="500px" 
+                                allowFullScreen
+                                title="Genetic Diversity Analysis">
+                            </iframe>
+                        </div>
+                    </TabPanel>
+                    <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Ecosystem Interaction Web</>}>
+                        <div>
+                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                                This section illustrates the complex interactions within an ecosystem. Visualize how species interact with each other and with their environment, highlighting key players and the balance of natural systems.
+                            </p>
+                            <iframe 
+                                src="/api/components/ecosystemInteraction" 
+                                frameBorder="0" 
+                                width="100%" 
+                                height="500px" 
+                                allowFullScreen
+                                title="Ecosystem Interaction Web">
+                            </iframe>
+                        </div>
+                    </TabPanel>
+                </TabView>
+            </div>
         </div>
 
-                            </div>
-
-                        <div className="flex flex-row">
-                            <GraphicCard filter={filter} legend={legend} title={title} orientation="horizontal">
-                                {plotData.length > 0 ? (
-                                    <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
-                                ) : (
-                                    <SkeletonCard width={"800px"} height={"470px"} />
-                                )}
-                            </GraphicCard>
-                        </div>
-                        <div className="w-full flex flex-row ">
-                                <div className="w-1/4"></div>
-                                <div className="px-6 py-8 w-4/5" >
-                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
-                                        if (key === "samplelocation" && actualGroup==="samplelocation"  && typeof value === 'string') {
-                                        
-                                            return (
-                                              <div key={key} className="col-span-2">
-                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                              </div>
-                                            );
-                                          }
-                                            return null;  // No renderizar nada si no se cumplen las condiciones
-                                        })}
-                                    </div>
-                                    <div className="prose flex flex-row flex-wrap">
-                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
-                                            if (key === actualGroup && key !== "samplelocation") {
-                                                if (typeof value === 'string' && value !== null) {
-                                                 
-
-                                                    return (  <div key={key} className="col-span-2">
-                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                  </div>);
-                                                } 
-                                            }
-                                            return null;
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                    </div>
-                ) : (
-                    <div className="w-full h-full"><Spinner/></div>
-                    )}
+</div>
             </Layout>
             </SidebarProvider>
         </div>

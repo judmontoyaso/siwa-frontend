@@ -270,7 +270,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const updatePlotWidth = () => {
 
         if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth -75);
             console.log(plotWidth)
             console.log(plotContainerRef.current)
             setLoaded(true)
@@ -731,7 +731,7 @@ useEffect(() => {
                 <Layout slug={params.slug} filter={""} >
 
                     {isLoaded ? (
-                        <div className="flex flex-col w-full">
+                        <div className="flex flex-col w-11/12 mx-auto">
 
                             <div className="flex flex-row w-full text-center justify-center items-center">
                                 <h1 className="text-3xl my-5 mx-2">{configFile?.alphadiversity?.title ?? "Alpha Diversidad"}</h1>

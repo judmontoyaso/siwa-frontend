@@ -141,6 +141,7 @@ const [selectedValuesByVariable, setSelectedValuesByVariable] = useState<Selecte
                     className={`p-button-rounded ${activeIndex === 2 ? 'animate-bounce' : ''} ${activeIndex >= 2 ? 'p-steps-complete p-button-success' : 'bg-gray-100 border-gray-100'}`} 
                     icon="pi pi-arrow-right"
                     loading={loadLefse}
+                    onClick={()=>setLoadLefse(true)}
                     loadingIcon="pi pi-spin pi-spinner"
                     style={{width: activeIndex === 2 ? '3rem' : '2rem', height: activeIndex === 2 ? '3rem' : '2rem'}}
                     data-pr-tooltip="Explore Data" // Mensaje del tooltip
@@ -193,7 +194,7 @@ setTempFile(false)
     setActiveIndex(0)  // Asume que el dataset está listo si 'tempfile' existe
         }
 
-    }, [tempfile]);
+    }, [params.slug,tempfile]);
     
 
     const { accessToken } = useAuth();
@@ -270,6 +271,7 @@ setRecords(records)
             // }
             if (!response.ok) {
             return null}
+            else{setActiveIndex(2)}
             const result = await response.json();
         console.log(result)
             return result;
@@ -629,7 +631,6 @@ setTempFile(false)
     const valueChecks = (
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
             <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select your groups of interest</h3>
-            // Al renderizar los checkbox de valores para la variable actual
 <div className={`border p-4 rounded-lg flex-grow min-w-[45%] ml-1 ${selectedColorBy !== "samplelocation" ? "" : "opacity-50 pointer-events-none"}`}>
     {valueOptions.length > 1 && selectedColorBy !== "samplelocation" ? (
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">

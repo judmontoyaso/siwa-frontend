@@ -141,7 +141,7 @@ const Dashboard = () => {
 
     useEffect(
       () => {
-      projectIds.forEach((projectId: string) => { 
+      projectIds?.forEach((projectId: string) => { 
         fetchProjectData(projectId, accessToken);
       })},[accessToken, projectIds]);
 
@@ -187,7 +187,7 @@ const Dashboard = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Projects</h3>
                 <p className="text-sm text-gray-600 mb-6">Select any of the loaded projects below to explore detailed analysis results.</p>
                                <ul className="divide-y divide-gray-200">
-                  {projectIds.map((projectId) => (
+                  {projectIds?.map((projectId) => (
                     <Link key={projectId} href={`/projects/${projectId}`}>
                       <li className={`py-2 flex mt-4 mb-4 p-4 justify-between items-center bg-slate-50 ${loadedProjects[projectId] ? "cursor-pointer hover:bg-gray-100" : "opacity-50"} rounded-lg`}>
                         <span className="text-lg text-gray-700 flex flex-row items-center">

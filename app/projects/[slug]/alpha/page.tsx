@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Spinner from "@/app/components/pacmanLoader";
@@ -468,22 +468,22 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                 <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
                 <ul className="w-full flex flex-wrap items-center content-center justify-around ">
-                    <li className="w-48 m-2 mb-1 p-1">
+                    <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                         <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
                             onChange={handleLocationChangeColorby}
                             disabled={isColorByDisabled} />
-                        <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                        <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                             <div className="block">
                                 <div className="w-full text-center flex justify-center">Sample location</div>
                             </div>
 
                         </label>
                     </li>
-                    <li className="w-48 m-2 mb-1 p-1">
+                    <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                         <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
                             onChange={handleLocationChangeColorby}
                             disabled={isColorByDisabled} />
-                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                             <div className="block">
                                 <div className="w-full">Treatment</div>
                             </div>
@@ -492,10 +492,10 @@ export default function Page({ params }: { params: { slug: string } }) {
                     </li>
                     {
                         columnOptions.includes("age" as never) && (
-                            <li className="w-48 m-2 mb-1 p-1">
+                            <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                                 <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
                                     onChange={handleLocationChangeColorby} />
-                                <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                                <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                                     <div className="block">
                                         <div className="w-full">Age</div>
                                     </div>
@@ -505,7 +505,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                     }
 
                     {colorByOptions.map((option, index) => (
-                        <li key={index} className="w-48 m-2 mb-1 p-1">
+                        <li key={index} className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                             <input
                                 type="radio"
                                 id={option}
@@ -521,7 +521,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 className={`flex items-center justify-center ${isColorByDisabled
                                     ? 'cursor-not-allowed'
                                     : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}   dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}   dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                             >
                                 <div className="block">
                                     <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
@@ -550,7 +550,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             iconPos="right"
             icon="pi pi-check-square"
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
             label="Apply"
           />
         </div>
@@ -768,11 +768,12 @@ useEffect(() => {
 
     return (
         <div className="w-full h-full">
-            <SidebarProvider>
+             <Suspense fallback={<p>Loading feed...</p>}>
+                 <SidebarProvider>
                 <Layout slug={params.slug} filter={""} >
 
                     {isLoaded ? (
-                        <div className="flex flex-col w-11/12 mx-auto">
+                        <div className="flex flex-col w-11/12  mx-auto">
 
                             <div className="flex flex-row w-full text-center justify-center items-center">
                                 <h1 className="text-3xl my-5 mx-2">{configFile?.alphadiversity?.title ?? "Alpha Diversidad"}</h1>
@@ -848,6 +849,8 @@ useEffect(() => {
                     <ToastContainer />
                 </Layout>
             </SidebarProvider>
+             </Suspense>
+           
         </div>
     );
 }

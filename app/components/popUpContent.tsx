@@ -32,7 +32,7 @@ const PopupComponent = ({filter}: any) => {
 
   return (
     <div className="w-full h-full flex content-end mr-5">
-        <div ref={popupRef} className="m-4 p-8 md:p-4 w-full h-full border border-gray-50 bg-gray-100 rounded-2xl overflow-y-scroll">
+        <div ref={popupRef} className="my-4 xl:p-8 md:p-2 w-full h-full border border-gray-50 bg-gray-100 rounded-2xl overflow-y-scroll">
           {filter}
         </div>
     </div>

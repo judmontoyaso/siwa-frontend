@@ -6932,12 +6932,20 @@ body {
   height: 100%;
 }
 
-@media (min-width: 768px) { 
+@media (max-width: 1280px) { 
   .taxograph {
     height: 100%!important;
     margin-top: 20px;
     margin-bottom: 40px;
   }
+  .p-dropdown .p-dropdown-label {
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .p-dropdown .p-dropdown-trigger {
+    width: 2rem;
+}
   
  }
 
@@ -6946,7 +6954,13 @@ body {
     height: 800px!important;
   }
 
+
+
   
 }
 
 .p-accordion-header-text{text-align: start;}
+
+.p-button-label {
+  flex: inherit!important;
+}

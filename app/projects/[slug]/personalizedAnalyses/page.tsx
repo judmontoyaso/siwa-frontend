@@ -785,31 +785,13 @@ useEffect(() => {
             </div>
             <div className="mt-5">
                 <TabView>
-                    <TabPanel header={<><i className="pi pi-chart-bar mr-2"></i> Hierarchical Visualization</>}>
+                 
+                    <TabPanel header={<><i className="pi pi-chart-line mr-2"></i> Ratio vs Gene Expression</>}>
                         <div>
                             <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                                This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
-                            </p>
-                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                                Each concentric ring in the chart represents a different taxonomic level, starting from the highest level of classification in the innermost ring and moving to more specific classifications in the outer rings. This arrangement helps visualize the relative proportions of each taxonomic category within the sample, providing insights into the biological diversity and possible ecological relationships within the sample.
-                            </p>
+                            The goal of gene expression is to evaluate how the animal host is responding to its environment by altering the levels of various proteins and other compounds in the body in a complex and very controlled manner. When studying gene expression with real-time polymerase chain reaction (PCR), scientists usually investigate changes (increases or decreases) in the expression of a particular gene or set of genes by measuring the abundance of the gene-specific transcript.                            </p>
                             <iframe 
-                                src="/api/components/innerHtml" 
-                                frameBorder="0" 
-                                width="100%" 
-                                height="500px" 
-                                allowFullScreen
-                                title="Taxonomy Composition Sunburst Chart">
-                            </iframe>
-                        </div>
-                    </TabPanel>
-                    <TabPanel header={<><i className="pi pi-chart-line mr-2"></i> Genetic Diversity Analysis</>}>
-                        <div>
-                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                                Explore the genetic diversity within a population through our detailed charts. This analysis helps identify genetic variations and can be critical in understanding evolutionary patterns and processes.
-                            </p>
-                            <iframe 
-                                src="/api/components/geneticDiversity" 
+                                src="/api/components/genvslact" 
                                 frameBorder="0" 
                                 width="100%" 
                                 height="500px" 
@@ -818,13 +800,12 @@ useEffect(() => {
                             </iframe>
                         </div>
                     </TabPanel>
-                    <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Ecosystem Interaction Web</>}>
+                    <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Feacal Score vs alpha</>}>
                         <div>
                             <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                                This section illustrates the complex interactions within an ecosystem. Visualize how species interact with each other and with their environment, highlighting key players and the balance of natural systems.
                             </p>
                             <iframe 
-                                src="/api/components/ecosystemInteraction" 
+                                src="/api/components/plotpopo" 
                                 frameBorder="0" 
                                 width="100%" 
                                 height="500px" 

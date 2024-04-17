@@ -69,10 +69,10 @@ const Page = ({ params }: { params: { slug: string } }) => {
         )}
 </div>
 
-    <div className="flex flex-wrap md:flex-nowrap">
+    <div className="flex xl:flex-wrap flex-nowrap xl:flex-row flex-col-reverse">
 
       {/* Contenedor de texto */}
-      <div className="px-6 py-8 md:w-1/2">
+      <div className="px-6 py-8 xl:w-1/2 w-full">
       {configFile?.summary?.image ? (
         <div className="prose lg:prose-lg max-w-none space-y-4 text-start">
           {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
@@ -92,7 +92,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       </div>
 
       {/* Contenedor de imagen */}
-      <div className="md:w-1/2 flex justify-center items-center md:justify-end p-4">
+      <div className="xl:w-1/2 w-full flex justify-center items-center xl:justify-end p-4">
         
         {configFile?.summary?.image ? (
           <Image src={configFile?.summary?.image} alt="Summary Image" width="500" height="300"  preview />

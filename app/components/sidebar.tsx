@@ -1,5 +1,6 @@
 "use client";
 import LoginButton from "@/app/components/Login";
+import MyLink from "@/app/components/myLink";
 import { createContext, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Image from "next/image";
@@ -109,7 +110,7 @@ console.log(user)
                     <li>
 
 
-                      <Link aria-disabled={true} href={`/projects/${slug}`} className="block px-1 ">
+                      <Link aria-disabled={true} href={`/projects/${slug}`} className="block px-1 " prefetch={true}>
                         <div className={`flex flex-row cursor-pointer mt-4  hover:bg-navy-500 hover:text-white mb-2 p-4  ${router === `/projects/${slug}` ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
                           <CgFileDocument  className="text-siwa-yellow"/><span className="ms-3">Summary</span>
                         </div></Link></li>
@@ -126,18 +127,18 @@ console.log(user)
                         <ul className="divide-y ">
 
                           <li className={`py-2 ${router === `/projects/${slug}/alpha` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
-                            <Link href={`/projects/${slug}/alpha`} className="block px-3 hover:text-gray-60">Alpha diversity</Link>
+                            <MyLink href={`/projects/${slug}/alpha`} className="block px-3 hover:text-gray-60"prefetch={true}>Alpha diversity</MyLink>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/beta` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
-                            <Link href={`/projects/${slug}/beta`} className="block px-3 ">
+                            <Link href={`/projects/${slug}/beta`} className="block px-3 "prefetch={true}>
                             Community make-up</Link>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/taxonomy/composition` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
-                            <Link href={`/projects/${slug}/taxonomy/composition`} className="block px-3 ">
+                            <Link href={`/projects/${slug}/taxonomy/composition`} className="block px-3 "prefetch={true}>
                             Taxonomic abundance</Link>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/abundancedif/datasetgeneration` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
-                            <Link href={`/projects/${slug}/abundancedif/datasetgeneration`} className="block px-3 ">
+                            <Link href={`/projects/${slug}/abundancedif/datasetgeneration`} className="block px-3 "prefetch={true}>
                             Differential abundance</Link>
                           </li>
                         </ul>
@@ -156,7 +157,7 @@ console.log(user)
                         <li>
 
 
-<Link aria-disabled={true} href={`/projects/${slug}/personalizedAnalyses`} className="block px-1  ">
+<Link aria-disabled={true} href={`/projects/${slug}/personalizedAnalyses`} className="block px-1  "prefetch={true}>
   <div className={`flex flex-row  mt-4  mb-2 p-4  ${router === `/projects/${slug}/personalizedAnalyses` ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}  rounded-lg  rounded-r-3xl shadow-md dark:bg-gray-800 text-center items-center w-11/12 justify-center`}>
     <TbReportAnalytics  className="text-siwa-yellow"/><span className="ms-3">Personalized analyses</span>
   </div></Link></li>

@@ -611,38 +611,38 @@ const valueChecks = (
         <div className=" mt-4 mb-4">
           <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
           <ul className="w-full flex flex-wrap items-center content-center justify-around">
-            <li className="w-48 m-2 mb-1 p-1">
+            <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
               <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
-              <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700  dark:peer-checked:text-white peer-checked:border-siwa-blue peer-checked:text-white  ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700  dark:peer-checked:text-white peer-checked:border-siwa-blue peer-checked:text-white  ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
                   <div className="w-full text-center flex justify-center">Sample location</div>
                 </div>
               </label>
             </li>
-            <li className="w-48 m-2 mb-1 p-1">
+            <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
               <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'treatment'}
                 onChange={handleLocationChangeColorby}
                 disabled={isColorByDisabled} />
-              <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-white peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-white peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
                   <div className="w-full">Treatment</div>
                 </div>
               </label>
             </li>
            { columnOptions?.includes("age" as never) && (
-            <li className="w-48 m-2 mb-1 p-1">
+            <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
             <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : colorBy === 'age'}
                 onChange={handleLocationChangeColorby} />
-              <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+              <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                 <div className="block">
                   <div className="w-full">Age</div>
                 </div>
               </label>
             </li>)}
             {colorByOptions?.map((option, index) => (
-              <li className="w-48 m-2 mb-1 p-1" key={index}>
+              <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1" key={index}>
                 <input
                   type="radio"
                   id={option}
@@ -658,7 +658,7 @@ const valueChecks = (
                   className={`flex items-center justify-center ${isColorByDisabled
                     ? 'cursor-not-allowed'
                     : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                 >
                   <div className="block">
                     <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
@@ -686,9 +686,9 @@ const valueChecks = (
             onClick={applyFilters}
             loading={filterPeticion}
             iconPos="right"
-            icon="pi pi-check-square"
+            icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 pr-3 rounded-xl border-none"
             label="Apply"
           />
         </div>
@@ -747,7 +747,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
           },          
           xaxis: {
             title: {
-              text: 'PC1',
+              text: `PC1 (${dataResult.proportions_explained.PC1}%)`,
               font: { 
                 family: 'Roboto, sans-serif',
                 size: 18,
@@ -756,7 +756,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
           },
           yaxis: {
             title: {
-              text: 'PC2',
+              text: `PC2 (${dataResult.proportions_explained.PC2}%)`,
               font: {
                 family: 'Roboto, sans-serif',
                 size: 18, // Aumenta el tamaño para mayor énfasis

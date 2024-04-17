@@ -1,6 +1,6 @@
 // components/Layout.tsx o layouts/Layout.tsx
 "use client";
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, Suspense, useEffect } from 'react';
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
 import { SidebarProvider, useSidebar } from './context/sidebarContext';
@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter:any }> = ({ children
   const { user, error, isLoading } = useUser();
   useEffect(() => {console.log("layout", isSidebarOpen)}, [isSidebarOpen]);
   return (
-    <div className="flex flex-row h-full">
+    <Suspense fallback={<p>Loading feed...</p>}><div className="flex flex-row h-full">
 {isLoading ? <><Spinner/></> : <>   <Sidebar slug={slug} filter={filter}/>
       <div className={`flex flex-col h-full ${isSidebarOpen ? "w-full" : "w-full"}`}>
       <Navbar slug={slug} ></Navbar>
@@ -49,7 +49,8 @@ const Layout: React.FC<LayoutProps & { slug: string, filter:any }> = ({ children
       
      
       
-    </div>
+    </div></Suspense>
+    
   );
 };
 

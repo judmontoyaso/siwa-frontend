@@ -675,7 +675,7 @@ setFilterPeticion(true);
                                 onChange={(e) => setSelectedGroup(e.target.value)}
                                 disabled={isColorByDisabled}
                               />
-                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
                                 <div className="block">
                                     <div className="w-full text-center flex justify-center">Sample location</div>
                                 </div>
@@ -702,7 +702,7 @@ if ((columnOptions as string[])?.includes(option)) {
           ${isColorByDisabled
               ? 'cursor-not-allowed'
               : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
         >
           <div className="block">
             <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
@@ -743,7 +743,7 @@ if ((columnOptions as string[])?.includes(option)) {
             iconPos="right"
             icon="pi pi-check-square"
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
             label="Apply"
           />
         </div>

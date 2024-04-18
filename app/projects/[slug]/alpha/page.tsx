@@ -59,7 +59,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     ]);
     const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
 
-
+const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
     const colors = [
         "#092538", // Azul oscuro principal
         "#34675C", // Verde azulado más claro
@@ -249,8 +249,86 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
- 
+
+    const getColorForValue = (value: string, colorMap: { [key: string]: string }) => {
+        if (!colorMap[value]) {
+            colorMap[value] = colorOrder[Object.keys(colorMap).length % colorOrder.length];
+        }
+        return colorMap[value];
+    };
+
     
+
+    const fetchProjectIdsFiltercolor = async (colorByVariable: string) => {
+                // Usa el token pasado como argumento
+                try {
+                    let colorIndex = 0;
+                    // Filtrar los datos basados en la locación seleccionada, si se ha seleccionado una
+                    const filteredData = otus?.data.data.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
+                    const groupedData = filteredData.reduce(
+                        (
+                            acc: {
+                                [x: string]: {
+                                    y: any;
+                                    text: string[];
+                                    marker: { color: string };
+        
+                                };
+                            },
+                            item: any[]
+                        ) => {
+        
+        
+                            const location = item[1];
+                            const alphaShannon = item[2];
+        
+        
+                            const sampleId = item[0];
+                            // Verifica si la locación actual debe ser incluida
+                            if (selectedLocations.includes(location)) {
+                                
+                                if (!acc[location]) {
+                                    acc[location] = {
+                                        y: [], text: [], marker: { color: colorOrder[colorIndex % colorOrder.length] }
+                                    };
+                                 
+                                }
+                                acc[location].y.push(alphaShannon);
+                                acc[location].text.push(`Sample ID: ${sampleId}`);
+                            }
+        
+                            return acc;
+                        },
+                        {}
+                    );
+                    const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), otus?.data?.columns.indexOf(colorByVariable) || 1);
+                    setShannonData(shannonData as never[]);
+                    setPlotData(
+                        Object.keys(groupedData).map((location) => ({
+                            ...groupedData[location],
+                            type: "box",
+                            name: location,
+                            marker: { color: newScatterColors[colorIndex] }
+                        }))
+                    );
+                    console.log('shannonData:', shannonData);
+                    setIsLoaded(true);
+                    setFilterPeticion(false);
+                } catch (error) {
+                    console.error("Error al obtener projectIds:", error);
+                    setFilterPeticion(false);
+                }
+    };
+
+ 
+
+    
+ 
+        
+const handleGroupChange = (value: string) => {
+    setTheRealColorByVariable(value);
+  fetchProjectIdsFiltercolor(value);
+  };
 
     const processData = (data: any[], index: number): any[] => {
         let colorIndex = 0;
@@ -554,6 +632,24 @@ export default function Page({ params }: { params: { slug: string } }) {
             label="Apply"
           />
         </div>
+
+        <div>
+        <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            value={theRealColorByVariable}
+            onChange={(e) => handleGroupChange(e.target.value)}
+      
+          >
+             <option selected value="samplelocation">Sample Location</option>
+            <option selected value="treatment">Treatment</option>
+          
+            {colorByOptions.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
+        </div>
         </div>
     );
 useEffect(() => {
@@ -854,5 +950,6 @@ useEffect(() => {
         </div>
     );
 }
+
 
 

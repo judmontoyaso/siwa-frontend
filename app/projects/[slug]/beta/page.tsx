@@ -59,7 +59,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [dataUnique, setDataUnique] = useState<any>();
   const [columnOptions, setColumnOptions] = useState<string[]>([]);
   const[filterPeticion, setFilterPetition] = useState(false);
-
+  const[theRealColorByVariable, setTheRealColorByVariable] = useState<string>('');
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
   const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
@@ -293,9 +293,6 @@ console.log(colorBy)
 
   };
 
-
-
-
   useEffect(() => {
     if (otus && colorBy) {
         // Filtrar los valores únicos de la columna seleccionada
@@ -330,7 +327,11 @@ const handleValueChange = (value: string) => {
 };
 
   
-  
+const handleGroupChange = (value: string) => {
+  setTheRealColorByVariable(value);
+fetchProjectIdsFiltercolor(dataResult, value);
+};
+
 
 // Componente de checks para los valores de la columna seleccionada
 const valueChecks = (
@@ -355,7 +356,7 @@ const valueChecks = (
 );
 
 
-
+useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy]);
 
   const fetchProjectIds = async (result: any) => {
     console.log(newScatterColors)
@@ -514,6 +515,7 @@ const valueChecks = (
       console.error("Error al obtener projectIds:", error);
     }
   };
+  
   const fetchProjectIdsFilter = async (result: any) => {
 
     const newScatterColors = { ...scatterColors }; // Crea una copia del estado actual
@@ -692,6 +694,22 @@ const valueChecks = (
             label="Apply"
           />
         </div>
+
+        <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            value={theRealColorByVariable}
+            onChange={(e) => handleGroupChange(e.target.value)}
+      
+          >
+             <option selected value="samplelocation">Sample Location</option>
+            <option selected value="treatment">Treatment</option>
+          
+            {colorByOptions.map((location) => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
     </div>
     );
 
@@ -854,8 +872,6 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
                                         {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
                                             if (key === selectedColorBy && key !== "samplelocation") {
                                                 if (typeof value === 'string' && value !== null) {
-                                                 
-
                                                     return (  <div key={key} className="col-span-2">
                                                     <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
                                                   </div>);

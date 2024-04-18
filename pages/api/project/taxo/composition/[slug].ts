@@ -12,6 +12,7 @@
           number: any;
           column: { column: any; };
           columnValues: { columnValues: any; };
+            nickname: { nickname: any; };
           samplelocation: { selectedLocations: any; }; selectedLocation: any; selectedColumn: any; 
 }; query: { slug: any; }; headers: { authorization: any; }; 
 }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { error: any; }): void; new(): any; }; }; }) => {
@@ -24,6 +25,7 @@
       const selectedGroup  = req.body.selectedGroup;
       const top  = req.body.top.toString();
       const columnValues  = req.body.columnValues;
+      const nickname = req.body.nickname;
 
       try {
         const response = await fetch(
@@ -39,7 +41,8 @@
                 "selectedRank": selectedRank,
                 "selectedGroup": selectedGroup,
                 "top": top,
-                "columnValues": columnValues
+                "columnValues": columnValues,
+                "nickname": nickname
 
             })
         }

@@ -54,6 +54,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const [filterPeticion, setFilterPeticion] = useState(false);
+    const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
     const [selectedLocations, setSelectedLocations] = useState<string[]>([
         "cecum",
         "feces",
@@ -131,33 +132,43 @@ const [actualRank, setActualRank] = useState<any>('genus');
       }, []);
 
       
-      
-    //   useEffect(() => {
-    //     if (htmlContent) { // Asegúrate de que htmlContent ya esté establecido
-    //         const container = document.getElementById('contendor-html'); // Asegúrate de que este sea el ID de tu contenedor
-            
-    //         if (container) { // Add a null check for the container
-    //             const scripts = container.querySelectorAll('script');
+      const fetchProjectIdsFiltercolor = async (colorByVariable: string) => {
+ 
 
-    //             scripts.forEach((oldScript) => {
-    //                 const newScript = document.createElement('script');
-    //                 newScript.type = 'text/javascript';
-    //                 if (oldScript.src) {
-    //                     newScript.src = oldScript.src;
-    //                 } else {
-    //                     newScript.textContent = oldScript.textContent;
-    //                 }
-    //                 if (oldScript.parentNode) { // Add a null check for the parentNode
-    //                     oldScript.parentNode.replaceChild(newScript, oldScript);
-    //                 }
-    //             });
-    //         }
-    //     }
-    //   }, [htmlContent]); // Este useEffect depende de htmlContent
-      
-
-
-      
+        if (otus && otus.data) {
+          const traces: SetStateAction<any[]> = [];
+          const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
+  
+          labels.forEach(label => {
+              const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
+              const xValues = filteredData.map((item: any[]) => item[1]);
+              const yValues = filteredData.map((item: any[]) => item[3]);
+              const color = colors[traces.length % colors.length];
+  
+              traces.push({
+                  x: xValues,
+                  y: yValues,
+                  type: 'bar',
+                  name: label,
+                  marker: { color: color },
+              });
+  
+              newScatterColors[label as string] = color;
+          });
+  
+          // Ordenando los traces basados en la suma total de los valores de Y de cada uno, de mayor a menor
+          traces.sort((a, b) => {
+          const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
+          const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
+          return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
+      });
+  
+          setPlotData(traces);
+          console.log("Traces:", plotData);
+          setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
+      }
+        }
+  
 
     useEffect(() => {
         // Función para actualizar el ancho del gráfico con un pequeño retraso
@@ -222,7 +233,8 @@ const [actualRank, setActualRank] = useState<any>('genus');
                     "selectedRank": selectedRank,
                     "selectedGroup": selectedGroup,
                     "top": number.toString(),
-                    "columnValues": selectedValue
+                    "columnValues": selectedValue,
+                    "nickname": user?.nickname,
 
                 })
             }
@@ -279,7 +291,8 @@ setObservedData(result?.Krona)
                     "selectedRank": selectedRank,
                     "selectedGroup": selectedGroup,
                     "columnValues": [...selectedValues],
-                    "top": number.toString()
+                    "top": number.toString(),
+                    "nickname": user?.nickname,
                 })
             }
             );
@@ -311,12 +324,66 @@ setObservedData(result?.Krona)
         }
     };
 
+
+    const fetchDataGroups = async (token: any) => {
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomygroups/${params.slug}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    "selectedColumn": selectedColumn,
+                    "selectedLocation": selectedValue,
+                    "selectedRank": selectedRank,
+                    "selectedGroup": theRealColorByVariable,
+                    "top": number.toString(),
+                    "columnValues": selectedValue,
+                    "nickname": user?.nickname,
+
+                })
+            }
+            );
+            if (response.status === 404) {
+                // toast.warn('The data needs to be loaded again!', {
+                //     position: "top-center",
+                //     autoClose: 5000,
+                //     hideProgressBar: false,
+                //     closeOnClick: true,
+                //     pauseOnHover: true,
+                //     draggable: true,
+                //     progress: undefined,
+                //     theme: "light",
+                //     transition: Bounce,
+                // });
+                // setTimeout(() => { window.location.href = "/"; }, 5000);
+                throw new Error("Respuesta no válida desde el servidor");
+            }
+            const result = await response.json();
+
+
+            console.log("Datos obtenidos:", result);
+            setOtus((prevOtus: any) => ({
+                ...prevOtus,
+                data: result.data
+            }));            setIsLoaded(true);
+            return result;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
+
+    useEffect(() => {fetchDataGroups(accessToken)}, [theRealColorByVariable])
+
     // Manejar cambio de locación
 
     useEffect(() => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
 fetchConfigFile(accessToken); fetchData(accessToken);
-    }, [params.slug, accessToken]);
+    }, [accessToken, user?.nickname]);
 
   
     interface DataItem {
@@ -329,6 +396,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
     useEffect(() => {
 
         if (otus && otus.data) {
+            console.log("OTUS:", otus);
             const traces: SetStateAction<any[]> = [];
             const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
 
@@ -494,7 +562,7 @@ setFilterPeticion(true);
             // Inicializa 'selectedValues' con todos los valores únicos
             setSelectedValues(new Set<string>(uniqueValuesCheck));
         }
-    }, [selectedGroup, otus]);
+    }, [selectedGroup]);
 
     // Estado para manejar los valores seleccionados en los checks
     const handleValueChange = (value: string) => {
@@ -746,6 +814,25 @@ if ((columnOptions as string[])?.includes(option)) {
             className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
             label="Apply"
           />
+        </div>
+
+        <div>
+        <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            value={theRealColorByVariable}
+            onChange={(e) => setTheRealColorByVariable(e.target.value)}
+      
+          >
+             <option selected value="samplelocation">Sample Location</option>
+          
+             {colorByOptions?.map((option, index) => {
+if ((columnOptions as string[])?.includes(option)) {
+    return (
+              <option key={option} value={option}>
+                {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
+              </option>
+            )}})}
+          </select>
         </div>
 
         </div>);

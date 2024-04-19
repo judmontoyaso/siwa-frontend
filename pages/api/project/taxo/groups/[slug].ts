@@ -11,7 +11,6 @@
           selectedGroup: any;
           number: any;
           column: { column: any; };
-          selectedColorGroup: any;
           columnValues: { columnValues: any; };
             nickname: { nickname: any; };
           samplelocation: { selectedLocations: any; }; selectedLocation: any; selectedColumn: any; 
@@ -27,11 +26,10 @@
       const top  = req.body.top.toString();
       const columnValues  = req.body.columnValues;
       const nickname = req.body.nickname;
-      const selectedColorGroup = req.body.selectedColorGroup;
 
       try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomycomposition/${slug}`, {
+            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomygroups/${slug}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -44,9 +42,7 @@
                 "selectedGroup": selectedGroup,
                 "top": top,
                 "columnValues": columnValues,
-                "nickname": nickname,
-                "selectedColorGroup": selectedColorGroup,
-
+                "nickname": nickname
 
             })
         }

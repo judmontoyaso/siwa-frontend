@@ -20,6 +20,7 @@ import { FiActivity, FiBarChart } from "react-icons/fi";
 import { RiExchangeFundsLine } from "react-icons/ri";
 import { Divider } from "primereact/divider";
 import { usePopup } from "@/app/popupContext";
+import { Card } from "primereact/card";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -27,6 +28,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [plotData, setPlotData] = useState<
         { type: string; y: any; name: string }[]
     >([]);
+        const { user } = useUser();
     const [otus, setOtus] = useState<any>();
     const [dataUnique, setDataUnique] = useState<any>();
     const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
@@ -58,7 +60,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         "ileum",
     ]);
     const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
-
+const [annova, setAnnova] = useState<any>();
 const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
     const colors = [
         "#092538", // Azul oscuro principal
@@ -97,6 +99,21 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
     ];
 
     const [colorOrder, setColorOrder] = useState<string[]>([]);
+
+    const colorPalettes = {
+        samplelocation: ["#074b44", "#017fb1", "#f99b35"],
+        treatment: ["#035060", "#f99b35", "#4e8e74"],
+        timepoint: ["#8cdbf4", "#f7927f", "#f7e76d"],
+        
+    };
+
+    useEffect(() => {
+        if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+            setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
+        }
+    }, [theRealColorByVariable]);
+    
+    
   // Función para aleatorizar la paleta de colores
   const shuffleColors = () => {
     let shuffled = colors
@@ -106,9 +123,9 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
     setColorOrder(shuffled);
   };
 
-  useEffect(() => {
-    shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
-  }, [otus]);
+//   useEffect(() => {
+//     shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
+//   }, [otus]);
     
     const fetchConfigFile = async (token: any) => {
         try {
@@ -144,6 +161,8 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
                     "samplelocation": selectedLocations,
                     "column": selectedColumn,
                     "columnValues": selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    "nickname": user?.nickname,
+                    "colannova": theRealColorByVariable
                 }),
 
             }
@@ -165,27 +184,130 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
             // }
             const result = await response.json();
             console.log('result:', result);
-
-            if (!otus) {
+            console.log(otus)
                 const locations = new Set(
                     result.data.data.map((item: any[]) => item[1])
                 );
                 const uniqueLocations = Array.from(locations) as string[];
 
                 setAvailableLocations(uniqueLocations);
+                console.log('locations:', uniqueLocations);
                 setDataUnique(result);
                 setColumnOptions(result.data.columns);
                 setValueOptions(result.data.data);
-            }
+            
 
             setOtus(result);
-
+            setAnnova(result.significance)  
             setIsLoaded(true);
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
         }
     };
+
+
+    const fetchDataFilter = async (token: any, columnIndex: number | undefined) => {
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/alpha/${params.slug}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    "samplelocation": selectedLocations,
+                    "column": selectedColumn,
+                    "columnValues": selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    "nickname": user?.nickname,
+                    "colannova": theRealColorByVariable
+                }),
+
+            }
+            );
+            // if (response.status === 500 && accessToken !== undefined) {
+            //     toast.warn('The data needs to be loaded again!', {
+            //         position: "top-center",
+            //         autoClose: 4000,
+            //         hideProgressBar: false,
+            //         closeOnClick: true,
+            //         pauseOnHover: true,
+            //         draggable: true,
+            //         progress: undefined,
+            //         theme: "light",
+            //         transition: Bounce,
+            //     });
+            //     setTimeout(() => { window.location.href = "/"; }, 5000);
+            //     throw new Error("Respuesta no válida desde el servidor");
+            // }
+            const result = await response.json();
+            console.log('result:', result);
+            console.log(otus)
+   
+            setOtus(result);
+            setAnnova(result.significance)  
+            setIsLoaded(true);
+            return result;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
+
+
+
+    const fetchAnnova = async (token: any) => {
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/processanova/${params.slug}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    "samplelocation": selectedLocations,
+                    "column": theRealColorByVariable,
+                    "columnValues": selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    "nickname": user?.nickname,
+                }),
+
+            }
+            );
+            // if (response.status === 500 && accessToken !== undefined) {
+            //     toast.warn('The data needs to be loaded again!', {
+            //         position: "top-center",
+            //         autoClose: 4000,
+            //         hideProgressBar: false,
+            //         closeOnClick: true,
+            //         pauseOnHover: true,
+            //         draggable: true,
+            //         progress: undefined,
+            //         theme: "light",
+            //         transition: Bounce,
+            //     });
+            //     setTimeout(() => { window.location.href = "/"; }, 5000);
+            //     throw new Error("Respuesta no válida desde el servidor");
+            // }
+            const result = await response.json();
+            console.log('result:', result);
+            if (!otus && otus !== undefined) {
+            setOtus((prevOtus: any) => ({
+                ...prevOtus,
+                significance: result.significance
+            })); 
+        }
+  
+setAnnova(result.significance)  
+            setIsLoaded(true);
+            return result;
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
+ 
 
     const fetchProjectIds = async (result: any, columnIndex: number | undefined) => {
 
@@ -322,7 +444,8 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
 
  
 
-    
+
+    useEffect(() => {fetchProjectIdsFiltercolor(theRealColorByVariable)}, [theRealColorByVariable, otus]);
  
         
 const handleGroupChange = (value: string) => {
@@ -407,7 +530,7 @@ const handleGroupChange = (value: string) => {
     useEffect(() => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
         fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
-    }, [accessToken]);
+    }, [accessToken, user?.nickname]);
 
     useEffect(() => {
         if (selectedLocations.length === 3) {
@@ -437,7 +560,7 @@ const handleGroupChange = (value: string) => {
     // Función para aplicar los filtros seleccionados
     const applyFilters = (event: any) => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        fetchData(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
+        fetchDataFilter(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
         setLocation(selectedLocations);
         console.log('filter', typeof (selectedValues), selectedValues)
         setActualcolumn(selectedColumn);
@@ -457,7 +580,7 @@ const handleGroupChange = (value: string) => {
             // Inicializa 'selectedValues' con todos los valores únicos
             setSelectedValues(new Set<string>(uniqueValuesCheck));
         }
-    }, [selectedColumn]);
+    }, [selectedColumn, otus]);
 
     const handleValueChange = (value: string) => {
         setSelectedValues(prevSelectedValues => {
@@ -494,20 +617,19 @@ const handleGroupChange = (value: string) => {
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
-            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
-            <div className="flex w-full flex-col overflow-x-scroll items-start">
+            <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-start">
 
-                {valueOptions.filter(value => value !== null).map((value, index) => (
-                    <div key={index} className="flex w-full items-start overflow-x-scroll mb-2 ">
+                {valueOptions?.filter(value => value !== null).map((value, index) => (
+                    <div key={index} className="flex mr-2 ml-2 items-start overflow-x-scroll mb-2">
                         <input
                             id={`value-${index}`}
                             type="checkbox"
                             value={value}
                             checked={selectedValues.has(value)}
                             onChange={() => handleValueChange(value)}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                            className="w-4 h-4 mb-0 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
-                        <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
+                        <label htmlFor={`value-${index}`} className="ml-2 mb-2 text-base font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
                             {value}
                         </label>
                     </div>
@@ -527,9 +649,11 @@ const handleGroupChange = (value: string) => {
 
     const filter = (
         <div className={`flex flex-col w-full  rounded-lg  dark:bg-gray-800 `}>
+
+            <Card title={"Filter by"}>
             <div className={`tab-content `}>
-                <div className="flex flex-col items-left mt-4 mb-4">
-                    <h3 className="mb-5 text-lg font-bold text-gray-900 dark:text-white">Select a Sample Location</h3>
+                <div className="flex flex-col items-left mt-2 mb-4">
+                    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location</h3>
                     <Dropdown
  value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
                          options={options}
@@ -541,10 +665,10 @@ const handleGroupChange = (value: string) => {
 
 
             </div>
-            <Divider />
-            <div className=" mt-4 mb-4">
+        
+            <div className=" mt-8 mb-4">
 
-                <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+                <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-white">Select a group to generate data</h3>
                 <ul className="w-full flex flex-wrap items-center content-center justify-around ">
                     <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                         <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
@@ -569,7 +693,7 @@ const handleGroupChange = (value: string) => {
                         </label>
                     </li>
                     {
-                        columnOptions.includes("age" as never) && (
+                        columnOptions?.includes("age" as never) && (
                             <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                                 <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
                                     onChange={handleLocationChangeColorby} />
@@ -610,32 +734,37 @@ const handleGroupChange = (value: string) => {
                 </ul>
             </div>
 
-            {selectedColumn === "samplelocation" ? "" :
+         
             <>
-            <Divider />
-            <div className=" mt-4 mb-4">
+           
+            <div className=" mt-6 mb-4">
 
                 {valueChecks}
             </div>
             </>
-                }
+                
 
 <Divider />
-      <div className="flex w-full items-center margin-0 justify-center my-10">
+      <div className="flex w-full items-center margin-0 justify-center my-4">
           <Button
             onClick={applyFilters}
             loading={filterPeticion}
             iconPos="right"
             icon="pi pi-check-square"
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Apply"
+            className=" max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Select Data"
           />
         </div>
 
-        <div>
-        <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            </Card>
+         
+
+        <Divider />
+        <Card title={"Color by"}>
+
+        <div> 
+          <select id="colorby" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={theRealColorByVariable}
             onChange={(e) => handleGroupChange(e.target.value)}
       
@@ -645,13 +774,17 @@ const handleGroupChange = (value: string) => {
           
             {colorByOptions.map((location) => (
               <option key={location} value={location}>
-                {location}
+                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
               </option>
             ))}
           </select>
         </div>
+        </Card>
         </div>
     );
+
+
+
 useEffect(() => {
     
     
@@ -720,29 +853,29 @@ useEffect(() => {
     };
 
 
-    useEffect(() => {
+//     useEffect(() => {
 
-        const significanceEntries = Object.entries(otus?.significance || {});
+//         const significanceEntries = Object.entries(otus?.significance || {});
 
-        const annotations = significanceEntries.map(([locationValue, significance]) => {
-            // Calcula la posición 'x' para la ubicación actual basándose en 'selectedLocations'
-            const xPosition = selectedLocations.indexOf(locationValue);
+//         const annotations = significanceEntries.map(([locationValue, significance]) => {
+//             // Calcula la posición 'x' para la ubicación actual basándose en 'selectedLocations'
+//             const xPosition = selectedLocations.indexOf(locationValue);
 
-            return {
-                x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
-                y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 4),
-                text: significance, // Convertir 'significance' a cadena
-                xref: 'x',
-                yref: 'y',
-                showarrow: false,
-                ax: 0,
-                ay: -40,
-                font: { size: 18 }
-            };
-        });
-
-        setAnnotations(annotations as never[]);
-    }, [otus, graphType]);
+//             return {
+//                 x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
+//                 y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 4),
+//                 text: significance, // Convertir 'significance' a cadena
+//                 xref: 'x',
+//                 yref: 'y',
+//                 showarrow: false,
+//                 ax: 0,
+//                 ay: -40,
+//                 font: { size: 18 }
+//             };
+//         });
+// console.log(annotations)
+//         setAnnotations(annotations as never[]);
+//     }, [graphType, otus?.significance, theRealColorByVariable]);
 
     const calculateMaxAlphaShannon = () => {
         if (!otus?.data) return 0;
@@ -769,7 +902,7 @@ useEffect(() => {
     // Calcula el máximo de 'alphashannon'
     const maxYValueForLocationShannon = calculateMaxAlphaShannon();
     // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
-    const yAxisRange = [0, maxYValueForLocationShannon + 2];
+    const yAxisRange = [0, maxYValueForLocationShannon + 5];
 
     console.log('Max alpha shannon:', yAxisRange);
 
@@ -782,33 +915,125 @@ useEffect(() => {
         </div>
     </div>)
 
+ function calculateAnnotations() {
+    console.log(otus)
+        const significanceEntries = Object.entries(annova || {});
+        console.log(significanceEntries)
+        const annotations = significanceEntries.map(([locationValue, significance]) => {
+            const xPosition = selectedLocations.indexOf(locationValue);
+            return {
+                x: locationValue, 
+                y: 11.2 + (graphType === "boxplot" ? 0.5 : 4),
+                text: significance, 
+                xref: 'x',
+                yref: 'y',
+                showarrow: false,
+                ax: 0,
+                ay: -40,
+                font: { size: 18 }
+            };
+        });
+
+        // Aplicar el filtro de valores únicos
+        return annotations 
+    }
+
+    useEffect(() => {console.log("annotations", annotations)}, [annotations]);
+
+
+    useEffect(() => {
+        // Asegúrate de que 'fetchAnnova' y 'calculateAnnotations' estén definidas correctamente.
+        // 'fetchAnnova' debe ser una función que retorne una promesa y 'calculateAnnotations' debe ser capaz de calcular las anotaciones basadas en los datos obtenidos.
+        
+        const fetchAndCalculateAnnotations = async () => {
+            try {
+                // Obtenemos los datos desde fetchAnnova, que se espera que retorne una promesa con los datos necesarios para calcular anotaciones.
+                const annovaData = await fetchAnnova(accessToken);
+                console.log(annovaData)
+             
+              
+               
+             
+            } catch (error) {
+                console.error("Failed to fetch Annova data:", error);
+            }
+        };
+    
+        // Invocamos la función asincrónica dentro de useEffect.
+        fetchAndCalculateAnnotations();
+    }, [theRealColorByVariable, accessToken]); 
+
+    useEffect(() => { const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
+    console.log(newAnnotations)
+     setAnnotations(newAnnotations as never[]);      }, [annova]);
+    
+    
+    
+    
+    
+    
+    // Dependencias incluyen las variables que puedan afectar la petición de datos.
+     // Solo reacciona a cambios en 'theRealColorByVariable'
+
+// useEffect(() => {
+//     const newLayout = {
+//         width: plotWidth || undefined,
+//         height: 600,
+//         showlegend: true,
+//         legend: {
+//             orientation: "h",
+//             x: 0.5,
+//             xanchor: "center",
+//             y: 1.1,
+//             yanchor: "top",   
+//         },
+//         xaxis: {
+//             showticklabels: false
+//         },
+//         // annotations: annotations, // Usar 'annotations' del estado
+//         yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
+//         margin: {
+//             l: 20, r: 10,
+//             t: 60,
+//             b: 50
+//         }
+//     };
+//     setLayout(newLayout);
+// }, [isWindowVisible, graphType, plotWidth, shannonData, annotations]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
 useEffect(() => {
+
+
+        // Calcula el máximo de 'alphashannon'
+        const maxYValueForLocationShannon = calculateMaxAlphaShannon();
+        // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
+        const yAxisRange = [0, 15];
+        console.log('Max alpha shannon:', yAxisRange);
     const newLayout = {
-        width: plotWidth || undefined,  // Utiliza plotWidth o cae a 'undefined' si es 0
+        width: plotWidth || undefined,
         height: 600,
-        showlegend: true,  // Activa la visualización de la leyenda
+        showlegend: true,
         legend: {
-            orientation: "h", // Horizontal
-            x: 0.5, // Centrado respecto al ancho del gráfico
-            xanchor: "center", // Ancla en el centro
-            y: 1.1, // Posición en y un poco por encima del gráfico
-            yanchor: "top", // Ancla la leyenda en la parte superior
-            
+            orientation: "h",
+            x: 0.5,
+            xanchor: "center",
+            y: 1.1,
+            yanchor: "top",   
         },
         xaxis: {
-            showticklabels: false  // Oculta las etiquetas del eje X
+            showticklabels: false
         },
+        annotations: annotations, // Usar 'annotations' del estado
         yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
         margin: {
             l: 20, r: 10,
-            t: 60, // Incrementa el margen superior para evitar solapamientos con la leyenda
+            t: 60,
             b: 50
         }
     };
     setLayout(newLayout);
-}, [isWindowVisible, graphType, plotWidth, shannonData]);
-
+    
+}, [otus, annotations]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         <div className="flex flex-row w-full items-center">

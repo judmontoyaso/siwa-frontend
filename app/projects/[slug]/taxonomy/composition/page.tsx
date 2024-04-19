@@ -170,6 +170,45 @@ const [actualRank, setActualRank] = useState<any>('genus');
         }
   
 
+
+
+// Objeto persistente fuera del componente para guardar colores asignados
+
+
+
+useEffect(() => {
+    if (otus && otus.data) {
+        const traces: SetStateAction<any[]> = [];
+        const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
+
+        labels.forEach((label: any, index: number) => {
+            const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
+            const scatterColors: { [key: string]: string } = {};
+
+            const xValues = filteredData.map((item: any[]) => item[1]);
+            const yValues = filteredData.map((item: any[]) => item[3]);
+
+            // Asignar color o recuperar el color existente
+            if (!scatterColors[label]) {
+                scatterColors[label] = colors[index % colors.length];
+            }
+
+            traces.push({
+                x: xValues,
+                y: yValues,
+                type: 'bar',
+                name: label,
+                marker: { color: scatterColors[label] },
+            });
+        });
+
+        setPlotData(traces);
+    }
+}, [otus]);
+
+
+
+
     useEffect(() => {
         // Función para actualizar el ancho del gráfico con un pequeño retraso
         const updatePlotWidth = () => {
@@ -235,6 +274,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
                     "top": number.toString(),
                     "columnValues": selectedValue,
                     "nickname": user?.nickname,
+                    "selectedColorGroup": theRealColorByVariable,
 
                 })
             }
@@ -275,6 +315,8 @@ setObservedData(result?.Krona)
             console.error("Error al obtener projectIds:", error);
         }
     };
+
+
     const fetchDataFilter = async (token: any) => {
 
         try {
@@ -290,6 +332,7 @@ setObservedData(result?.Krona)
                     "selectedLocation": selectedLocations,
                     "selectedRank": selectedRank,
                     "selectedGroup": selectedGroup,
+                    "selectedColorGroup": theRealColorByVariable,
                     "columnValues": [...selectedValues],
                     "top": number.toString(),
                     "nickname": user?.nickname,
@@ -329,7 +372,7 @@ setObservedData(result?.Krona)
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/taxonomygroups/${params.slug}`, {
+                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/taxo/groups/${params.slug}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -340,6 +383,8 @@ setObservedData(result?.Krona)
                     "selectedLocation": selectedValue,
                     "selectedRank": selectedRank,
                     "selectedGroup": theRealColorByVariable,
+                    "selectedColorGroup": theRealColorByVariable,
+
                     "top": number.toString(),
                     "columnValues": selectedValue,
                     "nickname": user?.nickname,

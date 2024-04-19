@@ -101,9 +101,9 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
     const [colorOrder, setColorOrder] = useState<string[]>([]);
 
     const colorPalettes = {
-        samplelocation: ["#092538", "#34675C", "#2E4057"],
-        treatment: ["#FEF282", "#E53935", "#415a55"],
-        timepoint: ["#FFA726", "#FF7043", "#F6C324"],
+        samplelocation: ["#074b44", "#017fb1", "#f99b35"],
+        treatment: ["#035060", "#f99b35", "#4e8e74"],
+        timepoint: ["#8cdbf4", "#f7927f", "#f7e76d"],
         
     };
 

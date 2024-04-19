@@ -112,6 +112,22 @@ export default function Page({ params }: { params: { slug: string } }) {
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
+
+  const colorPalettes = {
+    samplelocation: ["#092538", "#34675C", "#2E4057"],
+    treatment: ["#FEF282", "#F6C324", "#415a55"],
+    timepoint: ["#FFA726", "#FF7043", "#E53935"],
+    
+};
+
+
+
+// useEffect(() => {
+//     if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+//         setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
+//     }
+// }, [scatterData]);
+
   const updatePlotWidth = () => {
         if (plotContainerRef.current) {
           setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
@@ -139,6 +155,10 @@ export default function Page({ params }: { params: { slug: string } }) {
   useEffect(() => {
     shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
   }, [scatterData]);
+
+
+useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [scatterData]);
+
   const fetchConfigFile = async (token: any) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
@@ -611,7 +631,7 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
         </div>  
         <Divider />
         <div className=" mt-4 mb-4">
-          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Filter by</h3>
           <ul className="w-full flex flex-wrap items-center content-center justify-around">
             <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
               <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
@@ -691,12 +711,14 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
             icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
             className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 pr-3 rounded-xl border-none"
-            label="Apply"
+            label="Select Datax"
           />
         </div>
 
+        <Divider />
+
         <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          <select id="color" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={theRealColorByVariable}
             onChange={(e) => handleGroupChange(e.target.value)}
       

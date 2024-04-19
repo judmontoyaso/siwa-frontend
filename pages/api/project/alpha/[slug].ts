@@ -7,7 +7,7 @@ const handler = async (req: {
     body: {
         column: { column: any; };
         columnValues: { columnValues: any; };
-        samplelocation: { selectedLocations: any; }; selectedLocations: any; selectedColumn: any;
+        samplelocation: { selectedLocations: any; }; nickname:any; colannova:any; selectedLocations: any; selectedColumn: any;
     }; query: { slug: any; }; headers: { authorization: any; };
 }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { error: any; }): void; new(): any; }; }; }) => {
     const { slug } = req.query;
@@ -15,6 +15,8 @@ const handler = async (req: {
     const selectedLocations = req.body.samplelocation;
     const column = req.body.column;
     const columnValues = req.body.columnValues;
+    const nickname = req.body.nickname;
+    const colannova = req.body.colannova;
     console.log("________")
     console.log(req.body.samplelocation, token)
     try {
@@ -28,7 +30,9 @@ const handler = async (req: {
             body: JSON.stringify({
                 "samplelocation": selectedLocations,
                 "column": column,
-                "columnValues": columnValues
+                "columnValues": columnValues,
+                "nickname": nickname,
+                "colannova": colannova
             }),
 
         }

@@ -59,7 +59,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [dataUnique, setDataUnique] = useState<any>();
   const [columnOptions, setColumnOptions] = useState<string[]>([]);
   const[filterPeticion, setFilterPetition] = useState(false);
-  const[theRealColorByVariable, setTheRealColorByVariable] = useState<string>('');
+  const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
   const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
@@ -112,6 +112,26 @@ export default function Page({ params }: { params: { slug: string } }) {
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
+
+
+  const colorPalettes = {
+    samplelocation: ["#074b44", "#017fb1", "#f99b35"],
+    treatment: ["#035060", "#f99b35", "#4e8e74"],
+    timepoint: ["#8cdbf4", "#f7927f", "#f7e76d"],
+    
+};
+
+
+
+useEffect(() => {
+    if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+        setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
+    }
+console.log(colorOrder)
+}, [scatterData]);
+
+
+
   const updatePlotWidth = () => {
         if (plotContainerRef.current) {
           setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
@@ -136,9 +156,13 @@ export default function Page({ params }: { params: { slug: string } }) {
     setColorOrder(shuffled);
   };
 
-  useEffect(() => {
-    shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
-  }, [scatterData]);
+  // useEffect(() => {
+  //   shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
+  // }, [scatterData]);
+
+
+// useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [scatterData]);
+
   const fetchConfigFile = async (token: any) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
@@ -356,7 +380,7 @@ const valueChecks = (
 );
 
 
-useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy]);
+// useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy]);
 
   const fetchProjectIds = async (result: any) => {
     console.log(newScatterColors)
@@ -526,15 +550,15 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
       colorBy === 'samplelocation';
       const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
         const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-        const colorValue = colorBy !== 'samplelocation' ? item[result.data.columns.indexOf(colorBy)] : sampleLocation;
+        const colorValue = colorBy !== 'samplelocation' ? item[result.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
 
         let key = sampleLocation; // Por defecto, usa la locación como clave
         let name = `${sampleLocation}`;
         // Si "All" no está seleccionado en las locaciones y "Color By" no es "samplelocation", 
         // usa el valor seleccionado en "Color By" para colorear
-        if (!isAllLocationsSelected && colorBy !== 'samplelocation') {
-          key = colorBy !== 'samplelocation' ? colorValue : sampleLocation;
-          name = colorBy !== 'samplelocation' ? `${colorValue}` : `Location: ${sampleLocation}`;
+        if (!isAllLocationsSelected && theRealColorByVariable !== 'samplelocation') {
+          key = theRealColorByVariable !== 'samplelocation' ? colorValue : sampleLocation;
+          name = theRealColorByVariable !== 'samplelocation' ? `${colorValue}` : `Location: ${sampleLocation}`;
         }
 
         if (!acc[key]) {
@@ -553,7 +577,7 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
 
         acc[key].x.push(PC1);
         acc[key].y.push(PC2);
-        acc[key].text.push(`Sample ID: ${sampleId}, ${colorBy === "samplelocation" ? "location" : colorBy}: ${colorValue}`);
+        acc[key].text.push(`Sample ID: ${sampleId}, ${theRealColorByVariable === "samplelocation" ? "location" : theRealColorByVariable}: ${colorValue}`);
         scatterColors[key] = colorOrder[colorIndex % colorOrder.length];
         return acc;
       }, {});
@@ -611,7 +635,7 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
         </div>  
         <Divider />
         <div className=" mt-4 mb-4">
-          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
+          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Filter by</h3>
           <ul className="w-full flex flex-wrap items-center content-center justify-around">
             <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
               <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
@@ -691,12 +715,14 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
             icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
             className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 pr-3 rounded-xl border-none"
-            label="Apply"
+            label="Select Data"
           />
         </div>
 
+        <Divider />
+
         <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          <select id="color" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={theRealColorByVariable}
             onChange={(e) => handleGroupChange(e.target.value)}
       
@@ -706,7 +732,7 @@ useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy])
           
             {colorByOptions.map((location) => (
               <option key={location} value={location}>
-                {location}
+                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
               </option>
             ))}
           </select>

@@ -21,7 +21,7 @@ const handler = async (req: {
     console.log(req.body.samplelocation, token)
     try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/alpha-diversity/${slug}`, {
+            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/process_anova/${slug}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

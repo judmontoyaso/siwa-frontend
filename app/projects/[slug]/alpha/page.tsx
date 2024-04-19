@@ -764,7 +764,7 @@ const handleGroupChange = (value: string) => {
         <Card title={"Color by"}>
 
         <div> 
-          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          <select id="colorby" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value={theRealColorByVariable}
             onChange={(e) => handleGroupChange(e.target.value)}
       
@@ -774,7 +774,7 @@ const handleGroupChange = (value: string) => {
           
             {colorByOptions.map((location) => (
               <option key={location} value={location}>
-                {location}
+                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
               </option>
             ))}
           </select>

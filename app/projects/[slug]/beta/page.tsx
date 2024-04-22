@@ -1,12 +1,12 @@
 "use client";
-import { ReactNode, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Loading from "@/app/components/loading";
 import Plot from "react-plotly.js";
 import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { AiOutlineInfoCircle } from "react-icons/ai";
@@ -18,6 +18,10 @@ import Spinner from "@/app/components/pacmanLoader";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import { BiScatterChart } from "react-icons/bi";
+import Link from "next/link";
+import { BreadCrumb } from "primereact/breadcrumb";
+import { MenuItem } from "primereact/menuitem";
+import { Accordion, AccordionTab } from "primereact/accordion";
 
 
 
@@ -62,7 +66,21 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
-  const newScatterColors: { [key: string]: string } = {}; // Define el tipo explícitamente
+  const newScatterColors: { [key: string]: string } = {};
+
+
+  const router = useRouter();
+
+  const items = [
+      {label: 'Projects'},
+      { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+    { label: 'Community make-up', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/beta`}>{item.label}</Link> },
+  ];
+
+  const home = { icon: 'pi pi-home', command: () => router.push('/') };
+
+
+
   const colorsLocation = [
 
     "#FFA726", // Naranja
@@ -132,20 +150,81 @@ console.log(colorOrder)
 
 
 
-  const updatePlotWidth = () => {
+    const updatePlotWidth = () => {
+
         if (plotContainerRef.current) {
-          setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-          setLoaded(true)
-        }
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+            console.log(plotWidth)
+            console.log(plotContainerRef.current)
+            setLoaded(true)
+
+        };
     };
-  useEffect(() => {
-    // Función para actualizar el ancho del gráfico con un pequeño retraso
-  
+    const observedElementId = 'plofather';
+    useEffect(() => {
+        // Función para actualizar el ancho de la ventana
+        const updatePlotWidth = () => {
+          if (plotContainerRef.current) {
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+            console.log(plotWidth);
+            console.log(plotContainerRef.current);
+            setLoaded(true);
+          }
+        };
+      
+        const plofatherElement = document.getElementById('plofather');
+        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
+      
+        // Añade el event listener cuando el componente se monta
+        window.addEventListener('resize', updatePlotWidth);
+        console.log('plotWidth:', plotWidth);
+        updatePlotWidth();
+      
+        // Limpieza del event listener cuando el componente se desmonte
+        return () => {
+          window.removeEventListener('resize', updatePlotWidth);
+        };
+      }, [window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
 
-    updatePlotWidth(); // Establece el ancho inicial
 
+      useEffect(() => {
+        const interval = setInterval(() => {
+          const element = document.getElementById(observedElementId);
+          if (element) {
+            // Función para actualizar el ancho del elemento observado
+            const updatePlotWidth = () => {
+              const newWidth = element.offsetWidth - 75;
+              setPlotWidth(newWidth);
+              console.log('Actualizado plotWidth:', newWidth);
+              setLoaded(true);
+            };
+    
+            // Configura el ResizeObserver una vez que el elemento está disponible
+            const resizeObserver = new ResizeObserver(entries => {
+              for (let entry of entries) {
+                updatePlotWidth();
+              }
+            });
+    
+            resizeObserver.observe(element);
+    
+            // Limpieza del intervalo y del observer
+            clearInterval(interval);
+            return () => {
+              resizeObserver.disconnect();
+            };
+          }
+        }, 100); // Intervalo de verificación cada 100 ms
+    
+        return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
+      }, [observedElementId]); 
 
-  }, [plotData]);
+    useEffect(() => {
+        updatePlotWidth(); // Establece el ancho inicial
+        console.log('plotWidth:', plotWidth);
+
+    }, [otus]);
+
 
 
   const shuffleColors = () => {
@@ -361,8 +440,9 @@ fetchProjectIdsFiltercolor(dataResult, value);
 const valueChecks = (
     <div className="mb-5 mt-5">
         <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
-        {valueOptions?.map((value, index) => (
-            <div key={index} className="flex items-center mb-2">
+        <div className="flex flex-row mt-4 flex-wrap">
+            {valueOptions?.map((value, index) => (
+            <div key={index} className="flex items-center mb-2 mr-2 ml-2">
                 <input
                     id={`value-${index}`}
                     type="checkbox"
@@ -376,6 +456,8 @@ const valueChecks = (
                 </label>
             </div>
         ))}
+        </div>
+      
     </div>
 );
 
@@ -612,11 +694,38 @@ const valueChecks = (
     
   }
     , [params.slug, accessToken]);
+    const [activeIndexes, setActiveIndexes] = useState([0,1]);
 
+    const onTabChange = (e : any) => {
+        setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
+    };
 
   const filter = (
     <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
+         <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange}>    
+      <AccordionTab header="Color by">
+    
 
+                <div>
+  <select id="color" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            value={theRealColorByVariable}
+            onChange={(e) => handleGroupChange(e.target.value)}
+      
+          >
+             <option selected value="samplelocation">Sample Location</option>
+            <option selected value="treatment">Treatment</option>
+          
+            {colorByOptions.map((location) => (
+              <option key={location} value={location}>
+                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
+              </option>
+            ))}
+          </select>
+        
+
+          </div>
+          </AccordionTab>
+                <AccordionTab header="Filter by">
         <div className="flex flex-col items-left  mt-4 mb-4">
 
           <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location</h3>
@@ -633,7 +742,7 @@ const valueChecks = (
             ))}
           </select>
         </div>  
-        <Divider />
+      
         <div className=" mt-4 mb-4">
           <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Filter by</h3>
           <ul className="w-full flex flex-wrap items-center content-center justify-around">
@@ -698,7 +807,7 @@ const valueChecks = (
 {isColorByDisabled ? "" :
         colorBy === "samplelocation" ? "" :
         <>
-        <Divider />
+   
         <div className=" mt-4 mb-4">
         {valueChecks}
 
@@ -714,28 +823,14 @@ const valueChecks = (
             iconPos="right"
             icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 pr-3 rounded-xl border-none"
+            className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 pr-3 rounded-xl border-none"
             label="Select Data"
           />
         </div>
 
-        <Divider />
-
-        <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-          <select id="color" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={theRealColorByVariable}
-            onChange={(e) => handleGroupChange(e.target.value)}
-      
-          >
-             <option selected value="samplelocation">Sample Location</option>
-            <option selected value="treatment">Treatment</option>
-          
-            {colorByOptions.map((location) => (
-              <option key={location} value={location}>
-                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
-              </option>
-            ))}
-          </select>
+         
+        </AccordionTab>
+            </Accordion>
     </div>
     );
 
@@ -795,7 +890,9 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
               font: { 
                 family: 'Roboto, sans-serif',
                 size: 18,
-              }
+              },
+              standoff: 15,
+             
             }
           },
           yaxis: {
@@ -804,7 +901,8 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
               font: {
                 family: 'Roboto, sans-serif',
                 size: 18, // Aumenta el tamaño para mayor énfasis
-              }
+              },
+              standoff: 15,
             }
           },
           showlegend: true,  // Activa la visualización de la leyenda
@@ -816,7 +914,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
               yanchor: "top", // Ancla la leyenda en la parte superior
               
           },
-                    margin: { l: 40, r: 10, t: 0, b: 40 } 
+                    margin: { l: 60, r: 10, t: 0, b: 60 } 
 
         }}
       />)}
@@ -839,7 +937,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
   return (
     <div className="w-full h-full">
       <SidebarProvider>
-      <Layout slug={params.slug} filter={""} >
+      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} />}>
         {isLoaded ? (
 <div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">
@@ -872,42 +970,46 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
   <div className="flex">
     <GraphicCard legend={""} filter={filter} title={title}>
       {scatterData.length > 0 ? (
-        <MyPlotComponent scatterData={scatterData} scatterColors={scatterColors} />
+        <div>
+
+          <MyPlotComponent scatterData={scatterData} scatterColors={scatterColors} />
+          <div className="w-full flex flex-row ">
+                           
+                           <div className="px-6 py-8 w-full" >
+                               <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                   {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
+                                   if (key === "samplelocation" && selectedColorBy==="samplelocation"  && typeof value === 'string') {
+                                   
+                                       return (
+                                         <div key={key} className="col-span-2">
+                                           <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                         </div>
+                                       );
+                                     }
+                                       return null;  // No renderizar nada si no se cumplen las condiciones
+                                   })}
+                               </div>
+                               <div className="prose flex flex-row flex-wrap">
+                                   {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
+                                       if (key === selectedColorBy && key !== "samplelocation") {
+                                           if (typeof value === 'string' && value !== null) {
+                                               return (  <div key={key} className="col-span-2">
+                                               <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                             </div>);
+                                           } 
+                                       }
+                                       return null;
+                                   })}
+                               </div>
+                           </div>
+                       </div>
+        </div>
       ) : (
         <SkeletonCard width={"500px"} height={"270px"} />
       )}
     </GraphicCard>
   </div>
-  <div className="w-full flex flex-row ">
-                                <div className="w-1/4"></div>
-                                <div className="px-6 py-8 w-4/5" >
-                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                        {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
-                                        if (key === "samplelocation" && selectedColorBy==="samplelocation"  && typeof value === 'string') {
-                                        
-                                            return (
-                                              <div key={key} className="col-span-2">
-                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                              </div>
-                                            );
-                                          }
-                                            return null;  // No renderizar nada si no se cumplen las condiciones
-                                        })}
-                                    </div>
-                                    <div className="prose flex flex-row flex-wrap">
-                                        {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
-                                            if (key === selectedColorBy && key !== "samplelocation") {
-                                                if (typeof value === 'string' && value !== null) {
-                                                    return (  <div key={key} className="col-span-2">
-                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                  </div>);
-                                                } 
-                                            }
-                                            return null;
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
+
 
 </div>
 

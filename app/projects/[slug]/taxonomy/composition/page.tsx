@@ -1,5 +1,5 @@
 "use client";
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Plot from "react-plotly.js";
@@ -20,6 +20,10 @@ import { Dropdown } from "primereact/dropdown";
 import { Card } from "primereact/card";
 import { TabView, TabPanel } from "primereact/tabview";
 import { Accordion, AccordionTab } from "primereact/accordion";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { BreadCrumb } from "primereact/breadcrumb";
+import { MenuItem } from "primereact/menuitem";
 
 
 
@@ -172,8 +176,17 @@ const [actualRank, setActualRank] = useState<any>('genus');
 
 
 
-// Objeto persistente fuera del componente para guardar colores asignados
 
+
+const router = useRouter();
+
+const items = [
+    {label: 'Projects'},
+    { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+  { label: 'Taxonomic abundance', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
+];
+
+const home = { icon: 'pi pi-home', command: () => router.push('/') };
 
 
 useEffect(() => {
@@ -209,25 +222,80 @@ useEffect(() => {
 
 
 
-    useEffect(() => {
-        // Función para actualizar el ancho del gráfico con un pequeño retraso
+
+const updatePlotWidth = () => {
+
+    if (plotContainerRef.current) {
+        setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+        console.log(plotWidth)
+        console.log(plotContainerRef.current)
+        setLoaded(true)
+
+    };
+};
+const observedElementId = 'plofather';
+useEffect(() => {
+    // Función para actualizar el ancho de la ventana
+    const updatePlotWidth = () => {
+      if (plotContainerRef.current) {
+        setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+        console.log(plotWidth);
+        console.log(plotContainerRef.current);
+        setLoaded(true);
+      }
+    };
+  
+    const plofatherElement = document.getElementById('plofather');
+    console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
+  
+    // Añade el event listener cuando el componente se monta
+    window.addEventListener('resize', updatePlotWidth);
+    console.log('plotWidth:', plotWidth);
+    updatePlotWidth();
+  
+    // Limpieza del event listener cuando el componente se desmonte
+    return () => {
+      window.removeEventListener('resize', updatePlotWidth);
+    };
+  }, [window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const element = document.getElementById(observedElementId);
+      if (element) {
+        // Función para actualizar el ancho del elemento observado
         const updatePlotWidth = () => {
-            setTimeout(() => {
-                if (plotContainerRef.current) {
-                    setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
-                    setLoaded(true)
-                }
-            }, 800); // Retraso de 10 ms
+          const newWidth = element.offsetWidth - 75;
+          setPlotWidth(newWidth);
+          console.log('Actualizado plotWidth:', newWidth);
+          setLoaded(true);
         };
 
-        updatePlotWidth(); // Establece el ancho inicial
+        // Configura el ResizeObserver una vez que el elemento está disponible
+        const resizeObserver = new ResizeObserver(entries => {
+          for (let entry of entries) {
+            updatePlotWidth();
+          }
+        });
 
-        window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
+        resizeObserver.observe(element);
 
+        // Limpieza del intervalo y del observer
+        clearInterval(interval);
         return () => {
-            window.removeEventListener('resize', updatePlotWidth);
+          resizeObserver.disconnect();
         };
-    }, [params.slug, plotData, ]);
+      }
+    }, 100); // Intervalo de verificación cada 100 ms
+
+    return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
+  }, [observedElementId]); 
+
+useEffect(() => {
+    updatePlotWidth(); // Establece el ancho inicial
+    console.log('plotWidth:', plotWidth);
+}, [otus]);
 
 
 
@@ -552,40 +620,59 @@ setFilterPeticion(true);
             <div className="w-full flex " ref={plotContainerRef}>
                 {loaded && (
                     <Plot
-                        data={plotData}
-                        layout={{
-                            barmode: 'stack', // Cambiado a 'stack' para apilar las barras
-                            bargap: 0.1,
-                            plot_bgcolor: 'white',
-                            yaxis: {
-                                title: {
-                                    text: 'Relative Abundance', font: { 
-                                        family: 'Roboto, sans-serif',
-                                        size: 18,
-                                    }
+                    data={plotData}
+                    layout={{
+                        barmode: 'stack', // Modo de barras apiladas
+                        bargap: 0.1,
+                        plot_bgcolor: 'white',
+                        yaxis: {
+                            title: {
+                                text: 'Relative Abundance',
+                                font: { 
+                                    family: 'Roboto, sans-serif',
+                                    size: 18,
                                 }
-                            },
-                            xaxis: {
-                                title: {
-                                    text: '', font: { 
-                                        family: 'Roboto, sans-serif',
-                                        size: 18,
-                                    }
+                            }
+                        },
+                        xaxis: {
+                            title: {
+                                text: '', // Título para el eje X si es necesario
+                                font: { 
+                                    family: 'Roboto, sans-serif',
+                                    size: 18,
                                 }
-                            },
-                            width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-                            height: 700,
-                            // title: {
-                            //     text: `Relative abundance ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`, font: { // Añade esta sección para personalizar el título
-                            //         family: 'Roboto, sans-serif',
-                            //         size: 26,
-                            //     }
-                            // },
-                            showlegend: false,
-                            margin: { l: 50, r: 10, t: 20, b: 50 } 
-
-                        }}
-                    />)}
+                            }
+                        },
+                        width: plotWidth || undefined,
+                        height: 700,
+                        annotations: [{
+                            xref: 'paper',
+                            yref: 'paper',
+                            x: 1.2, // Coloca justo al lado del gráfico
+                            xanchor: 'left',
+                            y: 1, // En la parte superior
+                            yanchor: 'top',
+                            text: `${actualRank.charAt(0).toUpperCase() + actualRank.slice(1)}`, // Título de la leyenda
+                            showarrow: false,
+                            font: {
+                                family: 'Roboto, sans-serif',
+                                size: 14, // Tamaño de la fuente
+                                color: 'black'
+                            }
+                        }],
+                        showlegend: true,
+                        legend: {
+                            orientation: "v", // Orientación vertical
+                            x: 1.05, // Posición a la derecha del gráfico
+                            xanchor: "left",
+                            yanchor:"top",
+                            y: 0.9, // Centrado verticalmente
+                        
+                        },
+                        margin: { l: 50, r: 100, t: 20, b: 50 } // Asegúrate de dejar suficiente margen a la derecha
+                    }}
+                />
+                )}
             </div>
 
         </div>);
@@ -607,7 +694,7 @@ setFilterPeticion(true);
             // Inicializa 'selectedValues' con todos los valores únicos
             setSelectedValues(new Set<string>(uniqueValuesCheck));
         }
-    }, [selectedGroup]);
+    }, [selectedGroup, otus]);
 
     // Estado para manejar los valores seleccionados en los checks
     const handleValueChange = (value: string) => {
@@ -669,7 +756,6 @@ setFilterPeticion(true);
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
         <div className="mb-5 mt-5">
-            <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select the values to keep</h3>
             {valueOptions?.map((value, index) => (
                 <div key={index} className="flex items-center mb-2">
                     <input
@@ -706,16 +792,42 @@ setFilterPeticion(true);
 
     // Determinar el valor seleccionado para el Dropdown
     const selectedDropdownValue = selectedLocations.length === 3 ? selectedLocation : selectedLocations[0];
+    const [activeIndexes, setActiveIndexes] = useState([0,1]);
 
+    const onTabChange = (e : any) => {
+        setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
+    };
 
     const filter = (
-        <div className={`flex flex-col w-full p-4 rounded-lg  dark:bg-gray-800 `}>
+        <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
+ <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange}>    
+      <AccordionTab header="Color by">
+    
+<div>
+        <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            value={theRealColorByVariable}
+            onChange={(e) => setTheRealColorByVariable(e.target.value)}
+      
+          >
+             <option selected value="samplelocation">Sample Location</option>
+          
+             {colorByOptions?.map((option, index) => {
+if ((columnOptions as string[])?.includes(option)) {
+    return (
+              <option key={option} value={option}>
+                {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
+              </option>
+            )}})}
+          </select>      
+        </div>
 
+        </AccordionTab>
+                <AccordionTab header="Filter by">
             <div className="flex xl:flex-col md:flex-row md:flex-wrap xl:flex-nowrap items-left mt-4 mb-4 ">
                 <div className="xl:w-full md:w-1/2 md:flex md:flex-row xl:flex-col md:justify-between">
                     <div className="w-full flex flex-col">
 
-                    <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
+                    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a taxonomic rank for display</h3>
      <Dropdown 
             value={selectedRank} 
             options={dropdownOptions} 
@@ -727,19 +839,19 @@ setFilterPeticion(true);
 
                 </div>
 <Divider layout="vertical" className="md:block xl:hidden" />
-<Divider className="w-full md:hidden xl:block"/>   
-                <div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between">
-    <div className="max-w-xs mx-auto flex flex-col items-center mt-4 mb-4">
-    <PrimeToolTip target=".topInputText" />
-    <label htmlFor="topInput" className="block mb-5 text-lg font-medium text-gray-900 dark:text-white">
-        <div className="flex flex-row">
+                <div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between mt-2">
+    <div className="max-w-xs mx-auto flex flex-col items-center mt-5 mb-5">
+    <PrimeToolTip target=".topInputText" />                        
+
+    <h3  className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">
+        <div className="flex flex-row mt-2">
     Top <AiOutlineInfoCircle className="topInputText ml-2  text-lg cursor-pointer text-gray-500 p-text-secondary p-overlay-badge" data-pr-tooltip="This graph displays the most abundant taxa for each rank"
     data-pr-position="right"
     data-pr-at="right+5 top"
     data-pr-my="left center-2"/>
         </div>
         
- </label>
+ </h3>
     <div className="relative flex items-center max-w-[8rem]">
         <button type="button" id="decrement-button" onClick={() => setNumber(Math.max(1, number - 1))} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-l-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
             {/* SVG para el icono de decremento */}
@@ -753,13 +865,12 @@ setFilterPeticion(true);
     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
 </div>
  
-<Divider className="md:hidden xl:block"/>
   </div>
   <Divider className="md:block xl:hidden w-full"/>
-  <div className="xl:w-full md:w-1/2 md:flex md:flex-col md:justify-between">
+  <div className="xl:w-full md:w-1/2 md:flex md:flex-col md:justify-between mb-5">
     <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
 
-                    <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location (if applicable)</h3>
+                    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location (if applicable)</h3>
                     <Dropdown 
             id="location"
             value={selectedDropdownValue}
@@ -772,14 +883,13 @@ setFilterPeticion(true);
 
 
                 </div>
-<Divider className="xl:block md:hidden"/>
 </div>
 <Divider layout="vertical" className="md:block xl:hidden" />
 <div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between">
 
      
                 <div className="mt-4 mb-4">
-                <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group By</h3>
+                <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Group By</h3>
 
                 <ul className="w-full flex flex-wrap items-center content-center justify-around ">
 
@@ -835,14 +945,12 @@ if ((columnOptions as string[])?.includes(option)) {
             </div>
             <div className="xl:w-full md:w-full">
 
-            {selectedGroup!== "samplelocation" ?
             <>
-            <Divider/>
-            <div className="mt-4 mb-4">
+            <div className="mt-2 mb-4">
 {valueChecks}
             </div>
             </>
-             : ""}
+             
             </div>
 
             <Divider/>
@@ -856,29 +964,12 @@ if ((columnOptions as string[])?.includes(option)) {
             iconPos="right"
             icon="pi pi-check-square"
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Apply"
+            className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Select Data"
           />
         </div>
-
-        <div>
-        <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Color by</h3>
-          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={theRealColorByVariable}
-            onChange={(e) => setTheRealColorByVariable(e.target.value)}
-      
-          >
-             <option selected value="samplelocation">Sample Location</option>
-          
-             {colorByOptions?.map((option, index) => {
-if ((columnOptions as string[])?.includes(option)) {
-    return (
-              <option key={option} value={option}>
-                {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
-              </option>
-            )}})}
-          </select>
-        </div>
+        </AccordionTab>
+            </Accordion>
 
         </div>);
 
@@ -903,7 +994,7 @@ useEffect(() => {
     return (
         <div className="w-full h-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""}>
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} />}>
                 {isLoaded ? (
                     <div className="flex flex-col w-11/12 mx-auto">
 
@@ -940,7 +1031,7 @@ useEffect(() => {
               
                 <AccordionTab header={<>  Hierarchical visualization<i className="pi pi-info-circle ml-2"></i></>}>
 
-                    <div>          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                <div className="flex flex-row flex-wrap "><div className="w-full xl:w-1/2">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
                         This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
                     </p>
                     <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
@@ -952,14 +1043,16 @@ useEffect(() => {
                     <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
                         The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. Researchers and educators can utilize this visualization to discuss and analyze patterns of biodiversity, evolutionary relationships, or the impact of environmental changes on taxonomic distributions.
                     </p></div>
-                    <iframe 
+                    <iframe className="w-full xl:w-1/2 mt-5 mb-5"
                         src="/api/components/innerHtml" 
                         frameBorder="0" 
-                        width="100%" 
+ 
                         height="500px" 
                         allowFullScreen
                         title="Taxonomy Composition Sunburst Chart">
                     </iframe>
+                    </div>  
+                      
                 </AccordionTab>
             </Accordion>
         </div>
@@ -967,17 +1060,14 @@ useEffect(() => {
                             </div>
 
                         <div className="flex flex-row">
-                            <GraphicCard filter={filter} legend={legend} title={title} orientation="horizontal" slug={params.slug}>
+                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}>
                                 {plotData.length > 0 ? (
-                                    <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
-                                ) : (
-                                    <SkeletonCard width={"800px"} height={"470px"} />
-                                )}
-                            </GraphicCard>
-                        </div>
-                        <div className="w-full flex flex-row ">
-                                <div className="w-1/4"></div>
-                                <div className="px-6 py-8 w-4/5" >
+
+                                    <div>
+                                        <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
+ <div className="w-full flex flex-row ">
+              
+                                <div className="px-6 py-8 w-full" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
                                         if (key === "samplelocation" && actualGroup==="samplelocation"  && typeof value === 'string') {
@@ -1007,6 +1097,13 @@ useEffect(() => {
                                     </div>
                                 </div>
                             </div>
+                                    </div>
+                                ) : (
+                                    <SkeletonCard width={"800px"} height={"470px"} />
+                                )}
+                            </GraphicCard>
+                        </div>
+                       
                     </div>
                 ) : (
                     <div className="w-full h-full"><Spinner/></div>

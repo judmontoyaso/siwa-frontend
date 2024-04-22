@@ -14,7 +14,7 @@ const ProfilePage: React.FC = () => {
 
     return (
         <><SidebarProvider>
-        <Layout slug={""} filter={undefined}> 
+        <Layout slug={""} filter={undefined}  breadcrumbs={""}> 
         <div className='flex w-full justify-center h-full'>
                <Card className="w-full max-w-xl shadow-xl bg-white h-full p-4">
    

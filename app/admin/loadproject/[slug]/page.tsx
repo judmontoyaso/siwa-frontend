@@ -109,7 +109,7 @@ function Wizard({ params }: { params: { slug: string } }) {
   return (
     <div>
       <SidebarProvider>
-      <Layout slug={''} filter={undefined}>
+      <Layout slug={''} filter={undefined}  breadcrumbs={""}>
       <div className='flex items-center justify-center w-full h-full'>
                <div className='text-center flex  flex-col justify-center w-full'>
         {renderStep()}

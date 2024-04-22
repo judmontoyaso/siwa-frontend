@@ -150,7 +150,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     return (
         <div className='h-full'>
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""}>
+            <Layout slug={params.slug} filter={""}  breadcrumbs={""}>
                 <div className='w-full flex justify-center items-center h-full'>
 
 

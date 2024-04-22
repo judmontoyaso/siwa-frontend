@@ -369,7 +369,7 @@ useEffect(() => {setIsSidebarOpen(true)}, [params.slug]);
 
     return (
         <div>
-            <Layout slug={params.slug} filter={""}>
+            <Layout slug={params.slug} filter={""}  breadcrumbs={""}>
                 {isLoaded ? (
                     <>
                         <div className="flex flex-row justify-evenly w-full items-center">

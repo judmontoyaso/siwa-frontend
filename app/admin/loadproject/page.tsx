@@ -13,7 +13,7 @@ const Page = () => {
   return (
     <div>
       <SidebarProvider>
-        <Layout slug={''} filter={undefined}>
+        <Layout slug={''} filter={undefined}  breadcrumbs={""}>
 
           <div className="p-5">
             <h1 className="text-2xl font-bold mb-5">Proyectos</h1>

@@ -24,7 +24,7 @@ export default function Home() {
     <>
 {isLoading ? (<><SidebarProvider>
   
-        <Layout slug={""} filter={undefined}> cargando...      </Layout>
+        <Layout slug={""} filter={undefined} breadcrumbs={""}> cargando...      </Layout>
         </SidebarProvider></> ) : (   <>
   {user ? (
         <SidebarProvider>

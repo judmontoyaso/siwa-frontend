@@ -755,7 +755,7 @@ useEffect(() => {
     return (
         <div className="w-full h-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""}>
+            <Layout slug={params.slug} filter={""}  breadcrumbs={""}>
             <div className="flex flex-col w-full">
 
 <div className="flex flex-row w-full text-center justify-center items-center">

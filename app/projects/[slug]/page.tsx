@@ -60,7 +60,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
 
   return (
-    <Layout slug={params.slug} filter={filterContent}>
+    <Layout slug={params.slug} filter={filterContent}  breadcrumbs={""}>
 <div className="w-10/12 mx-auto px-4 py-8">
   <div className="bg-white shadow-lg rounded-lg overflow-hidden pb-10">
 <div className="w-full flex justify-center text-center">

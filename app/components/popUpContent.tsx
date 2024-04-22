@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IoCloseOutline, IoFilterOutline } from "react-icons/io5";
-import { usePopup } from '../popupContext';
+import { usePopup } from './context/popupContext';
 
 const PopupComponent = ({filter}: any) => {
   const { isWindowVisible, setIsWindowVisible } = usePopup();
@@ -23,7 +23,6 @@ const PopupComponent = ({filter}: any) => {
     if (isWindowVisible) {
         document.addEventListener("mousedown", handleClickOutside);
     }
-
     // Limpiar listener
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -32,7 +31,7 @@ const PopupComponent = ({filter}: any) => {
 
   return (
     <div className="w-full h-full flex content-end mr-5">
-        <div ref={popupRef} className="my-4 xl:p-8 md:p-2 w-full h-full border border-gray-50 bg-gray-100 rounded-2xl overflow-y-scroll">
+        <div ref={popupRef} className="my-4 xl:p-2 md:pt-8 xl:pt-8 p-8 md:p-2 w-full h-full border border-gray-50 bg-gray-100 rounded-2xl overflow-y-auto">
           {filter}
         </div>
     </div>

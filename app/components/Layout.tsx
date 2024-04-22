@@ -11,46 +11,46 @@ import 'primeicons/primeicons.css';
 import Loading from './loading';
 import { CgSpinnerTwoAlt } from 'react-icons/cg';
 import Spinner from './pacmanLoader';
-import { PopupProvider } from '../popupContext';
+import { PopupProvider } from './context/popupContext';
 
 type LayoutProps = {
   children: ReactNode;
 };
 
-const Layout: React.FC<LayoutProps & { slug: string, filter:any }> = ({ children, slug, filter }) => {
+const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:any }> = ({ children, slug, filter , breadcrumbs}) => {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
   const { user, error, isLoading } = useUser();
-  useEffect(() => {console.log("layout", isSidebarOpen)}, [isSidebarOpen]);
+  useEffect(() => { console.log("layout", isSidebarOpen) }, [isSidebarOpen]);
   return (
+          <PopupProvider>
     <Suspense fallback={<p>Loading feed...</p>}><div className="flex flex-row h-full">
-{isLoading ? <><Spinner/></> : <>   <Sidebar slug={slug} filter={filter}/>
-      <div className={`flex flex-col h-full ${isSidebarOpen ? "w-full" : "w-full"}`}>
-      <Navbar slug={slug} ></Navbar>
-      <PopupProvider>
+      {isLoading ? <><Spinner /></> : <>   <Sidebar slug={slug} filter={filter} />
+        <div className={`flex flex-col h-full ${isSidebarOpen ? "w-full" : "w-full"}`}>
+          <Navbar slug={slug} breadcrumbs={breadcrumbs}/>
 
 
-        <main className="overflow-auto text-center items-start justify-center block bg-white p-5 h-full">
+            <main className="overflow-auto text-center items-start justify-center block bg-white p-5 h-full">
 
-    {children}
+              {children}
 
-        </main>
-      </PopupProvider>
-        <div className='w-full flex flex-row justify-between border border-t-gray-100'>
-        <div>
-          <Tag severity="success" className="m-2 ml-5" icon='pi pi-fw pi-user' >
-            <span className='font-light'> {user?.Rol as ReactNode}</span>
-          </Tag>
-        </div>
-        <div className="flex items-center text-center mr-5">
-          version 0.0.1
+            </main>
+          <div className='w-full flex flex-row justify-between border border-t-gray-100'>
+            <div>
+              <Tag severity="success" className="m-2 ml-5" icon='pi pi-fw pi-user' >
+                <span className='font-light'> {user?.Rol as ReactNode}</span>
+              </Tag>
+            </div>
+            <div className="flex items-center text-center mr-5">
+              version 0.0.1
+            </div>
           </div>
-        </div>
-      </div></>}
-      
-     
-      
+        </div></>}
+
+
+
     </div></Suspense>
-    
+          </PopupProvider>
+
   );
 };
 

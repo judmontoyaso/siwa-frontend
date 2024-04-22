@@ -28,7 +28,7 @@ export default function Home() {
         </SidebarProvider></> ) : (   <>
   {user ? (
         <SidebarProvider>
-        <Layout slug={""} filter={undefined}>
+        <Layout slug={""} filter={undefined}  breadcrumbs={""}>
           <Dashboard></Dashboard>
         </Layout>
         </SidebarProvider>

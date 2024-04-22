@@ -16,9 +16,10 @@ import { Avatar } from 'primereact/avatar';
 
 interface NavbarProps {
   slug: string;
+  breadcrumbs: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ slug }) => {
+const Navbar: React.FC<NavbarProps> = ({ slug, breadcrumbs }) => {
   const [isOpen, setIsOpen] = useState(false); 
   const { user, error, isLoading } = useUser();
   const menu = useRef(null);
@@ -53,9 +54,12 @@ const [projects, setProjects] = useState([]);
   };
   
   return (
-    <nav className="flex justify-end p-4 bg-white align-middle items-center">
+    <nav className="flex justify-around p-4 bg-white align-middle items-center pt-4">
+<>
 
-          <div className="flex bg-white items-center">
+<div className='w-3/5'>{breadcrumbs}</div></>
+<div className='flex flex-row'>
+     <div className="flex bg-white items-center">
          <ProjectSelector slug={slug} user={user}/>
     </div>
 
@@ -74,6 +78,8 @@ const [projects, setProjects] = useState([]);
         <Toast ref={toast}></Toast>
         <Menu model={items} popup ref={menu} id="popup_menu" onShow={onMenuShow} onHide={onMenuHide} className='mt-2 mr-0' />                        
       </div>
+</div>
+       
 
     </nav>
   );

@@ -451,7 +451,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
     return (
         <div className="h-full">
             <SidebarProvider>
-                <Layout slug={params.slug} filter={""} >
+                <Layout slug={params.slug} filter={""} breadcrumbs={""} >
                     <div className="w-11/12">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <Card title={

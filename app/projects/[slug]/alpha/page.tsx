@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, Suspense, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Spinner from "@/app/components/pacmanLoader";
@@ -19,8 +19,15 @@ import { Button } from "primereact/button";
 import { FiActivity, FiBarChart } from "react-icons/fi";
 import { RiExchangeFundsLine } from "react-icons/ri";
 import { Divider } from "primereact/divider";
-import { usePopup } from "@/app/popupContext";
+import { PopupProvider, usePopup } from "@/app/components/context/popupContext";
 import { Card } from "primereact/card";
+import Plotly from "plotly.js";
+import { Accordion, AccordionTab } from "primereact/accordion";
+import { useRouter } from "next/navigation";
+import { BreadCrumb } from "primereact/breadcrumb";
+import Link from "next/link";
+import { MenuItem } from "primereact/menuitem";
+import { root } from "postcss";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -28,7 +35,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [plotData, setPlotData] = useState<
         { type: string; y: any; name: string }[]
     >([]);
-        const { user } = useUser();
+    const { user } = useUser();
     const [otus, setOtus] = useState<any>();
     const [dataUnique, setDataUnique] = useState<any>();
     const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
@@ -54,42 +61,58 @@ export default function Page({ params }: { params: { slug: string } }) {
     const { accessToken, isLoading, error } = useAuth();
     const { isWindowVisible } = usePopup();
     const [layout, setLayout] = useState({});
+    const [activeIndexes, setActiveIndexes] = useState([0,1]);
+
     const [Location, setLocation] = useState<string[]>([
         "cecum",
         "feces",
         "ileum",
     ]);
     const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
-const [annova, setAnnova] = useState<any>();
-const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
+    const [annova, setAnnova] = useState<any>();
+    const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
+
+
+    const router = useRouter();
+
+    const items = [
+        {label: 'Projects'},
+        { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+      { label: 'Alpha diversity', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
+    ];
+  
+    const home = { icon: 'pi pi-home', command: () => router.push('/') };
+  
+
+
     const colors = [
         "#092538", // Azul oscuro principal
         "#34675C", // Verde azulado más claro
         "#2E4057", // Azul petróleo oscuro
-        
+
         // Amarillos y naranjas
         "#FEF282", // Amarillo claro principal
         "#F6C324", // Amarillo mostaza
         "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
         "#FFA726", // Naranja
         "#FF7043", // Naranja rojizo
-      
+
         // Grises y neutrales
         "#BFBFBF", // Gris claro
         "#8C8C8C", // Gris medio
         "#616161", // Gris oscuro
         "#424242", // Gris muy oscuro
-      
+
         // Rojos y púrpuras
         "#E53935", // Rojo
         "#D81B60", // Fucsia
         "#8E24AA", // Púrpura
-      
+
         // Verdes y azules
         "#43A047", // Verde
         "#00ACC1", // Cian
         "#1E88E5", // Azul
-      
+
         // Colores adicionales para diversidad
         "#6D4C41", // Marrón
         "#FDD835", // Amarillo dorado
@@ -104,7 +127,7 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
         samplelocation: ["#074b44", "#017fb1", "#f99b35"],
         treatment: ["#035060", "#f99b35", "#4e8e74"],
         timepoint: ["#8cdbf4", "#f7927f", "#f7e76d"],
-        
+
     };
 
     useEffect(() => {
@@ -112,21 +135,21 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
             setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
         }
     }, [theRealColorByVariable]);
-    
-    
-  // Función para aleatorizar la paleta de colores
-  const shuffleColors = () => {
-    let shuffled = colors
-      .map(value => ({ value, sort: Math.random() }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(({ value }) => value);
-    setColorOrder(shuffled);
-  };
 
-//   useEffect(() => {
-//     shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
-//   }, [otus]);
-    
+
+    // Función para aleatorizar la paleta de colores
+    const shuffleColors = () => {
+        let shuffled = colors
+            .map(value => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
+        setColorOrder(shuffled);
+    };
+
+    //   useEffect(() => {
+    //     shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos
+    //   }, [otus]);
+
     const fetchConfigFile = async (token: any) => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
@@ -185,20 +208,20 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
             const result = await response.json();
             console.log('result:', result);
             console.log(otus)
-                const locations = new Set(
-                    result.data.data.map((item: any[]) => item[1])
-                );
-                const uniqueLocations = Array.from(locations) as string[];
+            const locations = new Set(
+                result.data.data.map((item: any[]) => item[1])
+            );
+            const uniqueLocations = Array.from(locations) as string[];
 
-                setAvailableLocations(uniqueLocations);
-                console.log('locations:', uniqueLocations);
-                setDataUnique(result);
-                setColumnOptions(result.data.columns);
-                setValueOptions(result.data.data);
-            
+            setAvailableLocations(uniqueLocations);
+            console.log('locations:', uniqueLocations);
+            setDataUnique(result);
+            setColumnOptions(result.data.columns);
+            setValueOptions(result.data.data);
+
 
             setOtus(result);
-            setAnnova(result.significance)  
+            setAnnova(result.significance)
             setIsLoaded(true);
             return result;
         } catch (error) {
@@ -245,9 +268,9 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
             const result = await response.json();
             console.log('result:', result);
             console.log(otus)
-   
+
             setOtus(result);
-            setAnnova(result.significance)  
+            setAnnova(result.significance)
             setIsLoaded(true);
             return result;
         } catch (error) {
@@ -294,20 +317,20 @@ const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('sa
             const result = await response.json();
             console.log('result:', result);
             if (!otus && otus !== undefined) {
-            setOtus((prevOtus: any) => ({
-                ...prevOtus,
-                significance: result.significance
-            })); 
-        }
-  
-setAnnova(result.significance)  
+                setOtus((prevOtus: any) => ({
+                    ...prevOtus,
+                    significance: result.significance
+                }));
+            }
+
+            setAnnova(result.significance)
             setIsLoaded(true);
             return result;
         } catch (error) {
             console.error("Error al obtener projectIds:", error);
         }
     };
- 
+
 
     const fetchProjectIds = async (result: any, columnIndex: number | undefined) => {
 
@@ -337,12 +360,12 @@ setAnnova(result.significance)
                     const sampleId = item[0];
                     // Verifica si la locación actual debe ser incluida
                     if (selectedLocations.includes(location)) {
-                        
+
                         if (!acc[location]) {
                             acc[location] = {
                                 y: [], text: [], marker: { color: colorOrder[colorIndex % colorOrder.length] }
                             };
-                         
+
                         }
                         acc[location].y.push(alphaShannon);
                         acc[location].text.push(`Sample ID: ${sampleId}`);
@@ -379,79 +402,79 @@ setAnnova(result.significance)
         return colorMap[value];
     };
 
-    
+
 
     const fetchProjectIdsFiltercolor = async (colorByVariable: string) => {
-                // Usa el token pasado como argumento
-                try {
-                    let colorIndex = 0;
-                    // Filtrar los datos basados en la locación seleccionada, si se ha seleccionado una
-                    const filteredData = otus?.data.data.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
-                    const groupedData = filteredData.reduce(
-                        (
-                            acc: {
-                                [x: string]: {
-                                    y: any;
-                                    text: string[];
-                                    marker: { color: string };
-        
-                                };
-                            },
-                            item: any[]
-                        ) => {
-        
-        
-                            const location = item[1];
-                            const alphaShannon = item[2];
-        
-        
-                            const sampleId = item[0];
-                            // Verifica si la locación actual debe ser incluida
-                            if (selectedLocations.includes(location)) {
-                                
-                                if (!acc[location]) {
-                                    acc[location] = {
-                                        y: [], text: [], marker: { color: colorOrder[colorIndex % colorOrder.length] }
-                                    };
-                                 
-                                }
-                                acc[location].y.push(alphaShannon);
-                                acc[location].text.push(`Sample ID: ${sampleId}`);
-                            }
-        
-                            return acc;
-                        },
-                        {}
-                    );
-                    const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), otus?.data?.columns.indexOf(colorByVariable) || 1);
-                    setShannonData(shannonData as never[]);
-                    setPlotData(
-                        Object.keys(groupedData).map((location) => ({
-                            ...groupedData[location],
-                            type: "box",
-                            name: location,
-                            marker: { color: newScatterColors[colorIndex] }
-                        }))
-                    );
-                    console.log('shannonData:', shannonData);
-                    setIsLoaded(true);
-                    setFilterPeticion(false);
-                } catch (error) {
-                    console.error("Error al obtener projectIds:", error);
-                    setFilterPeticion(false);
-                }
+        // Usa el token pasado como argumento
+        try {
+            let colorIndex = 0;
+            // Filtrar los datos basados en la locación seleccionada, si se ha seleccionado una
+            const filteredData = otus?.data.data.filter((item: string[]) => selectedLocations.includes(item[1])) || [];
+            const groupedData = filteredData.reduce(
+                (
+                    acc: {
+                        [x: string]: {
+                            y: any;
+                            text: string[];
+                            marker: { color: string };
+
+                        };
+                    },
+                    item: any[]
+                ) => {
+
+
+                    const location = item[1];
+                    const alphaShannon = item[2];
+
+
+                    const sampleId = item[0];
+                    // Verifica si la locación actual debe ser incluida
+                    if (selectedLocations.includes(location)) {
+
+                        if (!acc[location]) {
+                            acc[location] = {
+                                y: [], text: [], marker: { color: colorOrder[colorIndex % colorOrder.length] }
+                            };
+
+                        }
+                        acc[location].y.push(alphaShannon);
+                        acc[location].text.push(`Sample ID: ${sampleId}`);
+                    }
+
+                    return acc;
+                },
+                {}
+            );
+            const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), otus?.data?.columns.indexOf(colorByVariable) || 1);
+            setShannonData(shannonData as never[]);
+            setPlotData(
+                Object.keys(groupedData).map((location) => ({
+                    ...groupedData[location],
+                    type: "box",
+                    name: location,
+                    marker: { color: newScatterColors[colorIndex] }
+                }))
+            );
+            console.log('shannonData:', shannonData);
+            setIsLoaded(true);
+            setFilterPeticion(false);
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+            setFilterPeticion(false);
+        }
     };
 
- 
 
 
-    useEffect(() => {fetchProjectIdsFiltercolor(theRealColorByVariable)}, [theRealColorByVariable, otus]);
- 
-        
-const handleGroupChange = (value: string) => {
-    setTheRealColorByVariable(value);
-  fetchProjectIdsFiltercolor(value);
-  };
+
+    useEffect(() => { fetchProjectIdsFiltercolor(theRealColorByVariable) }, [theRealColorByVariable, otus]);
+
+
+    const handleGroupChange = (value: string) => {
+        setTheRealColorByVariable(value);
+        fetchProjectIdsFiltercolor(value);
+    };
 
     const processData = (data: any[], index: number): any[] => {
         let colorIndex = 0;
@@ -472,12 +495,12 @@ const handleGroupChange = (value: string) => {
                     };
                     newScatterColors[value] = colorOrder[colorIndex % colorOrder.length]; // Actualiza la copia con el nuevo color
                     colorIndex++;
-                   
+
                 }
 
                 acc[key].y.push(item[2]); // Asumiendo que el valor de interés está en el índice 9
                 acc[key].text.push(`Sample ID: ${item[0]}`);
-            }        setScatterColors(newScatterColors);
+            } setScatterColors(newScatterColors);
             return acc;
         }, {});
 
@@ -488,16 +511,72 @@ const handleGroupChange = (value: string) => {
     const updatePlotWidth = () => {
 
         if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth -75);
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
             console.log(plotWidth)
             console.log(plotContainerRef.current)
             setLoaded(true)
 
         };
     };
+    const observedElementId = 'plofather';
+    useEffect(() => { console.log("isWindowVisible", isWindowVisible) }, [isWindowVisible]);
+    useEffect(() => {
+        // Función para actualizar el ancho de la ventana
+        const updatePlotWidth = () => {
+          if (plotContainerRef.current) {
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+            console.log(plotWidth);
+            console.log(plotContainerRef.current);
+            setLoaded(true);
+          }
+        };
+      
+        const plofatherElement = document.getElementById('plofather');
+        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
+      
+        // Añade el event listener cuando el componente se monta
+        window.addEventListener('resize', updatePlotWidth);
+        console.log('plotWidth:', plotWidth);
+        updatePlotWidth();
+      
+        // Limpieza del event listener cuando el componente se desmonte
+        return () => {
+          window.removeEventListener('resize', updatePlotWidth);
+        };
+      }, [window.innerWidth, isWindowVisible, document?.getElementById('plofather')?.offsetWidth]);
 
-    useEffect(() => {console.log("isWindowVisible", isWindowVisible)}, [isWindowVisible]);
 
+      useEffect(() => {
+        const interval = setInterval(() => {
+          const element = document.getElementById(observedElementId);
+          if (element) {
+            // Función para actualizar el ancho del elemento observado
+            const updatePlotWidth = () => {
+              const newWidth = element.offsetWidth - 75;
+              setPlotWidth(newWidth);
+              console.log('Actualizado plotWidth:', newWidth);
+              setLoaded(true);
+            };
+    
+            // Configura el ResizeObserver una vez que el elemento está disponible
+            const resizeObserver = new ResizeObserver(entries => {
+              for (let entry of entries) {
+                updatePlotWidth();
+              }
+            });
+    
+            resizeObserver.observe(element);
+    
+            // Limpieza del intervalo y del observer
+            clearInterval(interval);
+            return () => {
+              resizeObserver.disconnect();
+            };
+          }
+        }, 100); // Intervalo de verificación cada 100 ms
+    
+        return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
+      }, [observedElementId]); 
 
     useEffect(() => {
         updatePlotWidth(); // Establece el ancho inicial
@@ -505,7 +584,6 @@ const handleGroupChange = (value: string) => {
         console.log(isWindowVisible)
     }, [otus, isWindowVisible]);
 
-    window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
 
     // useEffect(() => {
     //     updatePlotWidth(); // Establece el ancho inicial
@@ -646,150 +724,156 @@ const handleGroupChange = (value: string) => {
         }
     }, [availableLocations]); // Dependencia del efecto
 
-
+    const onTabChange = (e : any) => {
+        setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
+    };
     const filter = (
         <div className={`flex flex-col w-full  rounded-lg  dark:bg-gray-800 `}>
+   <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange}>    
+      <AccordionTab header="Color by">
+    
 
-            <Card title={"Filter by"}>
-            <div className={`tab-content `}>
-                <div className="flex flex-col items-left mt-2 mb-4">
-                    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location</h3>
-                    <Dropdown
- value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
-                         options={options}
-                        onChange={(e) => handleLocationChange(e.value)}
-                        disabled={availableLocations.length === 1}
-                    />  
+                <div>
+                    <select id="colorby" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        value={theRealColorByVariable}
+                        onChange={(e) => handleGroupChange(e.target.value)}
+
+                    >
+                        <option selected value="samplelocation">Sample Location</option>
+                        <option selected value="treatment">Treatment</option>
+
+                        {colorByOptions.map((location) => (
+                            <option key={location} value={location}>
+                                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+             </AccordionTab>
+                <AccordionTab header="Filter by">
+           
+                <div className={`tab-content `}>
+                    <div className="flex flex-col items-left mt-2 mb-4">
+                        <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location</h3>
+                        <Dropdown
+                            value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
+                            options={options}
+                            onChange={(e) => handleLocationChange(e.value)}
+                            disabled={availableLocations.length === 1}
+                        />
+
+                    </div>
+
 
                 </div>
 
+                <div className=" mt-8 mb-4">
 
-            </div>
-        
-            <div className=" mt-8 mb-4">
+                    <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-white">Select a group to generate data</h3>
+                    <ul className="w-full flex flex-wrap items-center content-center justify-around ">
+                        <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
+                            <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
+                                onChange={handleLocationChangeColorby}
+                                disabled={isColorByDisabled} />
+                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                                <div className="block">
+                                    <div className="w-full text-center flex justify-center">Sample location</div>
+                                </div>
 
-                <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-white">Select a group to generate data</h3>
-                <ul className="w-full flex flex-wrap items-center content-center justify-around ">
-                    <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                        <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
-                            onChange={handleLocationChangeColorby}
-                            disabled={isColorByDisabled} />
-                        <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                            <div className="block">
-                                <div className="w-full text-center flex justify-center">Sample location</div>
-                            </div>
+                            </label>
+                        </li>
+                        <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
+                            <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
+                                onChange={handleLocationChangeColorby}
+                                disabled={isColorByDisabled} />
+                            <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                                <div className="block">
+                                    <div className="w-full">Treatment</div>
+                                </div>
 
-                        </label>
-                    </li>
-                    <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                        <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
-                            onChange={handleLocationChangeColorby}
-                            disabled={isColorByDisabled} />
-                        <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                            <div className="block">
-                                <div className="w-full">Treatment</div>
-                            </div>
+                            </label>
+                        </li>
+                        {
+                            columnOptions?.includes("age" as never) && (
+                                <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
+                                    <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
+                                        onChange={handleLocationChangeColorby} />
+                                    <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                                        <div className="block">
+                                            <div className="w-full">Age</div>
+                                        </div>
+                                    </label>
+                                </li>
+                            )
+                        }
 
-                        </label>
-                    </li>
-                    {
-                        columnOptions?.includes("age" as never) && (
-                            <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                                <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
-                                    onChange={handleLocationChangeColorby} />
-                                <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
+                        {colorByOptions.map((option, index) => (
+                            <li key={index} className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
+                                <input
+                                    type="radio"
+                                    id={option}
+                                    name={option}
+                                    className="hidden peer"
+                                    value={option}
+                                    checked={isColorByDisabled ? false : selectedColumn === option}
+                                    onChange={handleLocationChangeColorby}
+                                    disabled={isColorByDisabled}
+                                />
+                                <label
+                                    htmlFor={option}
+                                    className={`flex items-center justify-center ${isColorByDisabled
+                                        ? 'cursor-not-allowed'
+                                        : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
+                                        } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}   dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                                >
                                     <div className="block">
-                                        <div className="w-full">Age</div>
+                                        <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
                                     </div>
                                 </label>
                             </li>
-                        )
-                    }
+                        ))}
+                    </ul>
+                </div>
 
-                    {colorByOptions.map((option, index) => (
-                        <li key={index} className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                            <input
-                                type="radio"
-                                id={option}
-                                name={option}
-                                className="hidden peer"
-                                value={option}
-                                checked={isColorByDisabled ? false : selectedColumn === option}
-                                onChange={handleLocationChangeColorby}
-                                disabled={isColorByDisabled}
-                            />
-                            <label
-                                htmlFor={option}
-                                className={`flex items-center justify-center ${isColorByDisabled
-                                    ? 'cursor-not-allowed'
-                                    : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                    } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}   dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                            >
-                                <div className="block">
-                                    <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-                                </div>
-                            </label>
-                        </li>
-                    ))}
-                </ul>
-            </div>
 
-         
-            <>
-           
-            <div className=" mt-6 mb-4">
+                <>
 
-                {valueChecks}
-            </div>
-            </>
-                
+                    <div className=" mt-6 mb-4">
 
-<Divider />
-      <div className="flex w-full items-center margin-0 justify-center my-4">
-          <Button
-            onClick={applyFilters}
-            loading={filterPeticion}
-            iconPos="right"
-            icon="pi pi-check-square"
-            loadingIcon="pi pi-spin pi-spinner" 
-            className=" max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Select Data"
-          />
-        </div>
+                        {valueChecks}
+                    </div>
+                </>
 
-            </Card>
-         
 
-        <Divider />
-        <Card title={"Color by"}>
+                <Divider />
+                <div className="flex w-full items-center margin-0 justify-center my-4">
+                    <Button
+                        onClick={applyFilters}
+                        loading={filterPeticion}
+                        iconPos="right"
+                        icon="pi pi-check-square"
+                        loadingIcon="pi pi-spin pi-spinner"
+                        className=" max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+                        label="Select Data"
+                    />
+                </div>
 
-        <div> 
-          <select id="colorby" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={theRealColorByVariable}
-            onChange={(e) => handleGroupChange(e.target.value)}
       
-          >
-             <option selected value="samplelocation">Sample Location</option>
-            <option selected value="treatment">Treatment</option>
+
           
-            {colorByOptions.map((location) => (
-              <option key={location} value={location}>
-                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        </Card>
+          
+            </AccordionTab>
+            </Accordion>
         </div>
     );
 
 
 
-useEffect(() => {
-    
-    
-    setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
-}, [params.slug, shannonData]);
+    useEffect(() => {
+
+
+        setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
+    }, [params.slug, shannonData]);
 
     const title = (
         <div>
@@ -853,29 +937,29 @@ useEffect(() => {
     };
 
 
-//     useEffect(() => {
+    //     useEffect(() => {
 
-//         const significanceEntries = Object.entries(otus?.significance || {});
+    //         const significanceEntries = Object.entries(otus?.significance || {});
 
-//         const annotations = significanceEntries.map(([locationValue, significance]) => {
-//             // Calcula la posición 'x' para la ubicación actual basándose en 'selectedLocations'
-//             const xPosition = selectedLocations.indexOf(locationValue);
+    //         const annotations = significanceEntries.map(([locationValue, significance]) => {
+    //             // Calcula la posición 'x' para la ubicación actual basándose en 'selectedLocations'
+    //             const xPosition = selectedLocations.indexOf(locationValue);
 
-//             return {
-//                 x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
-//                 y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 4),
-//                 text: significance, // Convertir 'significance' a cadena
-//                 xref: 'x',
-//                 yref: 'y',
-//                 showarrow: false,
-//                 ax: 0,
-//                 ay: -40,
-//                 font: { size: 18 }
-//             };
-//         });
-// console.log(annotations)
-//         setAnnotations(annotations as never[]);
-//     }, [graphType, otus?.significance, theRealColorByVariable]);
+    //             return {
+    //                 x: locationValue, // Usar 'xPosition' para reflejar la posición calculada
+    //                 y: maxYValueForLocation(locationValue, otus?.data) + (graphType === "boxplot" ? 0.5 : 4),
+    //                 text: significance, // Convertir 'significance' a cadena
+    //                 xref: 'x',
+    //                 yref: 'y',
+    //                 showarrow: false,
+    //                 ax: 0,
+    //                 ay: -40,
+    //                 font: { size: 18 }
+    //             };
+    //         });
+    // console.log(annotations)
+    //         setAnnotations(annotations as never[]);
+    //     }, [graphType, otus?.significance, theRealColorByVariable]);
 
     const calculateMaxAlphaShannon = () => {
         if (!otus?.data) return 0;
@@ -915,16 +999,16 @@ useEffect(() => {
         </div>
     </div>)
 
- function calculateAnnotations() {
-    console.log(otus)
+    function calculateAnnotations() {
+        console.log(otus)
         const significanceEntries = Object.entries(annova || {});
         console.log(significanceEntries)
         const annotations = significanceEntries.map(([locationValue, significance]) => {
             const xPosition = selectedLocations.indexOf(locationValue);
             return {
-                x: locationValue, 
+                x: locationValue,
                 y: 11.2 + (graphType === "boxplot" ? 0.5 : 4),
-                text: significance, 
+                text: significance,
                 xref: 'x',
                 yref: 'y',
                 showarrow: false,
@@ -935,73 +1019,77 @@ useEffect(() => {
         });
 
         // Aplicar el filtro de valores únicos
-        return annotations 
+        return annotations
     }
 
-    useEffect(() => {console.log("annotations", annotations)}, [annotations]);
+    useEffect(() => { console.log("annotations", annotations) }, [annotations]);
 
 
     useEffect(() => {
         // Asegúrate de que 'fetchAnnova' y 'calculateAnnotations' estén definidas correctamente.
         // 'fetchAnnova' debe ser una función que retorne una promesa y 'calculateAnnotations' debe ser capaz de calcular las anotaciones basadas en los datos obtenidos.
-        
+
         const fetchAndCalculateAnnotations = async () => {
             try {
                 // Obtenemos los datos desde fetchAnnova, que se espera que retorne una promesa con los datos necesarios para calcular anotaciones.
                 const annovaData = await fetchAnnova(accessToken);
                 console.log(annovaData)
-             
-              
-               
-             
+
+
+
+
             } catch (error) {
                 console.error("Failed to fetch Annova data:", error);
             }
         };
-    
+
         // Invocamos la función asincrónica dentro de useEffect.
         fetchAndCalculateAnnotations();
-    }, [theRealColorByVariable, accessToken]); 
+    }, [theRealColorByVariable, accessToken]);
 
-    useEffect(() => { const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
-    console.log(newAnnotations)
-     setAnnotations(newAnnotations as never[]);      }, [annova]);
-    
-    
-    
-    
-    
-    
+    useEffect(() => {
+        const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
+        console.log(newAnnotations)
+        setAnnotations(newAnnotations as never[]);
+    }, [annova]);
+
+
+
+
+
+
     // Dependencias incluyen las variables que puedan afectar la petición de datos.
-     // Solo reacciona a cambios en 'theRealColorByVariable'
+    // Solo reacciona a cambios en 'theRealColorByVariable'
 
-// useEffect(() => {
-//     const newLayout = {
-//         width: plotWidth || undefined,
-//         height: 600,
-//         showlegend: true,
-//         legend: {
-//             orientation: "h",
-//             x: 0.5,
-//             xanchor: "center",
-//             y: 1.1,
-//             yanchor: "top",   
-//         },
-//         xaxis: {
-//             showticklabels: false
-//         },
-//         // annotations: annotations, // Usar 'annotations' del estado
-//         yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
-//         margin: {
-//             l: 20, r: 10,
-//             t: 60,
-//             b: 50
-//         }
-//     };
-//     setLayout(newLayout);
-// }, [isWindowVisible, graphType, plotWidth, shannonData, annotations]); // 'annotations' añadido aquí para re-renderizar cuando cambian
+    // useEffect(() => {
+    //     const newLayout = {
+    //         width: plotWidth || undefined,
+    //         height: 600,
+    //         showlegend: true,
+    //         legend: {
+    //             orientation: "h",
+    //             x: 0.5,
+    //             xanchor: "center",
+    //             y: 1.1,
+    //             yanchor: "top",   
+    //         },
+    //         xaxis: {
+    //             showticklabels: false
+    //         },
+    //         // annotations: annotations, // Usar 'annotations' del estado
+    //         yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
+    //         margin: {
+    //             l: 20, r: 10,
+    //             t: 60,
+    //             b: 50
+    //         }
+    //     };
+    //     setLayout(newLayout);
+    // }, [isWindowVisible, graphType, plotWidth, shannonData, annotations]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
-useEffect(() => {
+
+
+    useEffect(() => {
 
 
         // Calcula el máximo de 'alphashannon'
@@ -1009,73 +1097,83 @@ useEffect(() => {
         // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
         const yAxisRange = [0, 15];
         console.log('Max alpha shannon:', yAxisRange);
-    const newLayout = {
-        width: plotWidth || undefined,
-        height: 600,
-        showlegend: true,
-        legend: {
-            orientation: "h",
-            x: 0.5,
-            xanchor: "center",
-            y: 1.1,
-            yanchor: "top",   
-        },
-        xaxis: {
-            showticklabels: false
-        },
-        annotations: annotations, // Usar 'annotations' del estado
-        yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
-        margin: {
-            l: 20, r: 10,
-            t: 60,
-            b: 50
-        }
-    };
-    setLayout(newLayout);
-    
-}, [otus, annotations]); // 'annotations' añadido aquí para re-renderizar cuando cambian
+        const newLayout = {
+            width: plotWidth || undefined,
+
+            resposive: true,
+            showlegend: true,
+            legend: {
+                orientation: "h",
+                x: 0.5,
+                xanchor: "center",
+                y: 1.1,
+                yanchor: "top",
+            },
+            xaxis: {
+                showticklabels: false
+            },
+            annotations: annotations, // Usar 'annotations' del estado
+            yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
+            margin: {
+                l: 20, r: 10,
+                t: 60,
+                b: 50
+            }
+        };
+        setLayout(newLayout);
+
+    }, [otus, annotations, window.innerWidth, document?.getElementById('plofather')?.offsetWidth]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         <div className="flex flex-row w-full items-center">
 
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
-                    <> 
-                    <div className="flex w-full justify-end">
-                      <div className="flex items-center">
+                    <>
+                        <div className="flex w-full justify-end">
+                            <div className="flex items-center">
 
-<Button
-    className=" p-button-rounded p-button-outlined p-button-sm"
-    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
-    data-tip data-for="botoninterpreteTip" id="botoninterpreteTip" 
-    ><RiExchangeFundsLine className="text-lg mr-1"/> Change to {graphType === "boxplot" ? "violin" : "boxplot"} view  
-  </Button>
-               </div>   
-                    </div>
-             
+                                <Button
+                                    className=" p-button-rounded p-button-outlined p-button-sm"
+                                    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
+                                    data-tip data-for="botoninterpreteTip" id="botoninterpreteTip"
+                                ><RiExchangeFundsLine className="text-lg mr-1" /> Change to {graphType === "boxplot" ? "violin" : "boxplot"} view
+                                </Button>
+                            </div>
+                        </div>
 
 
-               <Plot
-    data={
-        Object.values(shannonData.filter(entry => entry.name !== "null"))
-            .map((item, index) => ({
-                ...(item as object),
-                type: graphType === "boxplot" ? "box" : "violin",
-                marker: {
-                    color: colorOrder[index % colorOrder.length],
-                    size: 4, // Ajusta el tamaño del marcador según sea necesario para mejorar la legibilidad
-                },
-                boxpoints: graphType === "boxplot" ? "all" : undefined,
-                points: graphType !== "boxplot" ? "all" : undefined,
-                jitter: 0.3,  // Controla cuánto se dispersan los puntos en la dirección horizontal; ajusta según necesidad
-                pointpos: 0,  // Coloca los puntos directamente en el centro de las cajas
-            } ),(   
-            console.log(scatterColors)  ,
-            console.log(colorOrder)))
-    }
-    layout={
-        layout    }
-/>
+                        <div id="plot">
+                            <Plot
+                                className="alpha"
+                                data={
+                                    Object.values(shannonData.filter(entry => entry.name !== "null"))
+                                        .map((item, index) => ({
+                                            ...(item as object),
+                                            type: graphType === "boxplot" ? "box" : "violin",
+                                            marker: {
+                                                color: colorOrder[index % colorOrder.length],
+                                                size: 4, // Ajusta el tamaño del marcador según sea necesario para mejorar la legibilidad
+                                            },
+                                            boxpoints: graphType === "boxplot" ? "all" : undefined,
+                                            points: graphType !== "boxplot" ? "all" : undefined,
+                                            jitter: 0.3,  // Controla cuánto se dispersan los puntos en la dirección horizontal; ajusta según necesidad
+                                            pointpos: 0,  // Coloca los puntos directamente en el centro de las cajas
+                                        }), (
+                                            console.log(scatterColors),
+                                            console.log(colorOrder)))
+                                }
+                                divId="plot"
+
+                                layout={
+                                    layout}
+                                config={{
+                                    responsive: true // Configuración para hacer el gráfico responsivo
+                                }} />
+                        </div>
+
+
+
 
                     </>
 
@@ -1089,89 +1187,94 @@ useEffect(() => {
 
     return (
         <div className="w-full h-full">
-             <Suspense fallback={<p>Loading feed...</p>}>
-                 <SidebarProvider>
-                <Layout slug={params.slug} filter={""} >
 
-                    {isLoaded ? (
-                        <div className="flex flex-col w-11/12  mx-auto">
+            <Suspense fallback={<p>Loading feed...</p>}>
+                <SidebarProvider>
+                    <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} />}>
+                    
+                        {isLoaded ? (
+                            <div className="flex flex-col w-11/12  mx-auto">
 
-                            <div className="flex flex-row w-full text-center justify-center items-center">
-                                <h1 className="text-3xl my-5 mx-2">{configFile?.alphadiversity?.title ?? "Alpha Diversidad"}</h1>
-                                <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
-                                <Tooltip
-                                    style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                                    anchorSelect="#interpreteTip">
-                                    <div className={`prose single-column w-96 z-50`}>
-                                        {configFile?.alphadiversity?.interpretation ? (
-                                            <p className="text-gray-700 text-justify text-xl m-3">
-                                                {configFile.alphadiversity.interpretation}
-                                            </p>
-                                        ) : (""
-                                        )}
+                                <div className="flex flex-row w-full text-center justify-center items-center">
+                                    <h1 className="text-3xl my-5 mx-2">{configFile?.alphadiversity?.title ?? "Alpha Diversidad"}</h1>
+                                    <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
+                                    <Tooltip
+                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+                                        anchorSelect="#interpreteTip">
+                                        <div className={`prose single-column w-96 z-50`}>
+                                            {configFile?.alphadiversity?.interpretation ? (
+                                                <p className="text-gray-700 text-justify text-xl m-3">
+                                                    {configFile.alphadiversity.interpretation}
+                                                </p>
+                                            ) : (""
+                                            )}
+                                        </div>
+                                    </Tooltip>
+                                </div>    <div className="px-6 py-8">
+                                    <div className={`prose ${configFile?.alphadiversity?.text ? 'single-column' : 'column-text'}`}>
+                                        <p className="text-gray-700 text-justify text-xl">
+                                            {configFile?.alphadiversity?.text}
+                                        </p>
                                     </div>
-                                </Tooltip>
-                            </div>    <div className="px-6 py-8">
-                                <div className={`prose ${configFile?.alphadiversity?.text ? 'single-column' : 'column-text'}`}>
-                                    <p className="text-gray-700 text-justify text-xl">
-                                        {configFile?.alphadiversity?.text}
-                                    </p>
+
                                 </div>
 
-                            </div>
+                                <div className="flex">
+                                    <GraphicCard filter={filter} legend={""} title={title}>
+                                        {shannonData.length > 0 ? (
+                                            <> <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
+                                                      <div className="w-full flex flex-row ">
+                           
+                                    <div className="px-6 py-8" >
+                                        <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                                            {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
+                                                if (key === "samplelocation" && actualcolumn === "samplelocation" && typeof value === 'string') {
 
-                            <div className="flex">
-                                <GraphicCard filter={filter} legend={""} title={title}>
-                                    {shannonData.length > 0 ? (
-                                        <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
-                                    ) : (
-                                        <SkeletonCard width={"500px"} height={"270px"} />
-                                    )}
-                                </GraphicCard>
-                            </div>
-                            <div className="w-full flex flex-row ">
-                                <div className="w-1/4"></div>
-                                <div className="px-6 py-8 w-4/5" >
-                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                        {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                            if (key === "samplelocation" && actualcolumn === "samplelocation" && typeof value === 'string') {
-
-                                                return (
-                                                    <div key={key} className="col-span-2">
-                                                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                    </div>
-                                                );
-                                            }
-                                            return null;  // No renderizar nada si no se cumplen las condiciones
-                                        })}
-                                    </div>
-                                    <div className="prose flex flex-row flex-wrap">
-                                        {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                            if (key === actualcolumn && key !== "samplelocation") {
-                                                if (typeof value === 'string' && value !== null) {
-
-
-                                                    return (<div key={key} className="col-span-2">
-                                                        <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                    </div>);
+                                                    return (
+                                                        <div key={key} className="col-span-2">
+                                                            <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                        </div>
+                                                    );
                                                 }
-                                            }
-                                            return null;
-                                        })}
+                                                return null;  // No renderizar nada si no se cumplen las condiciones
+                                            })}
+                                        </div>
+                                        <div className="prose flex flex-row flex-wrap">
+                                            {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
+                                                if (key === actualcolumn && key !== "samplelocation") {
+                                                    if (typeof value === 'string' && value !== null) {
+
+
+                                                        return (<div key={key} className="col-span-2">
+                                                            <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
+                                                        </div>);
+                                                    }
+                                                }
+                                                return null;
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
+                                            </>
+                                           
+                                            
+                                        ) : (
+                                            <SkeletonCard width={"500px"} height={"270px"} />
+                                        )}
+                                    </GraphicCard>
+                                </div>
+                      
+
                             </div>
 
-                        </div>
+                        ) : (
+                            <div className="w-full h-full"><Spinner /></div>
+                        )}
+                        <ToastContainer />
+                    </Layout>
+                </SidebarProvider>
+            </Suspense>
 
-                    ) : (
-                        <div className="w-full h-full"><Spinner /></div>
-                    )}
-                    <ToastContainer />
-                </Layout>
-            </SidebarProvider>
-             </Suspense>
-           
         </div>
     );
 }

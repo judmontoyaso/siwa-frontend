@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Password } from 'primereact/password';
 import TitleEffect from './tittle';
 import { FaCaretRight } from "react-icons/fa";
+import { Ripple } from 'primereact/ripple';
 
 const Login = () => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -24,7 +25,7 @@ const Login = () => {
                         <div className='w-full  bg-siwa-blue h-full flex items-center justify-center bg-opacity-95 rounded-br-3xl'>
                             <div className="flex flex-col items-center w-full h-full ">
                               
-                                    <div className="animate-slide-down w-full m-5 ml-10 h-1/6">
+                                    <div className="animate-slide-down w-10/12 m-5 ml-10 h-1/6 top-9 align-middle flex items-end">
                                         <Image src={logoSiwa} alt="Logo SIWA" width={150} />
                                     </div>
 
@@ -42,18 +43,18 @@ your animals
 </div>
                                 
                                 
-                                    <p className='m-2 mt-5 font-light'>
+                                    <p className='m-2 mt-5 font-light text-xl'>
                                         Boost the performance of your farm through an <br></br>
                                          understanding of your specific microbial patterns.
                                     </p>
-                                    <p className='m-2 mt-20'>
+                                    <p className='m-2 mt-10'>
                                         <Link href="https://siwa.bio/" target='_blank'>
-                                    <button className="hover:bg-yellow-500 bg-yellow-400 text-white font-bold py-2 px-4 rounded inline-flex items-center">
-          Know More About SIWA  <FaCaretRight className="mr-2"/>
-           
-        </button>
-        </Link>
-                                    
+                                            <button className="p-ripple hover:animate-pulse bg-siwa-yellow text-siwa-blue font-bold py-2 px-4 rounded inline-flex items-center">
+                                            <span style={{ color: 'white', textShadow: '0.5px 0.5px 1px gray, -0.5px -0.5px 1px gray, 0.5px -0.5px 1px gray, -0.5px 0.5px 1px gray' }}>Know more about  SIWA</span>
+ {/* <FaCaretRight  className="mr-2 text-lg text-white" /> */}
+                                        
+                                            </button>
+                                        </Link>
                                     </p>
                                 </div>
                                 {/* <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="button">Iniciar Sesión</button> */}
@@ -70,10 +71,10 @@ your animals
                     </div>
 
 
-                    <div className="flex items-center justify-center dark:bg-gray-800 mt-5">
+                    <div className="flex items-center justify-center mt-5">
                         <Link href="/api/auth/login">
-                            <button className="px-4 py-2 border flex border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:shadow transition duration-150">
-                                <Image className="w-6 h-6 mr-2" src="https://www.svgrepo.com/show/475656/google-color.svg" loading="lazy" alt="google logo" width={6} height={6} />
+                            <button className="animate-pulse duration-1000 text-2xl px-4 py-2 border flex border-slate-200 dark:border-slate-700 rounded-lg  dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:shadow transition bg-siwa-blue text-white">
+                                <Image className="w-6 h-6 mr-2 mt-1" src="https://www.svgrepo.com/show/475656/google-color.svg" loading="lazy" alt="google logo" width={8} height={8} />
                                 <span>Login with Google</span>
                             </button>
                         </Link>

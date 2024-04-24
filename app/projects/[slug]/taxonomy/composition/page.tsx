@@ -798,27 +798,30 @@ setFilterPeticion(true);
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
+    const dropdownOptionsColorby = [
+        { label: 'Sample Location', value: 'samplelocation' }, // Opción predeterminada
+        ...colorByOptions 
+          ?.filter(option => (columnOptions as string[])?.includes(option)) // Filtra y mapea según tus criterios
+          .map(option => ({
+              label: option.charAt(0).toUpperCase() + option.replace('_', ' ').slice(1),
+              value: option
+          }))
+      ];
+
     const filter = (
         <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
- <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange}>    
-      <AccordionTab header="Color by">
+   <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
+      <AccordionTab header="Group by" className="mb-4">
     
 <div>
-        <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={theRealColorByVariable}
-            onChange={(e) => setTheRealColorByVariable(e.target.value)}
-      
-          >
-             <option selected value="samplelocation">Sample Location</option>
-          
-             {colorByOptions?.map((option, index) => {
-if ((columnOptions as string[])?.includes(option)) {
-    return (
-              <option key={option} value={option}>
-                {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
-              </option>
-            )}})}
-          </select>      
+<Dropdown
+      value={theRealColorByVariable}
+      options={dropdownOptionsColorby}
+      onChange={(e) => setTheRealColorByVariable(e.target.value)}
+      optionLabel="label"
+      className="w-full"
+      />
+           
         </div>
 
         </AccordionTab>
@@ -845,7 +848,7 @@ if ((columnOptions as string[])?.includes(option)) {
 
     <h3  className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">
         <div className="flex flex-row mt-2">
-    Top <AiOutlineInfoCircle className="topInputText ml-2  text-lg cursor-pointer text-gray-500 p-text-secondary p-overlay-badge" data-pr-tooltip="This graph displays the most abundant taxa for each rank"
+    Top <AiOutlineInfoCircle className="topInputText ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" data-pr-tooltip="This graph displays the most abundant taxa for each rank"
     data-pr-position="right"
     data-pr-at="right+5 top"
     data-pr-my="left center-2"/>
@@ -889,8 +892,19 @@ if ((columnOptions as string[])?.includes(option)) {
 
      
                 <div className="mt-4 mb-4">
-                <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Group By</h3>
 
+               
+      <h3 className="text-lg font-semibold text-gray-700 dark:text-white my-tooltip whitespace-pre">
+        Filtering <span>options <AiOutlineInfoCircle className="text-sm mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
+      </h3>     
+                                    <Tooltip
+                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+                                        anchorSelect="#group">
+                                        <div className={`prose single-column w-28 z-50`}>
+                                            <p>Select options to include in the plot.</p>
+                                         
+                                        </div>
+                                    </Tooltip>
                 <ul className="w-full flex flex-wrap items-center content-center justify-around ">
 
                         <li className="w-48 m-2 mb-1 p-1">
@@ -965,7 +979,7 @@ if ((columnOptions as string[])?.includes(option)) {
             icon="pi pi-check-square"
             loadingIcon="pi pi-spin pi-spinner" 
             className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Select Data"
+            label="Update"
           />
         </div>
         </AccordionTab>
@@ -1026,10 +1040,10 @@ useEffect(() => {
     </p>
 </div>
 
-<div className="mt-5">
+<div className="mt-8">
             <Accordion activeIndex={activeIndex}>
               
-                <AccordionTab header={<>  Hierarchical visualization<i className="pi pi-info-circle ml-2"></i></>}>
+                <AccordionTab header={<>  Hierarchical visualization</>}>
 
                 <div className="flex flex-row flex-wrap "><div className="w-full xl:w-1/2">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
                         This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
@@ -1063,7 +1077,7 @@ useEffect(() => {
                             <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}>
                                 {plotData.length > 0 ? (
 
-                                    <div>
+                                    <div className="w-full ml-4">
                                         <MyPlotComponent plotData={plotData} scatterColors={scatterColors} />
  <div className="w-full flex flex-row ">
               

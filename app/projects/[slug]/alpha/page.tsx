@@ -78,7 +78,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const items = [
         { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
         { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
-      { label: 'Alpha diversity', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
+      { label: 'Richness', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
     ];
   
     const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
@@ -727,27 +727,34 @@ export default function Page({ params }: { params: { slug: string } }) {
     const onTabChange = (e : any) => {
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
+
+    const dropdownOptionsColorby = [
+        { label: 'Sample Location', value: 'samplelocation' },
+        {label:'Treatment', value:'treatment'}, // Opción predeterminada
+        ...colorByOptions
+          ?.filter(option => columnOptions?.includes(option)) // Filtra y mapea según tus criterios
+          .map(option => ({
+              label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
+              value: option
+          }))
+      ];
+
     const filter = (
         <div className={`flex flex-col w-full  rounded-lg  dark:bg-gray-800 `}>
-   <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange}>    
+   <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
       <AccordionTab header="Color by">
     
 
                 <div>
-                    <select id="colorby" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        value={theRealColorByVariable}
-                        onChange={(e) => handleGroupChange(e.target.value)}
 
-                    >
-                        <option selected value="samplelocation">Sample Location</option>
-                        <option selected value="treatment">Treatment</option>
-
-                        {colorByOptions.map((location) => (
-                            <option key={location} value={location}>
-                                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
-                            </option>
-                        ))}
-                    </select>
+                <Dropdown
+      value={theRealColorByVariable}
+      options={dropdownOptionsColorby}
+      onChange={(e) => handleGroupChange(e.target.value)}
+      optionLabel="label"
+      className="w-full"
+      />
+          
                 </div>
              </AccordionTab>
                 <AccordionTab header="Filter by">
@@ -769,8 +776,20 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                 <div className=" mt-8 mb-4">
 
-                    <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-white">Select a group to generate data</h3>
-                    <ul className="w-full flex flex-wrap items-center content-center justify-around ">
+      <h3 className="text-lg font-semibold text-gray-700 dark:text-white my-tooltip whitespace-pre">
+        Filtering <span>options <AiOutlineInfoCircle className="text-sm mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
+      </h3>     
+                                    <Tooltip
+                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+                                        anchorSelect="#group">
+                                        <div className={`prose single-column w-28 z-50`}>
+                                            <p>Select options to include in the plot.</p>
+                                         
+                                        </div>
+                                    </Tooltip>
+      
+      
+                     <ul className="w-full flex flex-wrap items-center content-center justify-around mt-2 ">
                         <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
                             <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
                                 onChange={handleLocationChangeColorby}
@@ -854,7 +873,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                         icon="pi pi-check-square"
                         loadingIcon="pi pi-spin pi-spinner"
                         className=" max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-                        label="Select Data"
+                        label="Update"
                     />
                 </div>
 
@@ -909,7 +928,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         </div>
     );
 
-    const [annotations, setAnnotations] = useState([]);
+    const [annotations, setAnnotations] = useState<any[]>([]);
 
     const maxYValueForLocation = (locationValue: string, data: any) => {
         // Asegurarse de que 'data' y 'data.columns' existan
@@ -1008,7 +1027,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             return {
                 x: locationValue,
                 y: 11.2 + (graphType === "boxplot" ? 0.5 : 4),
-                text: significance,
+                text: significance + "*",
                 xref: 'x',
                 yref: 'y',
                 showarrow: false,
@@ -1091,7 +1110,21 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     useEffect(() => {
 
-
+        if (annotations.length > 0) {
+            annotations.push({
+                text: '* Each letter indicates whether there are statistically significant differences between each group.',
+                xref: 'paper',
+                yref: 'paper',
+                x: 0,
+                xanchor: 'left',
+                y: -0.1, // Ajusta esta posición según necesites
+                yanchor: 'top',
+                showarrow: false,
+                font: {
+                    size: 12
+                }
+            });
+        }
         // Calcula el máximo de 'alphashannon'
         const maxYValueForLocationShannon = calculateMaxAlphaShannon();
         // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
@@ -1196,7 +1229,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                             <div className="flex flex-col w-11/12  mx-auto">
 
                                 <div className="flex flex-row w-full text-center justify-center items-center">
-                                    <h1 className="text-3xl my-5 mx-2">{configFile?.alphadiversity?.title ?? "Alpha Diversidad"}</h1>
+                                    <h1 className="text-3xl my-5 mx-2"> Richness</h1>
                                     <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
                                     <Tooltip
                                         style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}

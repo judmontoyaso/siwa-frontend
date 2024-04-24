@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useEffect, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { Image } from 'primereact/image';
 import imageload from '@/public/imagewait.png';
@@ -8,6 +8,13 @@ import imageload from '@/public/imagewait.png';
 import React from 'react';
 import Layout from "@/app/components/Layout";
 import { useSidebar } from "@/app/components/context/sidebarContext";
+import Link from "next/link";
+import { Card } from "primereact/card";
+import Plot from "react-plotly.js";
+import { Message } from "primereact/message";
+import { useRouter } from "next/navigation";
+import { BreadCrumb } from "primereact/breadcrumb";
+import { MenuItem } from "primereact/menuitem";
 
 const Page = ({ params }: { params: { slug: string } }) => {
   const filterContent = ""; // Replace with the actual implementation of 'filterContent'
@@ -17,6 +24,16 @@ const Page = ({ params }: { params: { slug: string } }) => {
   const [configFile, setConfigFile] = useState({} as any);
 
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
+
+  const router = useRouter();
+
+  const items = [
+    { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
+    { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+  ];
+
+  const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
+
 
   const fetchToken = async () => {
     try {
@@ -59,13 +76,131 @@ const Page = ({ params }: { params: { slug: string } }) => {
     , [params.slug]);
 
 
+    const PlotPreview = ({ data, layout, style }: { data: any, layout: any, style: any }) => {
+      return (
+          <Plot
+              data={data}
+              layout={{ ...layout, autosize: true }}
+              style={style}
+              useResizeHandler={true}
+            config={{
+                staticPlot: true, // Desactiva todas las interacciones
+                displayModeBar: false // Oculta la barra de herramientas
+            }}
+          />
+      );
+    };
+
+    const plotsData = [
+      {
+          title: 'Alpha Diversity',
+          data: [{
+              y: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+              type: 'box',
+              marker: {
+                color: "#035060" // Asigna el primer color al boxplot
+            }
+          }],
+          layout: { margin: { t: 0, r: 0, l: 0, b: 0}},
+          link: `/projects/${params.slug}/alpha`
+      },
+      {
+          title: 'Beta Diversity',
+          data: [{
+              x: [1, 2, 3, 4, 5],
+              y: [1, 6, 3, 6, 1],
+              mode: 'markers',
+              type: 'scatter',
+              marker: {
+                color: "#035060" // Asigna el primer color al boxplot
+            }
+          }],
+          layout: { margin: { t: 0, r: 0, l: 0, b: 0}},
+          link: `/projects/${params.slug}/beta`
+      },
+      {
+          title: 'Taxonomy Composition',
+          data: [
+            {
+                x: ['Total'], // Cambia esto para apilar en un solo grupo
+                y: [20],
+                name: 'Lactobacillus',
+                type: 'bar',
+                marker: {
+                  color: "#035060" // Asigna el primer color al boxplot
+              }
+            },
+            {
+                x: ['Total'], // Cambia esto para apilar en un solo grupo
+                y: [12],
+                name: 'Peptoclostridium',
+                type: 'bar',
+                marker: {
+                  color: "#f99b35" // Segundo color
+              }
+            },
+            {
+              x: ['Total'], // Cambia esto para apilar en un solo grupo
+              y: [10],
+              name: 'Fusobacterium',
+              type: 'bar',
+              marker: {
+                color: "#4e8e74" // Tercer color
+            }
+          },
+          {
+            x: ['Total'], // Cambia esto para apilar en un solo grupo
+            y: [9],
+            name: 'Blautia',
+            type: 'bar',
+            marker: {
+              color: "#075462" // Reutiliza el primer color
+          }
+        }
+        ],
+          layout: {
+            margin: { t: 0, r: 0, l: 0, b: 0},
+              barmode: 'stack',
+              xaxis: {
+                tickangle: -45
+            },
+            yaxis: {
+                zeroline: false,
+                gridwidth: 2
+            },
+
+          },
+          link: `/projects/${params.slug}/taxonomy/composition`
+      },
+      {
+          title: 'Differential abundance',
+          data: [{
+              x: [20, 14, 23],
+              y: ['Category 1', 'Category 2', 'Category 3'],
+              type: 'bar',
+              marker: {
+                color: ["#035060", "#f99b35", "#4e8e74"] // Usa todos los colores para las diferentes categorías
+            },
+              orientation: 'h'
+          }],
+          layout: {  margin: { t: 0, r: 0, l: 0, b: 0}  },
+          link: `/projects/${params.slug}/abundancedif/datasetgeneration`
+      }
+  ];
+  
+
+    const bg_discount_gradient = 'bg-gradient-to-tr from-navy-100 to-navy-400'
+    const text_gradient = ' bg-gradient-to-br from-navy-300 via-navy-500 to-siwa-blue text-transparent bg-clip-text'
   return (
-    <Layout slug={params.slug} filter={filterContent}  breadcrumbs={""}>
-<div className="w-10/12 mx-auto px-4 py-8">
-  <div className="bg-white shadow-lg rounded-lg overflow-hidden pb-10">
+    <Layout slug={params.slug} filter={filterContent}  breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}/>}>
+<div className="w-full py-8 flex justify-center">
+  <div className="bg-white w-11/12  rounded-lg overflow-hidden pb-4">
 <div className="w-full flex justify-center text-center">
 
-{configFile?.summary?.image ? (   <h1 className="text-3xl m-5 font-bold text-gray-800 mb-6">{configFile?.summary?.title}</h1> ) : (         <h1 className="h-3.5 bg-gray-200 rounded-full dark:bg-gray-700 w-80 mb-4"></h1>
+{configFile?.summary?.image ? (    <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold ss:text-[72px] text-[35px] text-white ss:leading-[100.8px] leading-[50px]">
+          
+            <span className={`${text_gradient}`}>{configFile?.summary?.title}</span>{" "}
+          </h1> ) : (         <h1 className="h-3.5 bg-gray-200 rounded-full w-80 mb-4"></h1>
         )}
 </div>
 
@@ -73,12 +208,20 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
       {/* Contenedor de texto */}
       <div className="px-6 py-8 xl:w-1/2 w-full">
+
+     
       {configFile?.summary?.image ? (
         <div className="prose lg:prose-lg max-w-none space-y-4 text-start">
-          {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
-            <p key={key} className="text-gray-700">{value as ReactNode}</p>
-          ))}
-        </div> ) : (
+        <Card className="p-0"> 
+      <div className={`flex flex-row items-center py-[6px] px-4 ${bg_discount_gradient} mb-8`}>
+      <h2 className="w-full justify-start text-2xl font-semibold text-white text-start mb-2 mt-2">Know more about the {params.slug} project</h2>
+
+        </div>  {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
+            <p key={key} className="text-gray-700 text-xl font-light mb-4 p-2">{value as ReactNode}</p>
+          ))}</Card>
+        </div>
+          
+          ) : (
 
         <div className="w-full">
         <div className="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
@@ -104,6 +247,30 @@ const Page = ({ params }: { params: { slug: string } }) => {
       </div>
 
     </div>
+    <div className="flex flex-col w-full px-4 py-2">
+            <div className="mb-8 mt-6 w-full justify-start">
+                <Message severity="info" className="w-full justify-center text-xl message-summary" text="How to start? Use the sidebar on the left to navigate between different analyses available for this project, or begin your exploration now by selecting any of the available reports below." />
+            </div>
+                <div className="flex flex-row flex-wrap w-full justify-evenly items-center m-auto border rounded-lg border-gray-100 my-2 py-8 px-4">
+                    {plotsData.map(plot => (
+                        <Link href={plot.link} key={plot.title}>
+                            <div className="">
+                                <Card title={plot.title} className="bg-white shadow-md hover:shadow-xl transition-shadow duration-300 p-4 pt-0 flex flex-col justify-between border w-64 h-72 m-4 card-preview">
+                                    <div className="flex-grow">
+                                        <PlotPreview data={plot.data} layout={plot.layout} style={{ width: 200, height: 130 }} />
+                                    </div>
+                                </Card>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+          
+        </div>
+   
+       
+
+
+
   </div>
 </div>
 

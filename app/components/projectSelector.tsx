@@ -11,7 +11,7 @@ const ProjectSelector = ({ slug, user }: { slug: string, user: any }) => {
         <div className="mr-20 ml-20 flex items-center relative">
           {user && user.Project && ( // Mostrar solo si hay más de un proyecto
             <Tag
-              className={`mr-20 ml-20 ${user.Project.length > 1 ? "cursor-pointer" : "" } `} icon="pi pi-cloud"
+              className={`mr-20 w-36 ml-20 ${user.Project.length > 1 ? "cursor-pointer" : "" } `} icon="pi pi-cloud font-bold"
               onClick={() => user.Project.length > 1 ? setShowProjects(!showProjects) : undefined}
             >
               <span className='font-light'>Project: </span>{slug}

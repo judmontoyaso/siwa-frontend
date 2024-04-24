@@ -1,10 +1,10 @@
-import './globals.css'
 import { Inter } from 'next/font/google'
 import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { Roboto } from 'next/font/google'
 import { AuthProvider } from './components/authContext';
 import { PrimeReactProvider } from "primereact/api";
 import { PopupProvider } from './components/context/popupContext';
+import './globals.css'
 // theme
 
 const roboto = Roboto({

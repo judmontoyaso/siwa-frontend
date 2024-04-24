@@ -93,7 +93,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
     const plotsData = [
       {
-          title: 'Alpha Diversity',
+          title: 'Richness',
           data: [{
               y: [1, 2, 3, 4, 5, 6, 7, 8, 9],
               type: 'box',
@@ -105,7 +105,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
           link: `/projects/${params.slug}/alpha`
       },
       {
-          title: 'Beta Diversity',
+          title: 'Community make-up',
           data: [{
               x: [1, 2, 3, 4, 5],
               y: [1, 6, 3, 6, 1],
@@ -119,7 +119,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
           link: `/projects/${params.slug}/beta`
       },
       {
-          title: 'Taxonomy Composition',
+          title: 'Taxonomic abundance',
           data: [
             {
                 x: ['Total'], // Cambia esto para apilar en un solo grupo

@@ -127,7 +127,7 @@ console.log(user)
                         <ul className="divide-y ">
 
                           <li className={`py-2 ${router === `/projects/${slug}/alpha` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
-                            <Link href={`/projects/${slug}/alpha`} className="block px-3"prefetch={true}>Alpha diversity</Link>
+                            <Link href={`/projects/${slug}/alpha`} className="block px-3"prefetch={true}> Richness</Link>
                           </li>
                           <li className={`py-2 ${router === `/projects/${slug}/beta` ? "bg-navy-400 border-navy-400 text-white" : "bg-navy-800 border-navy-800 text-white"} mt-1 mb-1 w-11/12 rounded-lg  hover:bg-navy-500 hover:text-white hover:border-navy-500`}>
                             <Link href={`/projects/${slug}/beta`} className="block px-3 "prefetch={true}>

@@ -6947,3 +6947,7 @@
 .message-summary .p-inline-message-text {
   font-size: 1.2rem!important;
 }
+
+.filter .p-accordion-tab {
+  margin-bottom: 20px!important;
+}

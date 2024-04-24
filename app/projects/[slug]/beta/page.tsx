@@ -22,6 +22,7 @@ import Link from "next/link";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import { Accordion, AccordionTab } from "primereact/accordion";
+import { Dropdown } from "primereact/dropdown";
 
 
 
@@ -439,7 +440,6 @@ fetchProjectIdsFiltercolor(dataResult, value);
 // Componente de checks para los valores de la columna seleccionada
 const valueChecks = (
     <div className="mb-5 mt-5">
-        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Select values to show</h3>
         <div className="flex flex-row mt-4 flex-wrap">
             {valueOptions?.map((value, index) => (
             <div key={index} className="flex items-center mb-2 mr-2 ml-2">
@@ -700,52 +700,82 @@ const valueChecks = (
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
+
+    const dropdownOptionsColorby = [
+      { label: 'Sample Location', value: 'samplelocation' },
+      {label:'Treatment', value:'treatment'}, // Opción predeterminada
+      ...colorByOptions
+        ?.filter(option => columnOptions?.includes(option)) // Filtra y mapea según tus criterios
+        .map(option => ({
+            label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
+            value: option
+        }))
+    ];
+
+
+
+    const dropdownOptions = [{ label: 'Sample Location', value: 'samplelocation' },
+    {label:'All Locations', value:'all'}, // Opción predeterminada
+    ...availableLocations
+      .map(option => ({
+          label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
+          value: option
+      }))]
+
   const filter = (
     <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
-         <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange}>    
-      <AccordionTab header="Color by">
+   <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
+      <AccordionTab header="Color by" className="mb-4">
     
 
                 <div>
-  <select id="color" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={theRealColorByVariable}
-            onChange={(e) => handleGroupChange(e.target.value)}
-      
-          >
-             <option selected value="samplelocation">Sample Location</option>
-            <option selected value="treatment">Treatment</option>
-          
-            {colorByOptions.map((location) => (
-              <option key={location} value={location}>
-                {(location as string).charAt(0).toUpperCase() + (location as string).replace('_', ' ').slice(1)}
-              </option>
-            ))}
-          </select>
+
+                <Dropdown
+      value={theRealColorByVariable}
+      options={dropdownOptionsColorby}
+      onChange={(e) => handleGroupChange(e.target.value)}
+      optionLabel="label"
+      className="w-full"
+      />
+
+
         
 
           </div>
           </AccordionTab>
                 <AccordionTab header="Filter by">
-        <div className="flex flex-col items-left  mt-4 mb-4">
+        <div className="flex flex-col items-left  mt-2 mb-4">
 
-          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location</h3>
-          <select id="location" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            value={selectedLocation === "all" ? selectedLocation : selectedLocations}
-            onChange={(e) => handleLocationChange(e.target.value)}
+        <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location</h3>
+     
+          
+
+          <Dropdown 
+            id="location"
+            value={selectedLocation === "all" ? selectedLocation : selectedLocations[0]}
+            options={dropdownOptions}
+            onChange={(e) => handleLocationChange(e.value)}
             disabled={availableLocations.length === 1}
-          >
-            <option selected value="all">All Locations</option>
-            {availableLocations.map((location) => (
-              <option key={location} value={location}>
-                {location.charAt(0).toUpperCase() + location.slice(1)}
-              </option>
-            ))}
-          </select>
+            className="w-full"
+        />
         </div>  
       
-        <div className=" mt-4 mb-4">
-          <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Filter by</h3>
-          <ul className="w-full flex flex-wrap items-center content-center justify-around">
+        <div className=" mt-8 mb-4">
+
+       
+      <h3 className="text-lg font-semibold text-gray-700 dark:text-white my-tooltip whitespace-pre">
+        Filtering <span>options <AiOutlineInfoCircle className="text-sm mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
+      </h3>     
+                                    <Tooltip
+                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
+                                        anchorSelect="#group">
+                                        <div className={`prose single-column w-28 z-50`}>
+                                            <p>Select options to include in the plot.</p>
+                                         
+                                        </div>
+                                    </Tooltip>
+                                    
+                                             <ul className="w-full flex flex-wrap items-center content-center justify-around">
             <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
               <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : colorBy === 'samplelocation'}
                 onChange={handleLocationChangeColorby}
@@ -804,16 +834,13 @@ const valueChecks = (
           </ul>
         </div>
         <div>
-{isColorByDisabled ? "" :
-        colorBy === "samplelocation" ? "" :
-        <>
+
    
         <div className=" mt-4 mb-4">
         {valueChecks}
 
         </div>
-        </>
-                }
+     
           </div>
           <Divider />
           <div className="flex w-full items-center margin-0 justify-center my-10">
@@ -823,8 +850,8 @@ const valueChecks = (
             iconPos="right"
             icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 pr-3 rounded-xl border-none"
-            label="Select Data"
+            className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Update"
           />
         </div>
 

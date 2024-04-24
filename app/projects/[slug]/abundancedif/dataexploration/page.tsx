@@ -1,6 +1,6 @@
 
 "use client";
-import { ReactNode, SetStateAction, use, useEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, use, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import SkeletonCard from "@/app/components/skeletoncard";
@@ -20,6 +20,8 @@ import React from "react";
 import Link from "next/link";
 import Spinner from "@/app/components/pacmanLoader";
 import { Divider } from "primereact/divider";
+import { BreadCrumb } from "primereact/breadcrumb";
+import { MenuItem } from "primereact/menuitem";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -79,6 +81,16 @@ const taxonomyOptions = [
     "Genus",
     "Species"
 ];
+
+const itemsBreadcrumbs = [
+    { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
+    { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+  { label: 'Differential Abundance: Data', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/datasetgeneration`}>{item.label}</Link> },
+  { label: 'Differential Abundance: Analysis', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>{item.label}</Link> },
+
+];
+
+const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
 
 
     const colors = [
@@ -451,7 +463,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
     return (
         <div className="h-full">
             <SidebarProvider>
-                <Layout slug={params.slug} filter={""} breadcrumbs={""} >
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}/>} >
                     <div className="w-11/12">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <Card title={
@@ -497,7 +509,7 @@ dataExist ?
                                 <div className="w-1/4"></div>
                                 <div className="px-6 py-8 w-4/5" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
+                                        {Object.entries(configFile?.differential_abundance?.graph || {}).map(([key, value]) => {
                                         if (key === "samplelocation"  && typeof value === 'string') {
                                         
                                             return (
@@ -510,7 +522,7 @@ dataExist ?
                                         })}
                                     </div>
                                     <div className="prose flex flex-row flex-wrap">
-                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
+                                        {Object.entries(configFile?.differential_abundance?.graph || {}).map(([key, value]) => {
                                             if (key !== "" && key !== "samplelocation") {
                                                 if (typeof value === 'string' && value !== null) {
                                                  

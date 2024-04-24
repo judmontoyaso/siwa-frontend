@@ -1,5 +1,5 @@
 "use client";
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Plot from "react-plotly.js";
@@ -20,6 +20,10 @@ import { Dropdown } from "primereact/dropdown";
 import { Card } from "primereact/card";
 import { TabView, TabPanel } from "primereact/tabview";
 import { Accordion, AccordionTab } from "primereact/accordion";
+import { BreadCrumb } from "primereact/breadcrumb";
+import { MenuItem } from "primereact/menuitem";
+import Link from "next/link";
+import { Image } from 'primereact/image';
 
 
 
@@ -107,81 +111,21 @@ export default function Page({ params }: { params: { slug: string } }) {
   "#7E57C2", // Lavanda oscuro
   "#EC407A", // Rosa
     ];
-    const [number, setNumber] = useState(12);
-    const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
-    const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
-    const [loaded, setLoaded] = useState(false);
+
     const [configFile, setconfigFile] = useState({} as any);
-    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
-    const [dataUnique, setDataUnique] = useState<any>();
-    const [dataResult, setDataResult] = useState<any>(null);
-    const [actualGroup, setActualGroup] = useState<any>('samplelocation');
-const [actualRank, setActualRank] = useState<any>('genus');
-    const [columnOptions, setColumnOptions] = useState([]);
-    const [htmlContent, setHtmlContent] = useState('');
-    const containerRef = useRef<HTMLDivElement>(null); // Update the type of containerRef to HTMLDivElement
 
-
-    useEffect(() => {
-        fetch('/api/components/innerHtml')
-          .then(res => res.json())
-          .then(data => {
-            setHtmlContent(data.content); // Establece el contenido HTML en el estado
-          });
-      }, []);
+    const itemsBreadcrumbs = [
+        { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
+        { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+      { label: 'Personalized Analyses', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/personalizedAnalyses`}>{item.label}</Link> },
+    
+    ];
+    
+    const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
+    
 
       
-      
-    //   useEffect(() => {
-    //     if (htmlContent) { // Asegúrate de que htmlContent ya esté establecido
-    //         const container = document.getElementById('contendor-html'); // Asegúrate de que este sea el ID de tu contenedor
-            
-    //         if (container) { // Add a null check for the container
-    //             const scripts = container.querySelectorAll('script');
-
-    //             scripts.forEach((oldScript) => {
-    //                 const newScript = document.createElement('script');
-    //                 newScript.type = 'text/javascript';
-    //                 if (oldScript.src) {
-    //                     newScript.src = oldScript.src;
-    //                 } else {
-    //                     newScript.textContent = oldScript.textContent;
-    //                 }
-    //                 if (oldScript.parentNode) { // Add a null check for the parentNode
-    //                     oldScript.parentNode.replaceChild(newScript, oldScript);
-    //                 }
-    //             });
-    //         }
-    //     }
-    //   }, [htmlContent]); // Este useEffect depende de htmlContent
-      
-
-
-      
-
-    useEffect(() => {
-        // Función para actualizar el ancho del gráfico con un pequeño retraso
-        const updatePlotWidth = () => {
-            setTimeout(() => {
-                if (plotContainerRef.current) {
-                    setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth);
-                    setLoaded(true)
-                }
-            }, 800); // Retraso de 10 ms
-        };
-
-        updatePlotWidth(); // Establece el ancho inicial
-
-        window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
-
-        return () => {
-            window.removeEventListener('resize', updatePlotWidth);
-        };
-    }, [params.slug, plotData]);
-
-
-
-    const fetchConfigFile = async (token: any) => {
+        const fetchConfigFile = async (token: any) => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/configfile/${params.slug}`, {
               headers: {
@@ -204,558 +148,16 @@ const [actualRank, setActualRank] = useState<any>('genus');
     };
 
 
-
-   
-    const fetchData = async (token: any) => {
-
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/taxo/composition/${params.slug}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    "selectedColumn": selectedColumn,
-                    "selectedLocation": selectedValue,
-                    "selectedRank": selectedRank,
-                    "selectedGroup": selectedGroup,
-                    "top": number.toString(),
-                    "columnValues": selectedValue
-
-                })
-            }
-            );
-            if (response.status === 404) {
-                // toast.warn('The data needs to be loaded again!', {
-                //     position: "top-center",
-                //     autoClose: 5000,
-                //     hideProgressBar: false,
-                //     closeOnClick: true,
-                //     pauseOnHover: true,
-                //     draggable: true,
-                //     progress: undefined,
-                //     theme: "light",
-                //     transition: Bounce,
-                // });
-                // setTimeout(() => { window.location.href = "/"; }, 5000);
-                throw new Error("Respuesta no válida desde el servidor");
-            }
-            const result = await response.json();
-            const locations = new Set(
-                result?.data?.data?.map((item: any[]) => item[1])
-            );
-            const uniqueLocations = Array.from(locations) as string[];
-            setAvailableLocations(uniqueLocations);
-
-
-            console.log("Datos obtenidos:", result);
-            setOtus(result);
-            setDataResult(result);
-            setColumnOptions(result?.meta?.columns);
-            setDataUnique(result);
-setObservedData(result?.Krona)
-            setValueOptions(result?.meta?.data);
-            setIsLoaded(true);
-            return result;
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
-        }
-    };
-    const fetchDataFilter = async (token: any) => {
-
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/taxo/composition/${params.slug}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    "selectedColumn": selectedColumn,
-                    "selectedLocation": selectedLocations,
-                    "selectedRank": selectedRank,
-                    "selectedGroup": selectedGroup,
-                    "columnValues": [...selectedValues],
-                    "top": number.toString()
-                })
-            }
-            );
-            if (response.status === 404) {
-                // toast.warn('The data needs to be loaded again!', {
-                //     position: "top-center",
-                //     autoClose: 5000,
-                //     hideProgressBar: false,
-                //     closeOnClick: true,
-                //     pauseOnHover: true,
-                //     draggable: true,
-                //     progress: undefined,
-                //     theme: "light",
-                //     transition: Bounce,
-                // });
-                // setTimeout(() => { window.location.href = "/"; }, 5000);
-                throw new Error("Respuesta no válida desde el servidor");
-            }
-            const result = await response.json();
-
-            console.log("Datos obtenidos:", result);
-            setOtus(result);
-            setIsLoaded(true);
-            setFilterPeticion(false);
-            return result;
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
-            setFilterPeticion(false);
-        }
-    };
-
-    // Manejar cambio de locación
-
     useEffect(() => {
-        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-fetchConfigFile(accessToken); fetchData(accessToken);
-    }, [params.slug, accessToken]);
-
-  
-    interface DataItem {
-        // Asumiendo que todos los elementos tienen este formato
-        0: string; // Para el label
-        1: number; // Para el valor de X
-        3: number; // Para el valor de Y
-     
-    }
-    useEffect(() => {
-
-        if (otus && otus.data) {
-            const traces: SetStateAction<any[]> = [];
-            const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
-
-            labels.forEach(label => {
-                const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
-                const xValues = filteredData.map((item: any[]) => item[1]);
-                const yValues = filteredData.map((item: any[]) => item[3]);
-                const color = colors[traces.length % colors.length];
-
-                traces.push({
-                    x: xValues,
-                    y: yValues,
-                    type: 'bar',
-                    name: label,
-                    marker: { color: color },
-                });
-
-                newScatterColors[label as string] = color;
-            });
-
-            // Ordenando los traces basados en la suma total de los valores de Y de cada uno, de mayor a menor
-            traces.sort((a, b) => {
-            const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
-            const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
-            return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
-        });
-
-            setPlotData(traces);
-            console.log("Traces:", plotData);
-            setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
-        }
-    }, [otus]);
-
-    // useEffect(() => {
-    //     setPlotData( plotData.map(trace => ({
-    //         ...trace, // Conserva las propiedades existentes de la traza
-    //         width: 0.5, // Ajusta este valor para cambiar la anchura de las barras
-    //     })));    }, [otus,scatterColors]);
+fetchConfigFile(accessToken);
+    }, [accessToken, user?.nickname]);
 
 
-
-    // Función para aplicar los filtros seleccionados
-    const applyFilters = (event: any) => {
-
-
-        // Convierte ambas matrices a cadenas para una comparación simple
-        const newSelectionString = selectedLocations.join(',');
-        const currentSelectionString = Location.join(',');
-
-
-        fetchDataFilter(accessToken);
-
-        setLocation(selectedLocations);
-
-        if (selectedLocations.length === 3) {
-            setSelectedGroup("samplelocation"); // Restablecer el valor de tratamiento si se selecciona 'All'
-        } 
-setActualGroup(selectedGroup);
-setActualRank(selectedRank);
-setFilterPeticion(true);
-
-    };
-
-    const handleLocationChange = (event: any) => {
-        if (event === 'all') {
-            setSelectedLocations(['cecum', 'feces', 'ileum']);
-            setSelectedColumn("samplelocation");
-            setSelectedGroup("samplelocation");
-            setIsColorByDisabled(true);
-        } else {
-            setSelectedLocations([event]);
-            setIsColorByDisabled(false);
-        }
-    };
-
-    type Plotdata = {
-        name: string;
-        // Add other properties as needed
-    };
-
-    type ScatterColors = {
-        [key: string]: string;
-        // Add other properties as needed
-    };
-
-    const CustomLegend = ({ plotData, scatterColors }: { plotData: Plotdata[]; scatterColors: ScatterColors }) => (
-        <div style={{ marginLeft: '20px' }}>
-            {plotData.map((entry, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                    <div style={{ width: '15px', height: '15px', backgroundColor: scatterColors[entry.name], marginRight: '10px' }}></div>
-                    <div>{entry.name}</div>
-                </div>
-            ))}
-        </div>
-    );
-
-    const legend = (<div className="w-full flex flex-col overflow-x-scroll max-h-full  justify-center mt-5 items-center">
-    <div className="mb-2">
-        <h2 className=" text-base text-gray-700 w-full font-bold mr-1">{actualRank.charAt(0).toUpperCase() + actualRank.slice(1)}</h2>
-    </div>
-    <div className=" flex flex-col w-auto mt-2">
-    <CustomLegend plotData={plotData} scatterColors={scatterColors} />
-    </div>
-</div>)
-
-    const MyPlotComponent = ({ plotData, scatterColors }: { plotData: any[]; scatterColors: any }) => (
-        <div className="flex flex-row w-full items-start">
-            <div className="w-full flex " ref={plotContainerRef}>
-                {loaded && (
-                    <Plot
-                        data={plotData}
-                        layout={{
-                            barmode: 'stack', // Cambiado a 'stack' para apilar las barras
-                            bargap: 0.1,
-                            plot_bgcolor: 'white',
-                            yaxis: {
-                                title: {
-                                    text: 'Relative Abundance', font: { 
-                                        family: 'Roboto, sans-serif',
-                                        size: 18,
-                                    }
-                                }
-                            },
-                            xaxis: {
-                                title: {
-                                    text: '', font: { 
-                                        family: 'Roboto, sans-serif',
-                                        size: 18,
-                                    }
-                                }
-                            },
-                            width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-                            height: 700,
-                            // title: {
-                            //     text: `Relative abundance ${isColorByDisabled ? " por Ubicación" : " en " + (Location + (colorBy === "samplelocation" ? "" : " por " + colorBy.replace('_', ' ')))}`, font: { // Añade esta sección para personalizar el título
-                            //         family: 'Roboto, sans-serif',
-                            //         size: 26,
-                            //     }
-                            // },
-                            showlegend: false,
-                            margin: { l: 50, r: 10, t: 20, b: 50 } 
-
-                        }}
-                    />)}
-            </div>
-
-        </div>);
-
-
-
-
-
-    useEffect(() => {
-        if (otus && selectedGroup) {
-            // Filtrar los valores únicos de la columna seleccionada
-            const columnIndex = otus?.meta?.columns?.indexOf(selectedGroup);
-            console.log("Column index:", columnIndex);
-            const uniqueValues: Set<string> = new Set(dataUnique?.meta?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
-            const uniqueValuesCheck: Set<string> = new Set(otus?.meta?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
-
-            setValueOptions([...uniqueValues].filter(value => value !== 'null'));
-
-            // Inicializa 'selectedValues' con todos los valores únicos
-            setSelectedValues(new Set<string>(uniqueValuesCheck));
-        }
-    }, [selectedGroup, otus]);
-
-    // Estado para manejar los valores seleccionados en los checks
-    const handleValueChange = (value: string) => {
-        setSelectedValues(prevSelectedValues => {
-            const newSelectedValues = new Set(prevSelectedValues);
-            // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
-            if (newSelectedValues.size === 1 && newSelectedValues.has(value)) {
-                return prevSelectedValues;
-            }
-
-            // Si el valor está presente, lo eliminamos, de lo contrario, lo añadimos
-            if (newSelectedValues.has(value)) {
-                newSelectedValues.delete(value);
-            } else {
-                newSelectedValues.add(value);
-            }
-            return newSelectedValues;
-        });
-    };
-
-//     useEffect(() => {
-//         const transformDataForSunburst = (columns, values) => {
-//             const paths = [];
-//             const valuesOutput = [];
-//             const ids = [];
-        
-//             values?.forEach(row => {
-//               // Ignora las columnas 'OTU', 'abundance', y 'prevalence' para construir el path
-//               const path = columns.slice(0, -3).map((columnName, index) => {
-//                 return row[index] || 'Unknown'; // Usa 'Unknown' para valores undefined o null
-//               }).join('/');
-        
-//               // Asume que 'OTU' es el identificador único, y 'abundance' es el valor numérico
-//               const otuIndex = columns.indexOf('OTU');
-//               const abundanceIndex = columns.indexOf('abundance');
-//               const otu = row[otuIndex] || 'Unknown OTU';
-//               const abundance = row[abundanceIndex] || 0;
-        
-//               ids.push(otu); // Añade 'OTU' como id
-//               paths.push(path); // Añade el path construido
-//               valuesOutput.push(abundance); // Añade 'abundance' como el valor
-//             });
-//         console.log({ ids, paths, values: valuesOutput });
-//             return { ids, paths, values: valuesOutput };
-//           };
-        
-      
-
-      
-//           const { ids, paths, values } = transformDataForSunburst(observedData?.columns, observedData?.data);
-
-//            // Actualiza el estado con los nuevos datos
-//   setSunburstData({ ids, paths, values });
-
-//           console.log(observedData)
-//         // Aquí puedes actualizar el estado con los paths y values transformados, o hacer algo más con ellos
-//       }, [observedData]); // Asegúrate de que las dependencias de useEffect sean correctas
-      
-    // Componente de checks para los valores de la columna seleccionada
-    const valueChecks = (
-        <div className="mb-5 mt-5">
-            <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select the values to keep</h3>
-            {valueOptions?.map((value, index) => (
-                <div key={index} className="flex items-center mb-2">
-                    <input
-                        id={`value-${index}`}
-                        type="checkbox"
-                        value={value}
-                        checked={selectedValues.has(value)}
-                        onChange={() => handleValueChange(value)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                        {value}
-                    </label>
-                </div>
-            ))}
-        </div>
-    );
-
-    const dropdownOptions = taxonomyOptions.map((option, index) => ({
-        label: option.charAt(0).toUpperCase() + option.slice(1),
-        value: option
-    }));
-
-    const allLocationsOption = { label: 'All Locations', value: 'all' };
-
-    // Convertir availableLocations a un formato que Dropdown pueda entender
-    const locationOptions = availableLocations.map(location => ({
-        label: location.charAt(0).toUpperCase() + location.slice(1),
-        value: location
-    }));
-
-    // Asegúrate de incluir la opción "All Locations" al principio
-    const dropdownLocationOptions = [allLocationsOption, ...locationOptions];
-
-    // Determinar el valor seleccionado para el Dropdown
-    const selectedDropdownValue = selectedLocations.length === 3 ? selectedLocation : selectedLocations[0];
-
-
-    const filter = (
-        <div className={`flex flex-col w-full p-4 rounded-lg  dark:bg-gray-800 `}>
-
-            <div className="flex flex-col items-left mt-4 mb-4 ">
-     <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
-     <Dropdown 
-            value={selectedRank} 
-            options={dropdownOptions} 
-            onChange={(e) => setSelectedRank(e.value)} 
-            placeholder="Select a Rank"
-            className="w-full"
-        />
-
-
-<Divider/>
-<div className="max-w-xs mx-auto flex flex-col items-center mt-4 mb-4">
-    <PrimeToolTip target=".topInputText" />
-    <label htmlFor="topInput" className="block mb-5 text-lg font-medium text-gray-900 dark:text-white">
-        <div className="flex flex-row">
-    Top <AiOutlineInfoCircle className="topInputText ml-2  text-lg cursor-pointer text-gray-500 p-text-secondary p-overlay-badge" data-pr-tooltip="This graph displays the most abundant taxa for each rank"
-    data-pr-position="right"
-    data-pr-at="right+5 top"
-    data-pr-my="left center-2"/>
-        </div>
-        
- </label>
-    <div className="relative flex items-center max-w-[8rem]">
-        <button type="button" id="decrement-button" onClick={() => setNumber(Math.max(1, number - 1))} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-l-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
-            {/* SVG para el icono de decremento */}
-            <FiMinus />
-        </button>
-        <input type="text" id="topInput" value={number} onChange={e => setNumber(e.target.value === '' ? 1 : Math.max(1, Math.min(15, parseInt(e.target.value) || 1)))} className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="999" required />
-        <button type="button" id="increment-button" onClick={() => setNumber(Math.min(15, number + 1))} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-r-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
-        <GoPlus />
-        </button>
-    </div>
-    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
-</div>
- 
-<Divider/>
-                <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
-
-                    <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a Sample Location (if applicable)</h3>
-                    <Dropdown 
-            id="location"
-            value={selectedDropdownValue}
-            options={dropdownLocationOptions}
-            onChange={(e) => handleLocationChange(e.value)}
-            disabled={availableLocations.length === 1}
-            className="w-full"
-        />
-              
-
-
-                </div>
-<Divider/>
-                <div className="mt-4 mb-4">
-                <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group By</h3>
-
-                <ul className="w-full flex flex-wrap items-center content-center justify-around ">
-
-                        <li className="w-48 m-2 mb-1 p-1">
-                            <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={selectedGroup === 'samplelocation'}
-                                onChange={(e) => setSelectedGroup(e.target.value)}
-                                disabled={isColorByDisabled}
-                              />
-                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full text-center flex justify-center">Sample location</div>
-                                </div>
-                            </label>
-                        </li>
-                        {colorByOptions?.map((option, index) => {
-  // Solo renderizar el elemento si 'option' está presente en 'columnOptions'
-if ((columnOptions as string[])?.includes(option)) {
-    return (
-      <li className="w-48 m-2 mb-1 p-1" key={index}>
-        <input
-          type="radio"
-          id={option}
-          name={option}
-          className="hidden peer"
-          value={option}
-          checked={selectedGroup === option}
-          onChange={(e) => setSelectedGroup(e.target.value)}
-          disabled={isColorByDisabled}
-        />
-        <label
-          htmlFor={option}
-          className={`flex items-center justify-center 
-          ${isColorByDisabled
-              ? 'cursor-not-allowed'
-              : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-2xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-        >
-          <div className="block">
-            <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-          </div>
-        </label>
-      </li>
-    );
-  } else {
-    // No retorna nada si 'option' no está en 'columnOptions'
-    return null;
-  }
-})}
-
-                    </ul>
-                </div>
-
-            </div>
-            <div>
-
-            {selectedGroup!== "samplelocation" ?
-            <>
-            <Divider/>
-            <div className="mt-4 mb-4">
-{valueChecks}
-            </div>
-            </>
-             : ""}
-            </div>
-
-            <Divider/>
-
-            <div className="flex w-full items-center margin-0 justify-center my-10">
-          <Button
-            onClick={applyFilters}
-            loading={filterPeticion}
-            iconPos="right"
-            icon="pi pi-check-square"
-            loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Apply"
-          />
-        </div>
-
-        </div>);
-
-
-useEffect(() => {
-    if (availableLocations.length === 1) {
-      // Si solo hay una ubicación disponible, selecciónala automáticamente
-      const uniqueLocation = availableLocations[0];
-      console.log("Ubicación única:", uniqueLocation);
-      handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
-    }
-  }, [availableLocations]); // Dependencia del efecto
-
-  useEffect(() => {
-    
-    
-    setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
-}, [params.slug, plotData]);
-  
-  const title = ( <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " by Location" : " in " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualGroup === "samplelocation" ? "" : " by " + actualGroup.charAt(0).toUpperCase() + actualGroup.slice(1).replace('_', ' ')))}</div>  );
 
     return (
         <div className="w-full h-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""}  breadcrumbs={""}>
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}/>} >
             <div className="flex flex-col w-full">
 
 <div className="flex flex-row w-full text-center justify-center items-center">
@@ -780,37 +182,49 @@ useEffect(() => {
 
 
 <div className="px-6 py-8">
-            <div className="w-full">
-                <p className="text-left">This section provides an overview of customized analyses with static charts of particular interest in scientific research, showcasing complex data in a visually digestible format.</p>
-            </div>
+      
+
+                            <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
+    <p className="text-gray-700 text-justify text-xl">
+        {configFile?.personalized_analyses?.text}
+    </p>
+</div>
             <div className="mt-5">
                 <TabView>
                  
-                    <TabPanel header={<><i className="pi pi-chart-line mr-2"></i> Ratio vs Gene Expression</>}>
-                        <div>
-                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                            The goal of gene expression is to evaluate how the animal host is responding to its environment by altering the levels of various proteins and other compounds in the body in a complex and very controlled manner. When studying gene expression with real-time polymerase chain reaction (PCR), scientists usually investigate changes (increases or decreases) in the expression of a particular gene or set of genes by measuring the abundance of the gene-specific transcript.                            </p>
+                    <TabPanel header={<><i className="pi pi-chart-line mr-2"></i>Correlating experimental outcomes with traits of interest.</>}>
+                        <div className="flex flex-col-reverse xl:flex-row">
+                            <Card title="Connecting the microbiome to outcomes." className="mt-8 xl:mt-1 w-full xl:w-2/5 xl:mr-4">
+  <p className="text-gray-700 text-justify text-lg font-light">
+  A critical component of a good research study is the ability to relate experimental outcomes with phenotypic changes we hope to see. Fecal scores, body condition, blood parameters, or behavior, just to name a few. SIWA places a strong emphasis on relating microbial patterns and specific species to traits of interest. Robust correlations between study features and outcomes that matter to animals and pet owners are the foundation of our platform.</p>                           
+                            </Card>
+                          
                             <iframe 
                                 src="/api/components/genvslact" 
                                 frameBorder="0" 
                                 width="100%" 
                                 height="500px" 
                                 allowFullScreen
+                                className="w-full xl:w-3/5"
                                 title="Genetic Diversity Analysis">
                             </iframe>
                         </div>
                     </TabPanel>
-                    <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Feacal Score vs alpha</>}>
-                        <div>
-                            <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                            </p>
+                    <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Mapping SIWA Microbial Health Score 1 against the Bristol Stool Scale</>}>
+                        <div className="flex flex-col-reverse xl:flex-row">
+                              <Card className="w-full h-auto xl:w-1/3 xl:mt-1 mt-8 xl:mr-8" title="Bristol Stool Chart">
+                                
+                                <Image src={"/bristol-stool-chart.webp"} className="w-9/12 rounded-lg "  alt="Bristol stool chart" preview/>
+                                </Card>  
+                      
                             <iframe 
                                 src="/api/components/plotpopo" 
                                 frameBorder="0" 
                                 width="100%" 
                                 height="500px" 
                                 allowFullScreen
-                                title="Ecosystem Interaction Web">
+                                title="Ecosystem Interaction Web"
+                                className="w-full xl:w-2/3">
                             </iframe>
                         </div>
                     </TabPanel>

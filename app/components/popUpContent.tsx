@@ -31,8 +31,13 @@ const PopupComponent = ({filter}: any) => {
 
   return (
     <div className="w-full h-full flex content-end mr-5">
-        <div ref={popupRef} className="my-4 xl:p-2 md:pt-8 xl:pt-8 p-8 md:p-2 w-full h-full border border-gray-50 bg-gray-100 rounded-2xl overflow-y-auto">
-          {filter}
+        <div ref={popupRef} className="my-4 xl:p-2 md:pt-8 xl:pt-8 p-8 md:p-2 w-full h-full border border-gray-200 shadow-sm rounded-2xl overflow-y-auto flex flex-col">
+         <div >
+          <h2 className='font-extrabold text-siwa-blue text-2xl mb-8'>Visualization Settings</h2>
+         </div>
+         <div>
+           {filter}
+          </div>
         </div>
     </div>
   );

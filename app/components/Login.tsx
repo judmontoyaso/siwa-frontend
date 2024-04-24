@@ -47,10 +47,12 @@ your animals
                                         Boost the performance of your farm through an <br></br>
                                          understanding of your specific microbial patterns.
                                     </p>
-                                    <p className='m-2 mt-10'>
+                                    <p className='m-2 mt-5 font-light text-xl'>
+                                       To know more about SIWA</p>
+                                    <p className='m-2 mt-2'>
                                         <Link href="https://siwa.bio/" target='_blank'>
-                                            <button className="p-ripple hover:animate-pulse bg-siwa-yellow text-siwa-blue font-bold py-2 px-4 rounded inline-flex items-center">
-                                            <span style={{ color: 'white', textShadow: '0.5px 0.5px 1px gray, -0.5px -0.5px 1px gray, 0.5px -0.5px 1px gray, -0.5px 0.5px 1px gray' }}>Know more about  SIWA</span>
+                                            <button className="p-ripple hover:animate-pulse bg-siwa-yellow text-siwa-blue font-bold py-2 px-8 rounded inline-flex items-center">
+                                            <span className='text-gray-600 font-bold text-xl'>Visit our website</span>
  {/* <FaCaretRight  className="mr-2 text-lg text-white" /> */}
                                         
                                             </button>
@@ -73,8 +75,8 @@ your animals
 
                     <div className="flex items-center justify-center mt-5">
                         <Link href="/api/auth/login">
-                            <button className="animate-pulse duration-1000 text-2xl px-4 py-2 border flex border-slate-200 dark:border-slate-700 rounded-lg  dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:shadow transition bg-siwa-blue text-white">
-                                <Image className="w-6 h-6 mr-2 mt-1" src="https://www.svgrepo.com/show/475656/google-color.svg" loading="lazy" alt="google logo" width={8} height={8} />
+                            <button className="animate-pulse duration-1000 text-2xl px-8 py-3 border flex border-slate-200 dark:border-slate-700 rounded-lg  dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:shadow transition bg-siwa-blue text-white">
+                                <Image className="w-6 h-6 mr-2 mt-1 transition-none" src="https://www.svgrepo.com/show/475656/google-color.svg" loading="lazy" alt="google logo" width={8} height={8} />
                                 <span>Login with Google</span>
                             </button>
                         </Link>

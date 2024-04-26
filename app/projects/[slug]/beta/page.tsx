@@ -23,6 +23,7 @@ import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import { Accordion, AccordionTab } from "primereact/accordion";
 import { Dropdown } from "primereact/dropdown";
+import { Config } from "plotly.js";
 
 
 
@@ -430,6 +431,17 @@ const handleValueChange = (value: string) => {
     });
 };
 
+const config: Partial<Config> = {
+  displaylogo: false,
+  responsive: true,
+  modeBarButtonsToRemove: [
+    'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d', 
+    'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d', 
+    'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
+    'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
+  ],
+  modeBarButtonsToAdd: [],
+};
   
 const handleGroupChange = (value: string) => {
   setTheRealColorByVariable(value);
@@ -901,6 +913,7 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
       {loaded && (
       <Plot
         data={scatterData}
+        config={config}
         layout={{
           width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
           height: 600,

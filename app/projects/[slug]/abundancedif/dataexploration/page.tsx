@@ -22,6 +22,8 @@ import Spinner from "@/app/components/pacmanLoader";
 import { Divider } from "primereact/divider";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
+import { Dropdown } from "primereact/dropdown";
+import Plotly from "plotly.js";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -130,16 +132,81 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
     const tooltipTargetId = 'info-icon';
     const [actualcolumn, setActualcolumn] = useState("treatment")
 
+    
     const updatePlotWidth = () => {
 
         if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth -75);
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth );
             console.log(plotWidth)
             console.log(plotContainerRef.current)
             setLoaded(true)
 
         };
     };
+    const observedElementId = 'plofather';
+    useEffect(() => {
+        // Función para actualizar el ancho de la ventana
+        const updatePlotWidth = () => {
+          if (plotContainerRef.current) {
+            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth );
+            console.log(plotWidth);
+            console.log(plotContainerRef.current);
+            setLoaded(true);
+          }
+        };
+      
+        const plofatherElement = document.getElementById('plofather');
+        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
+      
+        // Añade el event listener cuando el componente se monta
+        window.addEventListener('resize', updatePlotWidth);
+        console.log('plotWidth:', plotWidth);
+        updatePlotWidth();
+      
+        // Limpieza del event listener cuando el componente se desmonte
+        return () => {
+          window.removeEventListener('resize', updatePlotWidth);
+        };
+      }, [window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
+
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          const element = document.getElementById(observedElementId);
+          if (element) {
+            // Función para actualizar el ancho del elemento observado
+            const updatePlotWidth = () => {
+              const newWidth = element.offsetWidth - 75;
+              setPlotWidth(newWidth);
+              console.log('Actualizado plotWidth:', newWidth);
+              setLoaded(true);
+            };
+    
+            // Configura el ResizeObserver una vez que el elemento está disponible
+            const resizeObserver = new ResizeObserver(entries => {
+              for (let entry of entries) {
+                updatePlotWidth();
+              }
+            });
+    
+            resizeObserver.observe(element);
+    
+            // Limpieza del intervalo y del observer
+            clearInterval(interval);
+            return () => {
+              resizeObserver.disconnect();
+            };
+          }
+        }, 100); // Intervalo de verificación cada 100 ms
+    
+        return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
+      }, [observedElementId]); 
+
+    useEffect(() => {
+        updatePlotWidth(); // Establece el ancho inicial
+        console.log('plotWidth:', plotWidth);
+
+    }, [otus]);
 
 
 
@@ -365,6 +432,21 @@ console.log(user?.nickname)
 useEffect(() => {console.log(abundanceData)}, [abundanceData]);
 
 
+const dropdownOptions =  taxonomyOptions?.map(option => (
+    {label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
+    value: option}))
+
+
+const dropdownColumns =       colorByOptions?.map((option, index) => {
+    if (columnOptions && columnOptions?.includes(option as never)) {
+        return (
+            {label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
+            value: option}
+        );
+    }
+    return "";
+})
+
 const filteredOptions = colorByOptions.filter(option => !columnOptions || columnOptions.includes(option as never));
    
     const applyFilters = () => { setActualcolumn(colorBy); 
@@ -374,68 +456,60 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
          }
 
           const filter = (
-            <div className={`flex flex-col w-full h-full  rounded-lg  dark:bg-gray-800 `}>
-                <div className={`tab-content `}>
+            <div className={`flex flex-col w-full h-full  rounded-lg`}>
+                <div className="card-abundance border border-gray-100 rounded-xl m-2 p-8 pt-0 ">
+                    <div className={`tab-content `}>
                 <div className="mt-4 mb-4">
-     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Select a taxonomic rank for display</h3>
-                <select value={selectedRank} onChange={(e) => setSelectedRank(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer">
-                    {taxonomyOptions.map((option, index) => (
-                        <option key={index} value={option}>
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                        </option>
-                    ))}
-                </select>
+     <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a taxonomic rank for display</h3>
+
+                <Dropdown 
+            id="rank-tax"
+            value={selectedRank}
+            options={dropdownOptions}
+            onChange={(e) => setSelectedRank(e.value)}
+            className="w-full"
+        />
 </div>
     
     
                 </div>
 
-                <Divider/>
+
     
-                <div className="mt-4 mb-4">
-    
-                    <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Group</h3>
+                <div className="mt-8 mb-4">
+                <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Group</h3>
                     <ul className="flex flex-wrap justify-between">
               
-                    <select 
-                    value={colorBy}
-                     onChange={(e) => setColorBy(e.target.value)}
-                     disabled = {filteredOptions.length <= 1}
-                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer">
-                        {colorByOptions.map((option, index) => {
-                            if (columnOptions && columnOptions?.includes(option as never)) {
-                                return (
-                                    <option key={index} value={option}>
-                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                    </option>
-                                );
-                            }
-                            return null;
-                        })}
-                    </select>
+        
+
+                    <Dropdown 
+            id="rank-group"
+            value={colorBy}
+            options={dropdownColumns}
+            onChange={(e) => setColorBy(e.value)}
+            className="w-full"
+        />
                         
                     </ul>
                 </div>
     
-<Divider/>
-                <div className="mt-4 mb-4 opacity-50" aria-disabled={true}>
+
+                <div className="mt-8 mb-4 opacity-50" aria-disabled={true}>
     
                     <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">Subgroup</h3>
                     <ul className="flex flex-wrap justify-between">
               
 
-                    <select value={colorBy} disabled   onChange={(e) => setColorBy(e.target.value)} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                        {colorByOptions?.map((option, index) => {
-                            if (columnOptions && columnOptions?.includes(option as never)) {
-                                return (
-                                    <option key={index} value={option}>
-                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                    </option>
-                                );
-                            }
-                            return null;
-                        })}
-                    </select>
+           
+
+                    <Dropdown 
+            id="rank-group"
+            value={colorBy}
+            options={dropdownColumns}
+            onChange={(e) => setColorBy(e.value)}
+            className="w-full"
+            disabled
+        />
 
                         
                     </ul>
@@ -443,21 +517,25 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
     
         <Divider/>
                  <div className="flex w-full items-center margin-0 justify-center my-10">
-          <Button
+                 <Button
             onClick={applyFilters}
             loading={filterPeticion}
             iconPos="right"
-            icon="pi pi-check-square"
+            icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
-            className=" w-full p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Apply"
+            className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+            label="Update"
           />
         </div>
+                </div>
+                
             </div>
         );
 
         const title = (<div>{`LEfSe: Differentiation of ${selectedColorBy} based on ${actualcolumn}`}</div>)
 
+
+       
      
 
     return (
@@ -485,29 +563,15 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
     <div className="flex flex-col h-full">   <GraphicCard filter={filter} legend={""} title={title}>
         {abundanceData ? (
 dataExist ? 
-<div className="w-full" ref={plotContainerRef}>
 
-    <LefsePlot data={abundanceData} width={plotWidth} />
-</div>
-: (
-    <div className="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-lg shadow">
-    <i className="pi pi-exclamation-triangle text-3xl text-yellow-500"></i> {/* Icono de PrimeReact */}
-    <p className="mt-2 text-base text-gray-700">
-        Our analysis found no significant differences with the current settings.
-    </p>
-    <p className="text-sm text-gray-600">
-        Please try different options for data visualization.
-    </p>
+<div>
+    <div className="w-full" ref={plotContainerRef}>
+    <LefsePlot data={abundanceData} width={plotWidth} group={actualcolumn} />
 
 </div>
-
-)    ) : (
-            <SkeletonCard width={"500px"} height={"270px"} />
-        )}
-    </GraphicCard>
-    <div className="w-full flex flex-row ">
-                                <div className="w-1/4"></div>
-                                <div className="px-6 py-8 w-4/5" >
+<div className="w-full flex flex-row ">
+                              
+                                <div className="px-6 py-8 w-full" >
                                     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                         {Object.entries(configFile?.differential_abundance?.graph || {}).map(([key, value]) => {
                                         if (key === "samplelocation"  && typeof value === 'string') {
@@ -537,6 +601,25 @@ dataExist ?
                                     </div>
                                 </div>
                             </div>
+</div>
+
+: (
+    <div className="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-lg shadow">
+    <i className="pi pi-exclamation-triangle text-3xl text-yellow-500"></i> {/* Icono de PrimeReact */}
+    <p className="mt-2 text-base text-gray-700">
+        Our analysis found no significant differences with the current settings.
+    </p>
+    <p className="text-sm text-gray-600">
+        Please try different options for data visualization.
+    </p>
+
+</div>
+
+)    ) : (
+            <SkeletonCard width={"500px"} height={"270px"} />
+        )}
+    </GraphicCard>
+ 
         </div>
      
 

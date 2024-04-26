@@ -31,7 +31,7 @@ const router = usePathname();
   return (
     <div  className={`flex pb-12 ${isTaxo ? " xl:flex-row md:flex-col" : "flex-row"}  items-start mt-6 mb-6 bg-white w-full`}>
       {isWindowVisible && (
-        <div className={`flex pb-12 ${isTaxo? " xl:w-1/4 md:w-full taxograph" : "xl:w-1/4 md:w-1/4"  } relative heightGraph`}>
+        <div className={`flex pb-12 ${isTaxo? " xl:w-1/4 md:w-full taxograph" : "xl:w-1/4 md:w-1/4"  } relative h-full`}>
           <PopupComponent filter={filter} />
         </div>
       )}

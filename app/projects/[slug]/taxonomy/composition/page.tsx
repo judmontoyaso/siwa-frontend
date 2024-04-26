@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
+import { Config } from "plotly.js";
 
 
 
@@ -621,6 +622,7 @@ setFilterPeticion(true);
                 {loaded && (
                     <Plot
                     data={plotData}
+                    config={config}
                     layout={{
                         barmode: 'stack', // Modo de barras apiladas
                         bargap: 0.1,
@@ -648,28 +650,28 @@ setFilterPeticion(true);
                         annotations: [{
                             xref: 'paper',
                             yref: 'paper',
-                            x: 1.2, // Coloca justo al lado del gráfico
+                            x: 1.29, 
                             xanchor: 'left',
-                            y: 1, // En la parte superior
+                            y: 0.8, // En la parte superior
                             yanchor: 'top',
                             text: `${actualRank.charAt(0).toUpperCase() + actualRank.slice(1)}`, // Título de la leyenda
                             showarrow: false,
                             font: {
                                 family: 'Roboto, sans-serif',
-                                size: 14, // Tamaño de la fuente
+                                size: 17, // Tamaño de la fuente
                                 color: 'black'
                             }
                         }],
                         showlegend: true,
                         legend: {
                             orientation: "v", // Orientación vertical
-                            x: 1.05, // Posición a la derecha del gráfico
+                            x: 1.3, // Posición a la derecha del gráfico
                             xanchor: "left",
                             yanchor:"top",
-                            y: 0.9, // Centrado verticalmente
+                            y: 0.75, // Centrado verticalmente
                         
                         },
-                        margin: { l: 50, r: 100, t: 20, b: 50 } // Asegúrate de dejar suficiente margen a la derecha
+                        margin: { l: 50, r: 50, t: 20, b: 50 } // Asegúrate de dejar suficiente margen a la derecha
                     }}
                 />
                 )}
@@ -774,6 +776,17 @@ setFilterPeticion(true);
         </div>
     );
 
+    const config: Partial<Config> = {
+        displaylogo: false,
+        responsive: true,
+        modeBarButtonsToRemove: [
+          'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d', 
+          'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d', 
+          'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
+          'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
+        ],
+        modeBarButtonsToAdd: [],
+      };
     const dropdownOptions = taxonomyOptions.map((option, index) => ({
         label: option.charAt(0).toUpperCase() + option.slice(1),
         value: option

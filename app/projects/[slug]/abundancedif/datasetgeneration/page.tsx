@@ -574,10 +574,10 @@ setRecords(records)
     const handleCancelClick = () => {
         confirmDialog({
           message: 'Are you sure you want to cancel? This will delete all temporary data files.',
-          header: 'Confirmation',
+          header: 'Warning',
           icon: 'pi pi-exclamation-triangle',
-          acceptLabel: 'Yes, delete',
-          rejectLabel: 'No, go back',
+          acceptLabel: 'Yes, go back',
+          rejectLabel: 'No, stay here',
           accept: () => handleDeleteTempFiles(), // Llama a tu función para borrar los archivos temporales
           reject: () => {} // Opcionalmente, define lógica para "No, volver atrás"
         });
@@ -840,13 +840,14 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
                 <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}/>} >
                     <div className="">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
-                         <Card title={
-                <div className="flex items-center text-center w-full justify-center">
-                    <span>Differential Abundance</span>
-                    <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
-                </div>
-            }>                        
-     {showLefsePlot? <LefsePlot data={abundanceData} width={""}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 opacity-60 relative">
+                         <div className="flex flex-col w-11/12 mx-auto" >  
+
+
+<div className="flex flex-row w-full text-center justify-center items-center">
+<h1 className="text-3xl my-5 mx-2">     <span>Differential Abundance
+                    <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl inline-block" /></span></h1>
+</div>                      
+     {showLefsePlot? <LefsePlot data={abundanceData} width={""}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 mt-8 opacity-60 relative">
             <div className="flex items-center text-yellow-600 mb-2 w-full">
                 <AiOutlineInfoCircle size={24} />
                 <p className="text-lg font-semibold ml-2">Instructions for Dataset Generation:</p>
@@ -990,7 +991,7 @@ if ((columnOptions as string[]).includes(option)) {
 
 
                             </div>))}</>}
-                        </Card>
+                        </div>
                     </div>
                 </Layout>
             </SidebarProvider>

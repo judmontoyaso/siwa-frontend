@@ -21,7 +21,7 @@ import { RiExchangeFundsLine } from "react-icons/ri";
 import { Divider } from "primereact/divider";
 import { PopupProvider, usePopup } from "@/app/components/context/popupContext";
 import { Card } from "primereact/card";
-import Plotly from "plotly.js";
+import Plotly, { Config } from "plotly.js";
 import { Accordion, AccordionTab } from "primereact/accordion";
 import { useRouter } from "next/navigation";
 import { BreadCrumb } from "primereact/breadcrumb";
@@ -716,6 +716,18 @@ export default function Page({ params }: { params: { slug: string } }) {
         </div>
     );
 
+    const config: Partial<Config> = {
+        displaylogo: false,
+        responsive: true,
+        modeBarButtonsToRemove: [
+          'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d', 
+          'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d', 
+          'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
+          'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
+        ],
+        modeBarButtonsToAdd: [],
+      };
+
     useEffect(() => {
         if (availableLocations.length === 1) {
             // Si solo hay una ubicación disponible, selecciónala automáticamente
@@ -1163,7 +1175,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <>
-                        <div className="flex w-full justify-end">
+                        <div className="flex w-full justify-end mb-5">
                             <div className="flex items-center">
 
                                 <Button
@@ -1179,6 +1191,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                         <div id="plot">
                             <Plot
                                 className="alpha"
+                                config={config}
                                 data={
                                     Object.values(shannonData.filter(entry => entry.name !== "null"))
                                         .map((item, index) => ({
@@ -1200,9 +1213,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                                 layout={
                                     layout}
-                                config={{
-                                    responsive: true // Configuración para hacer el gráfico responsivo
-                                }} />
+                            />
                         </div>
 
 

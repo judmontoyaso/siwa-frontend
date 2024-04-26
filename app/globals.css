@@ -6951,3 +6951,26 @@
 .filter .p-accordion-tab {
   margin-bottom: 20px!important;
 }
+
+.card-abundance .p-card-content {
+  padding: 0 0;
+}
+
+.js-plotly-plot .modebar-group, .modebar{
+  display: flex!important;
+  flex-direction: row!important;
+  align-content: center!important;
+  align-items: center!important;
+}
+
+.js-plotly-plot .modebar{
+  background-color: #f9fafb!important;
+  border-radius: 6px!important;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)!important;
+  padding: 0.5rem!important;
+}
+
+
+.js-plotly-plot .modebar-group{
+  opacity: 1!important;
+}

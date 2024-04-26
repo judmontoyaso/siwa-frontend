@@ -847,7 +847,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
 <h1 className="text-3xl my-5 mx-2">     <span>Differential Abundance
                     <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl inline-block" /></span></h1>
 </div>                      
-     {showLefsePlot? <LefsePlot data={abundanceData} width={""}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 mt-8 opacity-60 relative">
+     {showLefsePlot? <LefsePlot data={abundanceData} width={""} group={""}/> : <> <div className="bg-yellow-100 shadow rounded-lg p-6 flex flex-col items-start mb-10 mt-8 opacity-60 relative">
             <div className="flex items-center text-yellow-600 mb-2 w-full">
                 <AiOutlineInfoCircle size={24} />
                 <p className="text-lg font-semibold ml-2">Instructions for Dataset Generation:</p>

@@ -6915,6 +6915,9 @@
   .p-dropdown .p-dropdown-label {
     padding-right: 4px;
     padding-left: 4px;
+    padding-top: 8px;
+padding-bottom: 8px;
+    font-size: 11px;
   }
 
   .p-dropdown .p-dropdown-trigger {
@@ -6977,3 +6980,56 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
 .js-plotly-plot .modebar-group{
   opacity: 1!important;
 }
+
+
+.colorby-acordeon .p-accordion-content, .filter-acordeon .p-accordion-content{
+  padding-left: 5px!important;
+  padding-right: 5px!important;
+}
+
+
+@media screen and (max-width: 1215px) {
+  .colorby-acordeon  .p-accordion-header-text, .filter-acordeon .p-accordion-header-text {
+    font-size: 12px;
+  }
+  
+  
+}
+
+.colorby-acordeon  .p-accordion-header-text, .filter-acordeon .p-accordion-header-text {
+  font-size: 14px;
+}
+
+
+@media screen and (max-width: 1280px) {
+  .colorby-acordeon  h3, .filter-acordeon h3 {
+    font-size: 14px;
+    line-height: 15px;
+  }
+  
+  .colorby-acordeon  svg, .filter-acordeon svg {
+    font-size: 0.5rem!important;
+
+  }
+
+  .colorby-acordeon label  {
+    font-size: 12px;
+    padding: 2px;
+  }
+
+  .filter-acordeon label  {
+    font-size: 12px;
+    padding: 1px;
+  } 
+
+  .colorby-acordeon label div {
+    font-size: 12px;
+    padding: 2px;
+  }
+
+  .filter-acordeon label div {
+    font-size: 12px;
+    padding: 1px;
+  } 
+}
+

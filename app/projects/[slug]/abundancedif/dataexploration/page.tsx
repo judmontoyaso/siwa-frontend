@@ -702,7 +702,7 @@ useEffect(() => {console.log("filter",isNotFilter)}, [isNotFilter])
                                                             })}
                                                         </div>
                                                         <div className="prose flex flex-row flex-wrap">
-    {isNotFilter && configFile?.differential_abundance?.graph ? (
+    {isNotFilter && !filterPeticion && configFile?.differential_abundance?.graph ? (
         Object.entries(configFile.differential_abundance.graph.not_filter).map(([key, value]) => {
             // Construyendo la clave para comparar, ej: "treatment_species"
             const groupTaxaRankKey = `${actualcolumn}_${selectedColorBy}`;
@@ -722,7 +722,7 @@ console.log(groupTaxaRankKey)
     ) : (
         <div className="col-span-2">
           <p className="text-gray-700 m-3 text-justify text-xl">
-            No data available or filters are applied.
+        
           </p>
         </div>
       )}

@@ -12,6 +12,7 @@ import Loading from './loading';
 import { CgSpinnerTwoAlt } from 'react-icons/cg';
 import Spinner from './pacmanLoader';
 import { PopupProvider } from './context/popupContext';
+import Footer from './footer';
 
 type LayoutProps = {
   children: ReactNode;
@@ -32,7 +33,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:an
             <main className="overflow-auto text-center items-start justify-center block bg-white p-5 h-full">
 
               {children}
-
+<Footer />
             </main>
           <div className='w-full flex flex-row justify-between border border-t-gray-100'>
             <div>

@@ -155,7 +155,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
                   y: yValues,
                   type: 'bar',
                   name: label,
-                  marker: { color: color },
+                  marker: { color: color,  width: 1  },
               });
   
               newScatterColors[label as string] = color;
@@ -212,7 +212,7 @@ useEffect(() => {
                 y: yValues,
                 type: 'bar',
                 name: label,
-                marker: { color: scatterColors[label] },
+                marker: { color: scatterColors[label],  width: 1  },
             });
         });
 
@@ -525,7 +525,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
                     y: yValues,
                     type: 'bar',
                     name: label,
-                    marker: { color: color },
+                    marker: { color: color, width: 1  },
                 });
 
                 newScatterColors[label as string] = color;
@@ -629,7 +629,7 @@ setFilterPeticion(true);
                         plot_bgcolor: 'white',
                         yaxis: {
                             title: {
-                                text: 'Relative Abundance',
+                                text: 'Relative Abundance (%)',
                                 font: { 
                                     family: 'Roboto, sans-serif',
                                     size: 18,
@@ -839,8 +839,7 @@ setFilterPeticion(true);
 
         </AccordionTab>
                 <AccordionTab header="Filter by">
-            <div className="flex xl:flex-col md:flex-row md:flex-wrap xl:flex-nowrap items-left mt-4 mb-4 ">
-                <div className="xl:w-full md:w-1/2 md:flex md:flex-row xl:flex-col md:justify-between">
+                <div className="flex flex-col items-left  mt-2 mb-4">
                     <div className="w-full flex flex-col">
 
                     <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a taxonomic rank for display</h3>
@@ -853,9 +852,7 @@ setFilterPeticion(true);
         />
         </div>
 
-                </div>
-<Divider layout="vertical" className="md:block xl:hidden" />
-                <div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between mt-2">
+              
     <div className="max-w-xs mx-auto flex flex-col items-center mt-5 mb-5">
     <PrimeToolTip target=".topInputText" />                        
 
@@ -881,9 +878,7 @@ setFilterPeticion(true);
     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
 </div>
  
-  </div>
-  <Divider className="md:block xl:hidden w-full"/>
-  <div className="xl:w-full md:w-1/2 md:flex md:flex-col md:justify-between mb-5">
+  
     <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
 
                     <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location (if applicable)</h3>
@@ -899,9 +894,7 @@ setFilterPeticion(true);
 
 
                 </div>
-</div>
-<Divider layout="vertical" className="md:block xl:hidden" />
-<div className="xl:w-full md:w-2/5 md:flex md:flex-col md:justify-between">
+
 
      
                 <div className="mt-4 mb-4">
@@ -969,7 +962,7 @@ if ((columnOptions as string[])?.includes(option)) {
                     </ul>
                 </div>
 
-            </div>
+           
             <div className="xl:w-full md:w-full">
 
             <>
@@ -1021,7 +1014,7 @@ useEffect(() => {
     return (
         <div className="w-full h-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} />}>
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
                 {isLoaded ? (
                     <div className="flex flex-col w-11/12 mx-auto">
 
@@ -1058,7 +1051,8 @@ useEffect(() => {
               
                 <AccordionTab header={<>  Hierarchical visualization</>}>
 
-                <div className="flex flex-row flex-wrap "><div className="w-full xl:w-1/2">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                <div className="flex flex-row flex-wrap ">
+                    <div className="w-full lg:w-1/2">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
                         This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
                     </p>
                     <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
@@ -1069,8 +1063,9 @@ useEffect(() => {
                     </p>
                     <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
                         The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. Researchers and educators can utilize this visualization to discuss and analyze patterns of biodiversity, evolutionary relationships, or the impact of environmental changes on taxonomic distributions.
-                    </p></div>
-                    <iframe className="w-full xl:w-1/2 mt-5 mb-5"
+                    </p>
+                    </div>
+                    <iframe className="w-full lg:w-1/2 mt-5 mb-5"
                         src="/api/components/innerHtml" 
                         frameBorder="0" 
  

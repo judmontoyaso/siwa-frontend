@@ -977,11 +977,11 @@ const title = ( `Compositional differences (bray curtis) ${Location.length === 3
   return (
     <div className="w-full h-full">
       <SidebarProvider>
-      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} />}>
+      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
         {isLoaded ? (
 <div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">
-<h1 className="text-3xl my-5 mx-2">Beta diversity</h1>
+<h1 className="text-3xl my-5 mx-2">Community make-up</h1>
 <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip"/> 
          <Tooltip 
            style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px",textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)"}}

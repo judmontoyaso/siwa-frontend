@@ -706,7 +706,9 @@ useEffect(() => {console.log(isNotFilter)}, [isNotFilter])
         Object.entries(configFile.differential_abundance.graph.not_filter).map(([key, value]) => {
             // Construyendo la clave para comparar, ej: "treatment_species"
             const groupTaxaRankKey = `${actualcolumn}_${selectedColorBy}`;
-console.log(key)
+
+
+            console.log(key)
 console.log(groupTaxaRankKey)
             if (key === groupTaxaRankKey) {
                 return (

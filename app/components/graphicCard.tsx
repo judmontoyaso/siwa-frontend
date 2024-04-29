@@ -36,7 +36,7 @@ const router = usePathname();
         </div>
       )}
 
-<Card id='plofather'  className={`h-full ${ isWindowVisible ? "xl:w-10/12 md:w-10/12" : "w-full"} relative m-5 `}>
+<Card id='plofather'  className={`h-auto  ${ isWindowVisible ? "xl:w-10/12 md:w-10/12" : "w-full"} relative m-5 `}>
         {/* Posiciona el botón de manera que sobresalga del contenedor de filtros como una pestaña */}
         <button onClick={toggleFilterVisibility} className={`absolute top-0 ${isWindowVisible ? '-left-14': '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg p-2`}>
           {isWindowVisible ? <IoCloseOutline size="20" /> : <IoFilterOutline size="20" />}

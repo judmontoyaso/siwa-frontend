@@ -15,6 +15,7 @@ import { Message } from "primereact/message";
 import { useRouter } from "next/navigation";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
+import { UrlObject } from "url";
 
 const Page = ({ params }: { params: { slug: string } }) => {
   const filterContent = ""; // Replace with the actual implementation of 'filterContent'
@@ -208,6 +209,38 @@ const Page = ({ params }: { params: { slug: string } }) => {
           link: `/projects/${params.slug}/abundancedif/datasetgeneration`
       }
   ];
+
+
+  const responsiveOptions = [
+    {
+        breakpoint: '1024px',
+        numVisible: 3,
+        numScroll: 3
+    },
+    {
+        breakpoint: '600px',
+        numVisible: 2,
+        numScroll: 2
+    },
+    {
+        breakpoint: '480px',
+        numVisible: 1,
+        numScroll: 1
+    }
+];
+
+const plotTemplate = (plot: { link: string | UrlObject; title: any | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | PromiseLikeOfReactNode | React.Key | null | undefined; data: any; layout: any; }) => {
+    return (
+        <Link href={plot.link} key={plot.title}>
+            <div className="bg-white shadow-md hover:shadow-xl transition-shadow duration-300 p-4 pt-0 flex flex-col justify-between border w-64 h-72 m-4 card-preview">
+                <div className="flex-grow">
+                    <PlotPreview data={plot.data} layout={plot.layout} style={{ width: 200, height: 130 }} />
+                </div>
+                <div className="text-center font-medium">{plot.title}</div>
+            </div>
+        </Link>
+    );
+};
   
 
     const bg_discount_gradient = 'bg-gradient-to-tr from-navy-100 to-navy-400'
@@ -228,63 +261,76 @@ const Page = ({ params }: { params: { slug: string } }) => {
     <div className="flex xl:flex-wrap flex-nowrap xl:flex-row flex-col-reverse">
 
       {/* Contenedor de texto */}
-      <div className="px-6 py-8 xl:w-1/2 w-full">
 
-     
-      {configFile?.summary?.image ? (
-        <div className="prose lg:prose-lg max-w-none space-y-4 text-start">
-        <Card className="p-0"> 
-      <div className={`flex flex-row items-center py-[6px] px-4 ${bg_discount_gradient} mb-8`}>
-      <h2 className="w-full justify-start text-2xl font-semibold text-white text-start mb-2 mt-2">Know more about the {params.slug} project</h2>
-
-        </div>  {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
-            <p key={key} className="text-gray-700 text-xl font-light mb-4 p-2">{value as ReactNode}</p>
-          ))}</Card>
-        </div>
-          
-          ) : (
-
-        <div className="w-full">
-        <div className="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
-        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[480px] mb-2.5"></div>
-        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
-        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[440px] mb-2.5"></div>
-        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[460px] mb-2.5"></div>
-        <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px]"></div>
-    </div>)
-}
-      </div>
 
       {/* Contenedor de imagen */}
-      <div className="xl:w-1/2 w-full flex justify-center items-center xl:justify-end p-4">
+
+
+    </div>
+    <div className="flex flex-row-reverse w-full px-4 py-2">
+           
+                <div className="flex flex-col xl:w-1/2 w-1/3 items-center content-start mx-auto">
+                <div className="mb-4 w-full justify-start">
+                <Message severity="info" className="w-full justify-center text-xl message-summary" text="How to start? Use the sidebar on the left to navigate between different analyses available for this project, or begin your exploration now by selecting any of the available reports below." />
+            </div>
+            <div className="flex w-full flex-row flex-wrap  justify-evenly">
+               {plotsData.map(plot => (
+                        <Link href={plot.link} key={plot.title}>
+                            <div className="">
+                                <Card title={plot.title} className="bg-white shadow-md hover:shadow-xl transition-shadow duration-300 p-4 pt-0 flex flex-col justify-between border w-52 h-60 m-4 card-preview">
+                                    <div className="flex-grow">
+                                        <PlotPreview data={plot.data} layout={plot.layout} style={{ width: 150, height: 90 }} />
+                                    </div>
+                                </Card>
+                            </div>
+                        </Link>
+                    ))}
+            </div>
+                   
+                </div>
+
+
+                <div className="px-6 xl:w-1/2 w-2/3 ">
+
+     
+{configFile?.summary?.image ? (
+  <div className="prose lg:prose-lg max-w-none text-start w-full">
+  <Card className="p-0"> 
+<div className={`flex flex-row items-center py-[6px] px-4 ${bg_discount_gradient} mb-8`}>
+<h2 className="w-full justify-start text-2xl font-semibold text-white text-start mb-2 mt-2">Know more about the {params.slug} project</h2>
+
+  </div>  {Object.entries(configFile?.summary?.text || {}).map(([key, value]) => (
+      <p key={key} className="text-gray-700 text-xl font-light mb-4 p-2">{value as ReactNode}</p>
+    ))}
+    <div className="w-full  flex justify-center items-center xl:justify-end p-4">
         
         {configFile?.summary?.image ? (
-          <Image src={configFile?.summary?.image} alt="Summary Image" width="500" height="300"  preview />
+          <Image src={configFile?.summary?.image} alt="Summary Image" className="w-full" height="300"  preview />
           
         ) : (
           <Image src={imageload.src} alt="Logo SIWA" width="650" className="animate-pulse" style={{ opacity: 0.2, filter: 'brightness(90%)' }} />
         )}
 
       </div>
+    </Card>
 
-    </div>
-    <div className="flex flex-col w-full px-4 py-2">
-            <div className="mb-8 mt-6 w-full justify-start">
-                <Message severity="info" className="w-full justify-center text-xl message-summary" text="How to start? Use the sidebar on the left to navigate between different analyses available for this project, or begin your exploration now by selecting any of the available reports below." />
-            </div>
-                <div className="flex flex-row flex-wrap w-full justify-evenly items-center m-auto border rounded-lg border-gray-100 my-2 py-8 px-4">
-                    {plotsData.map(plot => (
-                        <Link href={plot.link} key={plot.title}>
-                            <div className="">
-                                <Card title={plot.title} className="bg-white shadow-md hover:shadow-xl transition-shadow duration-300 p-4 pt-0 flex flex-col justify-between border w-64 h-72 m-4 card-preview">
-                                    <div className="flex-grow">
-                                        <PlotPreview data={plot.data} layout={plot.layout} style={{ width: 200, height: 130 }} />
-                                    </div>
-                                </Card>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+
+  </div>
+
+  
+    
+    ) : (
+
+  <div className="w-full">
+  <div className="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
+  <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[480px] mb-2.5"></div>
+  <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
+  <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[440px] mb-2.5"></div>
+  <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[460px] mb-2.5"></div>
+  <div className="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px]"></div>
+</div>)
+}
+</div>
           
         </div>
    

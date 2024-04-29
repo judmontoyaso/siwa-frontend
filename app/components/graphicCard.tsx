@@ -31,7 +31,7 @@ const router = usePathname();
   return (
     <div  className={`flex pb-12 flex-row  items-start mt-6 mb-6 bg-white w-full`}>
       {isWindowVisible && (
-        <div className={`flex pb-12  xl:w-2/12 md:w-2/12 relative h-full`}>
+        <div className={`flex pb-12  xl:w-2/12 md:w-2/12 relative h-auto`}>
           <PopupComponent filter={filter} />
         </div>
       )}

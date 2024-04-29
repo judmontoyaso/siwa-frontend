@@ -214,7 +214,7 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
 
     const { accessToken } = useAuth();  
 
-useEffect(() => {if (columns.length > 0) {setActualcolumn(columns[0])}}, [columns])
+useEffect(() => {if (columns?.length > 0) {setActualcolumn(columns[0])}}, [columns])
 
     useEffect(() => {if(message!== null){ setLoadcsv(true)}}, [message])
 
@@ -235,7 +235,7 @@ useEffect(() => {if(user?.nickname){setUserNickname(user?.nickname)}}, [user])
                 throw new Error("Network response was not ok");
             }
             const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
-            setconfigFile(configfile.configFile);
+            setconfigFile(configfile?.configFile);
             const combinedOptions = Array.from(new Set([...colorByOptions, ...configfile.configFile.columns])) as any[];
             
             setColorByOptions(combinedOptions as never[]);
@@ -304,7 +304,7 @@ console.log(user?.nickname)
             setAbundanceData(result);
             setColumnOptions(result.columnsmeta);   
             console.log(result) 
-            if (result.data.length > 0) {
+            if (result?.data?.length > 0) {
                 setDataExist(true);
             }else{setDataExist(false)}
             return result;
@@ -335,7 +335,7 @@ console.log(user?.nickname)
             const result = await response.json();
             setAbundanceData(result);
             console.log(result) 
-            if (result.data.length > 0) {
+            if (result?.data?.length > 0) {
                 setDataExist(true);
             }else{setDataExist(false)}
             // setIsDatasetReady(true);
@@ -384,7 +384,7 @@ console.log(user?.nickname)
         // Verificar si `tempfile` es true antes de ejecutar la lógica
         if (tempfile === true) {
           fetchcolumnscsv(accessToken).then((result) => {
-            if (Array.isArray(result) && result.length > 0 && userNickname !== "" && userNickname !== undefined) {
+            if (Array.isArray(result) && result?.length > 0 && userNickname !== "" && userNickname !== undefined) {
               fetchDataAbundance(accessToken, result[0]);
             } else {
               console.error('Received invalid or empty response:', result);
@@ -439,7 +439,7 @@ const dropdownColumns =       colorByOptions?.map((option, index) => {
             value: option}
         );
     }
-    return "";
+    return null;
 })
 
 const filteredOptions = colorByOptions.filter(option => !columnOptions || columnOptions.includes(option as never));
@@ -480,7 +480,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
                     <Dropdown 
             id="rank-group"
             value={colorBy}
-            options={dropdownColumns}
+            options={dropdownColumns.filter((option) => option !== null)}
             onChange={(e) => setColorBy(e.value)}
             className="w-full"
         />
@@ -500,7 +500,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
                     <Dropdown 
             id="rank-group"
             value={colorBy}
-            options={dropdownColumns}
+            options={dropdownColumns.filter((option) => option !== null)}
             onChange={(e) => setColorBy(e.value)}
             className="w-full"
             disabled
@@ -527,7 +527,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
             </div>
         );
 
-        const title = (<div>{`LEfSe: Differentiation of ${selectedColorBy} based on ${actualcolumn}`}</div>)
+        const title = (<div className="mb-4">{`LEfSe: Differentiation of ${selectedColorBy} based on ${actualcolumn}`}</div>)
 
 
        
@@ -539,7 +539,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
             <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home} className="text-sm"/>} >
             <div className="flex flex-col w-11/12 mx-auto">
                     <div className="flex flex-row w-full text-center justify-center items-center">
-<h1 className="text-3xl my-5 mx-2">Differential abundance : LEfSe</h1>
+<h1 className="text-3xl my-5 mx-2">Differential taxonomic abundance : LEfSe</h1>
 <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
 </div>
 

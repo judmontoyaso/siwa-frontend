@@ -485,9 +485,9 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-    useEffect(() => (records === recordsAll ? setIsNotFilter(true) : setIsNotFilter(false)), [recordsAll])
+    useEffect(() => (records === recordsAll ? setIsNotFilter(true) : setIsNotFilter(false)), [recordsAll, records])
 
-useEffect(() => {console.log(isNotFilter)}, [isNotFilter])
+useEffect(() => {console.log("filter",isNotFilter)}, [isNotFilter])
 
     useEffect(() => {
         fetchConfigFile(accessToken);

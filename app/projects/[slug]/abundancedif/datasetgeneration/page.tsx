@@ -94,7 +94,7 @@ const [selectedValuesByVariable, setSelectedValuesByVariable] = useState<Selecte
 const itemsBreadcrumbs = [
     { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
     { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
-  { label: 'Differential Abundance: Data', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/datasetgeneration`}>{item.label}</Link> },
+  { label: 'Diff. Abund. : Data', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/datasetgeneration`}>{item.label}</Link> },
 ];
 
 const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
@@ -190,7 +190,6 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
     
     useEffect(() => {
         // Verifica si 'tempfile' tiene algún contenido significativo
-    console.log("dsajkhakjdhasjkdhaskjdhjashdkaskjdhasjkhdlahs",tempfile)
         // Si existe un dataset, ajusta 'activeIndex' al último paso
         if (tempfile) {
             setActiveIndex(2); // Asumiendo que 2 es el índice del último paso
@@ -837,7 +836,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
     return (
         <div className="h-full">
             <SidebarProvider>
-                <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}/>} >
+                <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
                     <div className="">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <div className="flex flex-col w-11/12 mx-auto" >  

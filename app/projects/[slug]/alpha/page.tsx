@@ -1039,7 +1039,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             return {
                 x: locationValue,
                 y: 11.2 + (graphType === "boxplot" ? 0.5 : 4),
-                text: significance + "*",
+                text: significance,
                 xref: 'x',
                 yref: 'y',
                 showarrow: false,
@@ -1118,25 +1118,26 @@ export default function Page({ params }: { params: { slug: string } }) {
     //     setLayout(newLayout);
     // }, [isWindowVisible, graphType, plotWidth, shannonData, annotations]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
+    const shouldShowText = annotations && annotations.length > 0;
 
 
     useEffect(() => {
 
-        if (annotations.length > 0) {
-            annotations.push({
-                text: '* Each letter indicates whether there are statistically significant differences between each group.',
-                xref: 'paper',
-                yref: 'paper',
-                x: 0,
-                xanchor: 'left',
-                y: -0.1, // Ajusta esta posición según necesites
-                yanchor: 'top',
-                showarrow: false,
-                font: {
-                    size: 12
-                }
-            });
-        }
+        // if (annotations.length > 0) {
+        //     annotations.push({
+        //         text: '* Each letter indicates whether there are statistically significant differences between each group.',
+        //         xref: 'paper',
+        //         yref: 'paper',
+        //         x: 0,
+        //         xanchor: 'left',
+        //         y: -0.1, // Ajusta esta posición según necesites
+        //         yanchor: 'top',
+        //         showarrow: false,
+        //         font: {
+        //             size: 10
+        //         }
+        //     });
+        // }
         // Calcula el máximo de 'alphashannon'
         const maxYValueForLocationShannon = calculateMaxAlphaShannon();
         // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
@@ -1158,11 +1159,12 @@ export default function Page({ params }: { params: { slug: string } }) {
                 showticklabels: false
             },
             annotations: annotations, // Usar 'annotations' del estado
+            autosize: true,
             yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
             margin: {
                 l: 20, r: 10,
                 t: 60,
-                b: 50
+                b: 10
             }
         };
         setLayout(newLayout);
@@ -1214,6 +1216,14 @@ export default function Page({ params }: { params: { slug: string } }) {
                                 layout={
                                     layout}
                             />
+                              {shouldShowText && (
+                                <div className="flex flex-row  p-3 mx-3 mb-5">
+                                <div className="mr-1 font-bold">* </div>
+        <div className="text-gray text-sm flex text-justify">
+          Each letter indicates whether there are statistically significant differences between each group.
+        </div>
+        </div>
+      )}
                         </div>
 
 
@@ -1234,7 +1244,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
             <Suspense fallback={<p>Loading feed...</p>}>
                 <SidebarProvider>
-                    <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} />}>
+                    <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
                     
                         {isLoaded ? (
                             <div className="flex flex-col w-11/12  mx-auto">

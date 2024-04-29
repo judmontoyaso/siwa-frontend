@@ -94,14 +94,29 @@ const Page = ({ params }: { params: { slug: string } }) => {
     const plotsData = [
       {
           title: 'Richness',
-          data: [{
-              y: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+          data: [
+            {
+              y: [1.2, 2.3,  5.2, 6, 7.3, 9.1],
               type: 'box',
               marker: {
                 color: "#035060" // Asigna el primer color al boxplot
+              },
+              boxpoints: 'all', // Muestra todos los puntos de datos
+        pointpos: 0, // Posición de los puntos respecto a la caja
+        jitter: 0.3 // Controla la dispersión de los puntos
+            },
+            {
+              y: [2, 3.3, 6.2, 7.8, 8.7, 9.2, 12.5],
+              type: 'box',
+              marker: {
+                color: "#f99b35" // Asigna un segundo color al boxplot
+              },
+              boxpoints: 'all', // Muestra todos los puntos de datos
+        pointpos: 0, // Posición de los puntos respecto a la caja
+        jitter: 0.3 // Controla la dispersión de los puntos
             }
-          }],
-          layout: { margin: { t: 0, r: 0, l: 0, b: 0}},
+          ],
+          layout: { margin: { t: 0, r: 0, l: 0, b: 0}, showlegend: false},
           link: `/projects/${params.slug}/alpha`
       },
       {
@@ -128,7 +143,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
                 type: 'bar',
                 marker: {
                   color: "#035060" // Asigna el primer color al boxplot
-              }
+              },   width: 1 
             },
             {
                 x: ['Total'], // Cambia esto para apilar en un solo grupo
@@ -137,7 +152,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
                 type: 'bar',
                 marker: {
                   color: "#f99b35" // Segundo color
-              }
+              },   width: 1 
             },
             {
               x: ['Total'], // Cambia esto para apilar en un solo grupo
@@ -146,7 +161,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
               type: 'bar',
               marker: {
                 color: "#4e8e74" // Tercer color
-            }
+            },   width: 1 
           },
           {
             x: ['Total'], // Cambia esto para apilar en un solo grupo
@@ -155,21 +170,27 @@ const Page = ({ params }: { params: { slug: string } }) => {
             type: 'bar',
             marker: {
               color: "#075462" // Reutiliza el primer color
-          }
+          },   width: 1 
         }
         ],
-          layout: {
-            margin: { t: 0, r: 0, l: 0, b: 0},
-              barmode: 'stack',
-              xaxis: {
-                tickangle: -45
-            },
-            yaxis: {
-                zeroline: false,
-                gridwidth: 2
-            },
-
+        layout: {
+          margin: { t: 0, r: 0, l: 0, b: 0},
+            barmode: 'stack',
+            xaxis: {
+              tickangle: -45
           },
+          yaxis: {
+              zeroline: false,
+              gridwidth: 1
+          },
+          legend: {
+            x: 1.2, // Moves legend to the right outside of the plotting area
+            xanchor: 'left', // Anchors the legend to the right side
+            y: 1, // Positions the top of the legend at the top of the plotting area
+            font: {
+              size: 10 // Smaller font size for the legend
+            }
+          }},
           link: `/projects/${params.slug}/taxonomy/composition`
       },
       {
@@ -192,7 +213,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
     const bg_discount_gradient = 'bg-gradient-to-tr from-navy-100 to-navy-400'
     const text_gradient = ' bg-gradient-to-br from-navy-300 via-navy-500 to-siwa-blue text-transparent bg-clip-text'
   return (
-    <Layout slug={params.slug} filter={filterContent}  breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}/>}>
+    <Layout slug={params.slug} filter={filterContent}  breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
 <div className="w-full py-8 flex justify-center">
   <div className="bg-white w-11/12  rounded-lg overflow-hidden pb-4">
 <div className="w-full flex justify-center text-center">

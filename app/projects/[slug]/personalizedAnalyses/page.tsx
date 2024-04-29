@@ -157,7 +157,7 @@ fetchConfigFile(accessToken);
     return (
         <div className="w-full h-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}/>} >
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
             <div className="flex flex-col w-full">
 
 <div className="flex flex-row w-full text-center justify-center items-center">

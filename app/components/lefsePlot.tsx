@@ -210,9 +210,8 @@ responsive: true,
   };
 
   return (
-    <div>
 
-      
+
       <Plot
         ref={plotRef}
         data={traces}
@@ -221,11 +220,8 @@ responsive: true,
         config={config}
         onInitialized={() => setIsLoaded(true)}
       />
-      {/* <Button onClick={downloadImage} disabled={!isLoaded}>Download as PNG</Button>
-      <button onClick={zoomIn} disabled={!isLoaded}>Zoom In</button>
-      <button onClick={zoomOut} disabled={!isLoaded}>Zoom Out</button>
-      <button onClick={resetView} disabled={!isLoaded}>Reset View</button> */}
-    </div>
+
+  
   );
 };
 

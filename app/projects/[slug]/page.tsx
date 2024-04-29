@@ -247,9 +247,9 @@ const plotTemplate = (plot: { link: string | UrlObject; title: any | ReactElemen
     const text_gradient = ' bg-gradient-to-br from-navy-300 via-navy-500 to-siwa-blue text-transparent bg-clip-text'
   return (
     <Layout slug={params.slug} filter={filterContent}  breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
-<div className="w-full py-8 flex justify-center">
+<div className="w-full py-8 flex justify-center summary">
   <div className="bg-white w-11/12  rounded-lg overflow-hidden pb-4">
-<div className="w-full flex justify-center text-center">
+<div className="w-full flex justify-center text-center title summary">
 
 {configFile?.summary?.image ? (    <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold ss:text-[72px] text-[35px] text-white ss:leading-[100.8px] leading-[50px]">
           
@@ -273,7 +273,7 @@ const plotTemplate = (plot: { link: string | UrlObject; title: any | ReactElemen
                 <div className="mb-4 w-full justify-start">
                 <Message severity="info" className="w-full justify-center text-xl message-summary" text="How to start? Use the sidebar on the left to navigate between different analyses available for this project, or begin your exploration now by selecting any of the available reports below." />
             </div>
-            <div className="flex w-full flex-row flex-wrap  justify-evenly">
+            <div className="flex w-full flex-row flex-wrap  justify-evenly access-projects">
                {plotsData.map(plot => (
                         <Link href={plot.link} key={plot.title}>
                             <div className="">

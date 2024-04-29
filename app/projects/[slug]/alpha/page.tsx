@@ -754,7 +754,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const filter = (
         <div className={`flex flex-col w-full  rounded-lg  dark:bg-gray-800 `}>
    <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
-      <AccordionTab header="Color by">
+      <AccordionTab className="colorby-acordeon" header="Color by">
     
 
                 <div>
@@ -769,7 +769,7 @@ export default function Page({ params }: { params: { slug: string } }) {
           
                 </div>
              </AccordionTab>
-                <AccordionTab header="Filter by">
+                <AccordionTab className="filter-acordeon" header="Filter by">
            
                 <div className={`tab-content `}>
                     <div className="flex flex-col items-left mt-2 mb-4">
@@ -788,8 +788,8 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                 <div className=" mt-8 mb-4">
 
-      <h3 className="text-lg font-semibold text-gray-700 dark:text-white my-tooltip whitespace-pre">
-        Filtering <span>options <AiOutlineInfoCircle className="text-sm mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
+      <h3 className="text-lg font-semibold text-gray-700  my-tooltip "data-tip data-for="interpreteTip" id="group" >
+        Filtering <span>options <AiOutlineInfoCircle className="xl:text-sm  text-xs mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
       </h3>     
                                     <Tooltip
                                         style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}

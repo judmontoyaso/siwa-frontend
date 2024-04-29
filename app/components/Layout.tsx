@@ -41,7 +41,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:an
               </Tag>
             </div>
             <div className="flex items-center text-center mr-5">
-              version 0.0.1
+              Version 1.0.1
             </div>
           </div>
         </div></>}

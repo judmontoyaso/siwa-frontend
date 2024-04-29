@@ -6965,10 +6965,11 @@
 
 .js-plotly-plot .modebar{
   background-color: #f9fafb!important;
-  border-radius: 6px!important;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)!important;
-  padding: 0.5rem!important;
-  right: -10px!important;
+  border-radius: 8px!important;
+border-color: var(--gray-600);  padding: 0.5rem!important;
+  top: -10px!important;
+  right: 0px!important;
+  width: 150px!important;
 }
 
 

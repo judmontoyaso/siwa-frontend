@@ -116,7 +116,7 @@ console.log(colorOrder)
       width: width || undefined,
       showlegend: true,
       legend: {
-        x: 0.5,
+        x: 0,
         xanchor: 'center',
         y: 1.1,  // Posición Y ligeramente por encima de la parte superior del gráfico
         yanchor: 'top',
@@ -125,7 +125,7 @@ console.log(colorOrder)
 
     setTraces(newTraces as never[]);
     setLayout(newLayout);
-  }, [data, width, colorOrder, window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
+  }, [isLoaded, data, window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
 
   useEffect(() => {
     function handleResize() {
@@ -134,7 +134,7 @@ console.log(colorOrder)
 
       setLayout(prevLayout => ({
         ...prevLayout,
-        legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.1, yanchor: 'top' }
+        legend: { orientation: 'h', x: 0, xanchor: 'center', y: 1.1, yanchor: 'top' }
       }));
     }
 
@@ -211,6 +211,8 @@ responsive: true,
 
   return (
     <div>
+
+      
       <Plot
         ref={plotRef}
         data={traces}

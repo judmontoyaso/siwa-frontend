@@ -29,16 +29,16 @@ const router = usePathname();
   // useEffect(() => {console.log("isWindowVisible", isWindowVisible)}, [isWindowVisible]);
 
   return (
-    <div  className={`flex pb-12 ${isTaxo ? " xl:flex-row md:flex-col" : "flex-row"}  items-start mt-6 mb-6 bg-white w-full`}>
+    <div  className={`flex pb-12 flex-row  items-start mt-6 mb-6 bg-white w-full`}>
       {isWindowVisible && (
-        <div className={`flex pb-12 ${isTaxo? " xl:w-1/4 md:w-full taxograph" : "xl:w-1/4 md:w-1/4"  } relative h-full`}>
+        <div className={`flex pb-12  xl:w-1/4 md:w-1/4 relative h-full`}>
           <PopupComponent filter={filter} />
         </div>
       )}
 
-<Card id='plofather'  className={`h-full ${ isWindowVisible ? isTaxo? "xl:w-3/4 md:w-full" : "xl:w-3/4 md:w-3/4" : "w-full"} relative m-5 `}>
+<Card id='plofather'  className={`h-full ${ isWindowVisible ? "xl:w-3/4 md:w-3/4" : "w-full"} relative m-5 `}>
         {/* Posiciona el botón de manera que sobresalga del contenedor de filtros como una pestaña */}
-        <button onClick={toggleFilterVisibility} className={`absolute top-0 ${isWindowVisible ? isTaxo?'md:-left-4 xl:-left-14' : '-left-14': '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg p-2`}>
+        <button onClick={toggleFilterVisibility} className={`absolute top-0 ${isWindowVisible ? '-left-14': '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg p-2`}>
           {isWindowVisible ? <IoCloseOutline size="20" /> : <IoFilterOutline size="20" />}
         </button>
         {title && (

@@ -87,8 +87,8 @@ const taxonomyOptions = [
 const itemsBreadcrumbs = [
     { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
     { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
-  { label: 'Differential Abundance: Data', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/datasetgeneration`}>{item.label}</Link> },
-  { label: 'Differential Abundance: Analysis', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>{item.label}</Link> },
+  { label: 'Diff. Abund. : Data', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/datasetgeneration`}>{item.label}</Link> },
+  { label: 'LEfSe', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/abundancedif/dataexploration`}>{item.label}</Link> },
 
 ];
 
@@ -202,11 +202,7 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
         return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
       }, [observedElementId]); 
 
-    useEffect(() => {
-        updatePlotWidth(); // Establece el ancho inicial
-        console.log('plotWidth:', plotWidth);
 
-    }, [otus]);
 
 
 
@@ -215,7 +211,6 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
         console.log('plotWidth:', plotWidth);
     }, [abundanceData]);
 
-    window.addEventListener('resize', updatePlotWidth); // Añade un listener para actualizar el ancho en el redimensionamiento
 
     const { accessToken } = useAuth();  
 
@@ -539,17 +534,18 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
      
 
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}/>} >
-                    <div className="w-11/12">
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home} className="text-sm"/>} >
+            <div className="flex flex-col w-11/12 mx-auto">
+                    <div className="flex flex-row w-full text-center justify-center items-center">
+<h1 className="text-3xl my-5 mx-2">Differential abundance : LEfSe</h1>
+<AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
+</div>
+
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
-                         <Card title={
-                <div className="flex items-center text-center w-full justify-center">
-                            <h1 className="text-3xl my-5 mx-2">Differential abundance: {configFile?.taxonomic_composition?.title ?? "Taxonomy diversity"}</h1>
-                    <AiOutlineInfoCircle id={tooltipTargetId} className="ml-2 cursor-pointer text-xl" />
-                </div>
-            }>     
+       
+                   
  <div className="px-6 py-8">
                             <div className={`prose single-column`}>
     <p className="text-gray-700 text-justify text-xl">
@@ -560,7 +556,7 @@ const filteredOptions = colorByOptions.filter(option => !columnOptions || column
                             </div>
 <div className="flex justify-center items-center">
   {tempfile ? (
-    <div className="flex flex-col h-full">   <GraphicCard filter={filter} legend={""} title={title}>
+    <div className="flex flex-col h-full w-full">   <GraphicCard filter={filter} legend={""} title={title}>
         {abundanceData ? (
 dataExist ? 
 
@@ -632,8 +628,8 @@ dataExist ?
 
 
 </div>
-           
-                        </Card>
+          
+       
                     </div>
                 </Layout>
             </SidebarProvider>

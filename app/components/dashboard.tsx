@@ -156,7 +156,7 @@ const Dashboard = () => {
 
   return (
     <>
-    <div className="min-h-screen flex flex-col justify-start rounded-lg bg-gray-50">
+    <div className="min-h-screen flex flex-col justify-start w-full rounded-lg bg-gray-50">
       <div className="mx-auto w-full max-w-4xl p-8">
         <h1 className="text-center text-2xl font-semibold text-gray-800 mb-2">Hello, {user?.name}!</h1>
         <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>

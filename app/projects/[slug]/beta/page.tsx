@@ -1,5 +1,5 @@
 "use client";
-import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Loading from "@/app/components/loading";
@@ -98,6 +98,18 @@ export default function Page({ params }: { params: { slug: string } }) {
     timepoint: ["#8cdbf4", "#f7927f", "#f7e76d"],
     
 };
+
+
+// useEffect(() => {
+//   const assignedColors = {};
+//   Object.keys(colorPalettes).forEach((key) => {
+//     // Asignar colores de manera única a cada categoría
+//     colorPalettes[key].forEach((color, index) => {
+//       assignedColors[`${key}_${index}`] = color;
+//     });
+//   });
+//   setScatterColors(assignedColors);
+// }, []);
 
 
 
@@ -350,6 +362,8 @@ console.log(colorBy)
 
   };
 
+  // useEffect(() => {fetchProjectIdsFiltercolor(dataResult, theRealColorByVariable)}, [theRealColorByVariable,  dataResult]);
+
   useEffect(() => {
     if (otus && colorBy) {
         // Filtrar los valores únicos de la columna seleccionada
@@ -396,9 +410,12 @@ const config: Partial<Config> = {
 };
   
 const handleGroupChange = (value: string) => {
-  setTheRealColorByVariable(value);
 fetchProjectIdsFiltercolor(dataResult, value);
+  
+  setTheRealColorByVariable(value);
 };
+
+
 
 
 // Componente de checks para los valores de la columna seleccionada
@@ -512,7 +529,7 @@ const valueChecks = (
       },
       {} // Asegura que el valor inicial del acumulador es un objeto
     );
-    setScatterColors(prevColors => ({ ...prevColors, ...newScatterColors }));
+    setScatterColors(newScatterColors);
     setScatterData(Object.values(scatterPlotData || {}));
     const plotData = Object.keys(groupedData || {})
       .filter((location: string) => selectedLocation.includes(location))
@@ -544,7 +561,7 @@ const valueChecks = (
       const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
       // Determinar si "None" está seleccionado en "Color By"
 
-      color === 'samplelocation';
+
       const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
         const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
         const colorValue = color !== 'samplelocation' ? item[result.data.columns.indexOf(color)] : sampleLocation;
@@ -575,12 +592,15 @@ const valueChecks = (
         acc[key].x.push(PC1);
         acc[key].y.push(PC2);
         acc[key].text.push(`Sample ID: ${sampleId}, ${color === "samplelocation" ? "location" : color}: ${colorValue}`);
+        scatterColors[key] = colorOrder[colorIndex % colorOrder.length];
 
         return acc;
       }, {});
-      setScatterColors(prevColors => ({ ...prevColors, ...newScatterColors }));
+      setScatterColors(newScatterColors);
       isColorByDisabled || color === "samplelocation" ? SetTittleVariable('location') : SetTittleVariable(color.replace('_', ' '));
       setScatterData(Object.values(scatterPlotData));
+      console.log(newScatterColors)
+      console.log(scatterColors)
       setIsLoaded(true);
     } catch (error) {
       console.error("Error al obtener projectIds:", error);
@@ -589,7 +609,6 @@ const valueChecks = (
   
   const fetchProjectIdsFilter = async (result: any) => {
 
-    const newScatterColors = { ...scatterColors }; // Crea una copia del estado actual
     try {
 
       const isAllLocationsSelected = selectedLocations.length === 3 && ["cecum", "feces", "ileum"].every(location => selectedLocations.includes(location));
@@ -629,7 +648,7 @@ const valueChecks = (
         return acc;
       }, {});
 
-      setScatterColors(prevColors => ({ ...prevColors, ...newScatterColors }));
+      setScatterColors(newScatterColors);
       setScatterData(Object.values(scatterPlotData));
       console.log(newScatterColors)
       console.log(scatterColors)

@@ -23,7 +23,7 @@ Durham, NC 27703, USA</p>
         </div>
       </div>
       <div className="flex justify-center items-center w-1/3">
-        <Image src={logoUrl} alt="Logo" width={200} height={100} />
+        <Image src={logoUrl} alt="Logo" width={200} height={100} className='imagen-footer' />
       </div>
       <div className="mr-4 w-1/3 flex justify-end">
         <Image src={rightLogoUrl} alt="Right Logo" width={200} height={100} />

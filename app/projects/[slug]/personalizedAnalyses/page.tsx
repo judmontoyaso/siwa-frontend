@@ -158,7 +158,7 @@ fetchConfigFile(accessToken);
         <div className="w-full h-full">
             <SidebarProvider>
             <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
-            <div className="flex flex-col w-11/12  mx-auto h-full">
+            <div className="flex flex-col w-11/12  mx-auto">
 
 <div className="flex flex-row w-full text-center justify-center items-center">
     <h1 className="text-3xl my-5 mx-2">{"Personalized Analyses"}</h1>
@@ -217,12 +217,12 @@ fetchConfigFile(accessToken);
                     </TabPanel>
                     <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Mapping SIWA Microbial Health Score 1 against the Bristol Stool Scale</>}>
                     <div className="flex flex-row xl:flex-row">
-                    <div className="md:w-1/4 xl:w-1/5 mr-7 flex items-center">
+                    <div className="md:w-1/4 xl:w-1/5 mr-4 flex items-center">
 
-                              <Card className="w-full h-auto xl:mt-1 mt-8 xl:mr-8 bristol-card" title="Bristol Stool Chart">
+                              <div className="w-full h-auto xl:mt-1 mt-8 xl:mr-8 bristol-card p-1 border border-gray-300 rounded-lg">
                                 
-                                <Image src={"/bristol-stool-chart.webp"} className="w-9/12 rounded-lg "  alt="Bristol stool chart" preview/>
-                                </Card>  
+                                <Image src={"/bristol-stool-chart.webp"} className="w-full rounded-lg "  alt="Bristol stool chart" preview/>
+                                </div>  
                       </div>
                       <div className="md:w-3/4 xl:w-4/5">
                             <iframe 

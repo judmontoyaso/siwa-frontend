@@ -30,7 +30,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:an
           <Navbar slug={slug} breadcrumbs={breadcrumbs}/>
 
 
-            <main className="overflow-auto text-center items-start justify-center block bg-white p-5 h-full">
+            <main className="overflow-auto text-center items-start  bg-white p-5 h-full flex flex-col justify-between ">
 
               {children}
 <Footer />

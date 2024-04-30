@@ -83,48 +83,6 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-  const colorsLocation = [
-
-    "#FFA726", // Naranja
-
-    "#8C8C8C", // Gris medio
-    "#FF7043", // Naranja rojizo
-  ];
-  const colors = [
-
-    "#FFA726", // Naranja
-
-    "#8C8C8C", // Gris medio
-    "#FF7043", // Naranja rojizo
-    "#616161", // Gris oscuro
-    "#092538", // Azul oscuro principal
-  "#2E4057", // Azul petróleo oscuro
-  "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
-
-
-  // Amarillos y naranjas
-  "#FEF282", // Amarillo claro principal
-  "#F6C324", // Amarillo mostaza
- 
-  "#424242", // Gris muy oscuro
-
-  // Rojos y púrpuras
-  "#E53935", // Rojo
-  "#D81B60", // Fucsia
-  "#8E24AA", // Púrpura
-
-  // Verdes y azules
-  "#43A047", // Verde
-  "#00ACC1", // Cian
-  "#1E88E5", // Azul
-
-  // Colores adicionales para diversidad
-  "#6D4C41", // Marrón
-  "#FDD835", // Amarillo dorado
-  "#26A69A", // Verde azulado claro
-  "#7E57C2", // Lavanda oscuro
-  "#EC407A", // Rosa
-  ];
 
   const [colorOrder, setColorOrder] = useState<string[]>([]);
 
@@ -148,7 +106,7 @@ useEffect(() => {
         setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
     }
 console.log(colorOrder)
-}, [scatterData]);
+}, [theRealColorByVariable]);
 
 
 
@@ -229,13 +187,7 @@ console.log(colorOrder)
 
 
 
-  const shuffleColors = () => {
-    let shuffled = colors
-      .map(value => ({ value, sort: Math.random() }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(({ value }) => value);
-    setColorOrder(shuffled);
-  };
+
 
   // useEffect(() => {
   //   shuffleColors();  // Aleatoriza los colores al montar y cada vez que cambian los datos

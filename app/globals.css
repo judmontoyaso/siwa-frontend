@@ -7002,6 +7002,11 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
 
 
 @media screen and (max-width: 1280px) {
+
+  .imagen-footer{
+    width: 150px!important;
+    height: 75px!important;
+  }
   .colorby-acordeon  h3, .filter-acordeon h3 {
     font-size: 14px;
     line-height: 15px;
@@ -7088,9 +7093,19 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
 }
 
 .p-tabview-title {
-  line-height: 1;
+  line-height: 25px;
   white-space: wrap; 
   text-align: start;
   display: flex;
   flex-direction: row;
 }
+
+.bristol-card .p-card-title {
+  font-size: 1rem;
+  line-height: 1.3rem;
+}
+
+.p-tabview-panels {margin-top: 20px;
+padding-right: 0;
+padding-left: 0;}
+

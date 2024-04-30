@@ -695,7 +695,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
-            <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-start">
+            <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-center justify-center">
 
                 {valueOptions?.filter(value => value !== null).map((value, index) => (
                     <div key={index} className="flex mr-2 ml-2 items-start overflow-x-scroll mb-2">
@@ -707,7 +707,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                             onChange={() => handleValueChange(value)}
                             className="w-4 h-4 mb-0 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
-                        <label htmlFor={`value-${index}`} className="ml-2 mb-2 text-base font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
+                        <label htmlFor={`value-${index}`} className="ml-2 mb-2 text-lg font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
                             {value}
                         </label>
                     </div>
@@ -764,7 +764,8 @@ export default function Page({ params }: { params: { slug: string } }) {
       options={dropdownOptionsColorby}
       onChange={(e) => handleGroupChange(e.target.value)}
       optionLabel="label"
-      className="w-full"
+      className="w-full text-sm filtercolorby"
+      id="colorby"
       />
           
                 </div>
@@ -779,6 +780,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                             options={options}
                             onChange={(e) => handleLocationChange(e.value)}
                             disabled={availableLocations.length === 1}
+
                         />
 
                     </div>
@@ -789,7 +791,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 <div className=" mt-8 mb-4">
 
       <h3 className="text-lg font-semibold text-gray-700  my-tooltip "data-tip data-for="interpreteTip" id="group" >
-        Filtering <span>options <AiOutlineInfoCircle className="xl:text-base  text-base mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
+        Filtering <span>options <AiOutlineInfoCircle className="xl:text-lg  text-lg mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
       </h3>     
                                     <Tooltip
                                         style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
@@ -876,7 +878,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 </>
 
 
-                <Divider />
+                <Divider className="mt-0"/>
                 <div className="flex w-full items-center margin-0 justify-center my-4">
                     <Button
                         onClick={applyFilters}

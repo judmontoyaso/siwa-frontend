@@ -6993,12 +6993,12 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
     font-size: 12px;
   }
   
-  
-}
-
-.colorby-acordeon  .p-accordion-header-text, .filter-acordeon .p-accordion-header-text {
+  .colorby-acordeon  .p-accordion-header-text, .filter-acordeon .p-accordion-header-text {
   font-size: 14px;
 }
+
+}
+
 
 
 @media screen and (max-width: 1280px) {
@@ -7071,7 +7071,7 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
   padding: 0.5rem!important;
 }
 
-.filter-panel .p-dropdown-item-label{
+.p-dropdown-item{
   font-size: 12px;
 
 }}

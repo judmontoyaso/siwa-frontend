@@ -7005,6 +7005,7 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
   .colorby-acordeon  h3, .filter-acordeon h3 {
     font-size: 14px;
     line-height: 15px;
+    margin-bottom: 20px;
   }
   
   .colorby-acordeon  svg, .filter-acordeon svg {
@@ -7075,3 +7076,21 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
   font-size: 12px;
 
 }}
+
+.card-abundance{
+  padding-left: 5px!important;
+  padding-right: 5px!important;
+  padding-bottom: 0;
+}
+
+.card-abundance .p-card-body{
+  padding: 5px!important;
+}
+
+.p-tabview-title {
+  line-height: 1;
+  white-space: wrap; 
+  text-align: start;
+  display: flex;
+  flex-direction: row;
+}

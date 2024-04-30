@@ -572,7 +572,7 @@ useEffect(() => {console.log("filter",isNotFilter)}, [isNotFilter])
 
     const filter = (
         <div className={`flex flex-col w-full h-full  rounded-lg`}>
-            <div className="card-abundance border border-gray-100 rounded-xl m-2 p-8 pt-0 ">
+            <Card className="card-abundance colorby-acordeon border border-gray-100 rounded-xl m-2 p-8 pt-0 ">
                 <div className={`tab-content `}>
                     <div className="mt-4 mb-4">
                         <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a taxonomic rank for display</h3>
@@ -642,7 +642,7 @@ useEffect(() => {console.log("filter",isNotFilter)}, [isNotFilter])
                         label="Update"
                     />
                 </div>
-            </div>
+            </Card>
 
         </div>
     );

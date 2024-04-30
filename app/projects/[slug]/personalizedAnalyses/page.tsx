@@ -158,7 +158,7 @@ fetchConfigFile(accessToken);
         <div className="w-full h-full">
             <SidebarProvider>
             <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-11/12  mx-auto">
 
 <div className="flex flex-row w-full text-center justify-center items-center">
     <h1 className="text-3xl my-5 mx-2">{"Personalized Analyses"}</h1>
@@ -189,34 +189,42 @@ fetchConfigFile(accessToken);
         {configFile?.personalized_analyses?.text}
     </p>
 </div>
-            <div className="mt-5">
-                <TabView>
+            <div className="mt-5 w-full flex flex-col">
+                <TabView className="flex flex-col w-full mx-auto">
                  
                     <TabPanel header={<><i className="pi pi-chart-line mr-2"></i>Correlating experimental outcomes with traits of interest.</>}>
-                        <div className="flex flex-col-reverse xl:flex-row">
-                            <Card title="Connecting the microbiome to outcomes." className="mt-8 xl:mt-1 w-full xl:w-2/5 xl:mr-4">
+                        <div className="flex flex-row xl:flex-row">
+  <div className="w-2/5">
+                            <Card title="Connecting the microbiome to outcomes." className=" xl:mt-1 w-full xl:w-2/5 xl:mr-4">
+
   <p className="text-gray-700 text-justify text-lg font-light">
   A critical component of a good research study is the ability to relate experimental outcomes with phenotypic changes we hope to see. Fecal scores, body condition, blood parameters, or behavior, just to name a few. SIWA places a strong emphasis on relating microbial patterns and specific species to traits of interest. Robust correlations between study features and outcomes that matter to animals and pet owners are the foundation of our platform.</p>                           
                             </Card>
-                          
-                            <iframe 
+  </div>
+                          <div className="w-3/5">
+                              <iframe 
                                 src="/api/components/genvslact" 
                                 frameBorder="0" 
                                 width="100%" 
                                 height="500px" 
                                 allowFullScreen
-                                className="w-full xl:w-3/5"
+                                className="w-full"
                                 title="Genetic Diversity Analysis">
                             </iframe>
+                          </div>
+                          
                         </div>
                     </TabPanel>
                     <TabPanel header={<><i className="pi pi-sitemap mr-2"></i> Mapping SIWA Microbial Health Score 1 against the Bristol Stool Scale</>}>
-                        <div className="flex flex-col-reverse xl:flex-row">
-                              <Card className="w-full h-auto xl:w-1/3 xl:mt-1 mt-8 xl:mr-8" title="Bristol Stool Chart">
+                    <div className="flex flex-row xl:flex-row">
+                    <div className="w-1/5">
+
+                              <Card className="w-full h-auto xl:mt-1 mt-8 xl:mr-8" title="Bristol Stool Chart">
                                 
                                 <Image src={"/bristol-stool-chart.webp"} className="w-9/12 rounded-lg "  alt="Bristol stool chart" preview/>
                                 </Card>  
-                      
+                      </div>
+                      <div className="w-4/5">
                             <iframe 
                                 src="/api/components/plotpopo" 
                                 frameBorder="0" 
@@ -226,6 +234,7 @@ fetchConfigFile(accessToken);
                                 title="Ecosystem Interaction Web"
                                 className="w-full xl:w-2/3">
                             </iframe>
+                            </div>
                         </div>
                     </TabPanel>
                 </TabView>

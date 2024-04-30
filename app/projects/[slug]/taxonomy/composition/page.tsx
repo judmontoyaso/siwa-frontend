@@ -757,9 +757,11 @@ setFilterPeticion(true);
       
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
-        <div className="mb-5 mt-5">
+        <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
+            <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-center justify-center">
+
             {valueOptions?.map((value, index) => (
-                <div key={index} className="flex items-center mb-2">
+                <div key={index} className="flex items-center mb-2 mr-2 ml-2">
                     <input
                         id={`value-${index}`}
                         type="checkbox"
@@ -773,6 +775,7 @@ setFilterPeticion(true);
                     </label>
                 </div>
             ))}
+        </div>
         </div>
     );
 
@@ -824,7 +827,7 @@ setFilterPeticion(true);
     const filter = (
         <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
    <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
-      <AccordionTab header="Group by" className="mb-4">
+      <AccordionTab header="Group by"  className="colorby-acordeon"  >
     
 <div>
 <Dropdown
@@ -838,7 +841,7 @@ setFilterPeticion(true);
         </div>
 
         </AccordionTab>
-                <AccordionTab header="Filter by">
+                <AccordionTab header="Filter by"  className="filter-acordeon" >
                 <div className="flex flex-col items-left  mt-2 mb-4">
                     <div className="w-full flex flex-col">
 
@@ -963,21 +966,19 @@ if ((columnOptions as string[])?.includes(option)) {
                 </div>
 
            
-            <div className="xl:w-full md:w-full">
+     
 
-            <>
-            <div className="mt-2 mb-4">
+           
+            <div className="">
 {valueChecks}
             </div>
-            </>
+         
              
-            </div>
+       
 
-            <Divider/>
 </div>
-               
-
-            <div className="flex w-full items-center margin-0 justify-center my-10">
+<Divider className="mt-0"/>
+                <div className="flex w-full items-center margin-0 justify-center my-4">
           <Button
             onClick={applyFilters}
             loading={filterPeticion}
@@ -1049,30 +1050,38 @@ useEffect(() => {
 <div className="mt-8">
             <Accordion activeIndex={activeIndex}>
               
-                <AccordionTab header={<>  Hierarchical visualization</>}>
+                <AccordionTab header={<>     <PrimeToolTip target=".hierarchical" />                        
+
+<h3  className="text-lg font-semibold text-gray-700 ">
+    <div className="flex flex-row mt-2">
+    Hierarchical visualization  <AiOutlineInfoCircle className="hierarchical ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" data-pr-tooltip="The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. We can use this method to discover and analyze patterns of biodiversity or the impact of study variables on taxonomic distributions."
+data-pr-position="right"
+data-pr-at="right+5 top"
+data-pr-my="left center-2"/>
+    </div>
+    
+</h3>  </>}>
 
                 <div className="flex flex-row flex-wrap ">
-                    <div className="w-full lg:w-1/2">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        This tab showcases a Sunburst Chart representing the taxonomic composition of a biological sample. The chart offers a compelling visualization of the nested hierarchical structure of taxonomic classifications, such as domains, kingdoms, phyla, classes, orders, families, genera, and species.
-                    </p>
-                    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        Each concentric ring in the chart represents a different taxonomic level, starting from the highest level of classification in the innermost ring and moving to more specific classifications in the outer rings. This arrangement helps visualize the relative proportions of each taxonomic category within the sample, providing insights into the biological diversity and possible ecological relationships within the sample.
-                    </p>
-                    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        By hovering over any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total sample it represents, and its relationship to adjacent segments. This interactive feature allows for an in-depth exploration of the complex taxonomic landscape, making it easier to identify predominant or rare taxa within the sample.
-                    </p>
-                    <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
-                        The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. Researchers and educators can utilize this visualization to discuss and analyze patterns of biodiversity, evolutionary relationships, or the impact of environmental changes on taxonomic distributions.
-                    </p>
+                    <div className="w-full lg:w-2/5">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                    This sunburst chart representing the taxonomic composition of this dataset allows us to visualize the nested hierarchical structure of taxonomic classifications, and how changes at each taxonomic level relate to one another. By hovering over any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total dataset it represents, and its relationship to adjacent segments.                    </p>
+               
+                   
                     </div>
-                    <iframe className="w-full lg:w-1/2 mt-5 mb-5"
+                    <div className="w-full lg:w-3/5 mt-5 mb-5 flex justify-center">
+                    <iframe 
                         src="/api/components/innerHtml" 
                         frameBorder="0" 
- 
-                        height="500px" 
+
+ width={500}
+ height={400}
+                    
                         allowFullScreen
                         title="Taxonomy Composition Sunburst Chart">
                     </iframe>
+                        </div>
+
+                
                     </div>  
                       
                 </AccordionTab>

@@ -451,8 +451,9 @@ fetchProjectIdsFiltercolor(dataResult, value);
 
 // Componente de checks para los valores de la columna seleccionada
 const valueChecks = (
-    <div className="mb-5 mt-5">
-        <div className="flex flex-row mt-4 flex-wrap">
+  <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
+            <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-center justify-center">
+
             {valueOptions?.map((value, index) => (
             <div key={index} className="flex items-center mb-2 mr-2 ml-2">
                 <input
@@ -737,7 +738,7 @@ const valueChecks = (
   const filter = (
     <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
    <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
-      <AccordionTab header="Color by" className="mb-4">
+      <AccordionTab header="Color by" className="colorby-acordeon" >
     
 
                 <div>
@@ -755,7 +756,7 @@ const valueChecks = (
 
           </div>
           </AccordionTab>
-                <AccordionTab header="Filter by">
+                <AccordionTab header="Filter by"  className="filter-acordeon" >
         <div className="flex flex-col items-left  mt-2 mb-4">
 
         <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location</h3>
@@ -848,14 +849,14 @@ const valueChecks = (
         <div>
 
    
-        <div className=" mt-4 mb-4">
+        <div className=" mt-4">
         {valueChecks}
 
         </div>
      
           </div>
-          <Divider />
-          <div className="flex w-full items-center margin-0 justify-center my-10">
+          <Divider className="mt-0"/>
+                <div className="flex w-full items-center margin-0 justify-center my-4">
           <Button
             onClick={applyFilters}
             loading={filterPeticion}

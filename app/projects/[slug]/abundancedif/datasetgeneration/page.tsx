@@ -837,7 +837,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
         <div className="h-full">
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
-                    <div className="">
+                    <div className="h-full mb-10">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <div className="flex flex-col w-11/12 mx-auto" >  
 
@@ -898,7 +898,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
                                     <h2 className="mb-4 font-semibold text-lg">Sample Location:</h2>
                                     <div className="flex flex-wrap gap-4">
                                     {availableLocations.map((location) => (
-  <div key={location} className="flex items-center">
+  <div key={location} className="flex items-center justify-center">
     <Checkbox
       inputId={location}
       onChange={() => handleLocationChange(location)}
@@ -979,7 +979,7 @@ if ((columnOptions as string[]).includes(option)) {
                                 </div> 
                                 </div>
 
-                                <div className="w-full flex justify-center mt-6">
+                                <div className="w-full flex justify-center mt-6 mb-8">
                                     <Toast ref={toast} />
                                     <ConfirmPopup />
                                     <div className="w-full mt-6 flex flex-wrap gap-2 justify-center button-generate-cont">

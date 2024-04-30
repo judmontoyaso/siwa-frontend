@@ -31,18 +31,18 @@ const router = usePathname();
   return (
     <div  className={`flex pb-12 flex-row  items-start mt-6 mb-6 bg-white w-full`}>
       {isWindowVisible && (
-        <div className={`flex pb-12  xl:w-2/12 md:w-2/12 relative h-auto`}>
+        <div className={`flex pb-12  xl:w-1/4 md:w-1/4 relative h-auto filter-panel`}>
           <PopupComponent filter={filter} />
         </div>
       )}
 
-<Card id='plofather'  className={`h-auto  ${ isWindowVisible ? "xl:w-10/12 md:w-10/12" : "w-full"} relative m-5 `}>
+<Card id='plofather'  className={`h-auto  ${ isWindowVisible ? "xl:w-3/4 md:w-3/4" : "w-full"} relative m-5 `}>
         {/* Posiciona el botón de manera que sobresalga del contenedor de filtros como una pestaña */}
         <button onClick={toggleFilterVisibility} className={`absolute top-0 ${isWindowVisible ? '-left-14': '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg p-2`}>
           {isWindowVisible ? <IoCloseOutline size="20" /> : <IoFilterOutline size="20" />}
         </button>
         {title && (
-          <div className="px-5 py-3 text-xl font-semibold text-gray-800">
+          <div className="px-5 py-3 text-2xl font-semibold text-gray-800">
             {title}
           </div>
         )}

@@ -837,7 +837,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
         <div className="h-full">
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
-                    <div className="h-full mb-10">
+                    <div className="mb-10">
                     <Tooltip target={`#${tooltipTargetId}`} content="Differential abundance analysis identifies species that vary significantly in abundance between different environments or conditions, providing insights into biological and ecological changes." />
                          <div className="flex flex-col w-11/12 mx-auto" >  
 

@@ -697,7 +697,10 @@ export default function Page({ params }: { params: { slug: string } }) {
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
             <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-center justify-center">
 
-                {valueOptions?.filter(value => value !== null).map((value, index) => (
+                {valueOptions?.filter(value => value !== null).map((value, index) => {
+                       const stringValue = String(value);
+
+                       return(
                     <div key={index} className="flex mr-2 ml-2 items-start overflow-x-scroll mb-2">
                         <input
                             id={`value-${index}`}
@@ -707,11 +710,11 @@ export default function Page({ params }: { params: { slug: string } }) {
                             onChange={() => handleValueChange(value)}
                             className="w-4 h-4 mb-0 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
-                        <label htmlFor={`value-${index}`} className="ml-2 mb-2 text-lg font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
-                            {value}
+                          <label htmlFor={`value-${index}`} className="ml-2 mb-2 text-lg font-medium text-gray-900 dark:text-gray-300 overflow-x-scroll">
+                            {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
                         </label>
-                    </div>
-                ))}
+                    </div>)
+})}
             </div>
         </div>
     );
@@ -725,6 +728,8 @@ export default function Page({ params }: { params: { slug: string } }) {
           'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
           'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
         ],
+        scrollZoom: false,
+
         modeBarButtonsToAdd: [],
       };
 
@@ -1163,6 +1168,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             annotations: annotations, // Usar 'annotations' del estado
             autosize: true,
             yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
+            dragmode: false ,
             margin: {
                 l: 20, r: 10,
                 t: 60,

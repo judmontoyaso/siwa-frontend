@@ -115,6 +115,7 @@ console.log(colorOrder)
       height: 900,
       width: width || undefined,
       showlegend: true,
+      dragmode: false ,
       legend: {
         x: 0,
         xanchor: 'center',
@@ -155,6 +156,7 @@ responsive: true,
       'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
       'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
     ],
+    scrollZoom: false,
     modeBarButtonsToAdd: [],
   };
 

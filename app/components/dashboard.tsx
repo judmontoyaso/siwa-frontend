@@ -14,6 +14,8 @@ import { GiSpinalCoil } from "react-icons/gi";
 import { BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
 import { IoCloudOffline } from "react-icons/io5";
 import Spinner from "./pacmanLoader";
+import { RoughNotation } from "react-rough-notation";
+
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
   const [projectIds, setProjectIds] = useState([]);
@@ -159,7 +161,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col justify-start w-full rounded-lg bg-gray-50">
       <div className="mx-auto w-full max-w-4xl p-8">
         <h1 className="text-center text-2xl font-semibold text-gray-800 mb-2">Hello, {user?.name}!</h1>
-        <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your SIWA Dashboard</h2>
+        <h2 className="text-center text-3xl font-semibold text-gray-800 mb-10">Welcome to your <RoughNotation type="highlight" show={true} color="#FEF282" animate={true} animationDuration={1500} animationDelay={500}>SIWA Dashboard</RoughNotation></h2>
       </div>
   
       <div className="mx-auto w-full max-w-4xl px-8 pb-8 flex flex-row-reverse gap-8">

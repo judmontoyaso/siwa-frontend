@@ -671,6 +671,7 @@ setFilterPeticion(true);
                             y: 0.75, // Centrado verticalmente
                         
                         },
+                        dragmode: false ,
                         margin: { l: 50, r: 50, t: 20, b: 50 } // Asegúrate de dejar suficiente margen a la derecha
                     }}
                 />
@@ -760,7 +761,10 @@ setFilterPeticion(true);
         <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
             <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-center justify-center">
 
-            {valueOptions?.map((value, index) => (
+            {valueOptions?.map((value, index) => { 
+                                       const stringValue = String(value);
+
+                return(
                 <div key={index} className="flex items-center mb-2 mr-2 ml-2">
                     <input
                         id={`value-${index}`}
@@ -771,10 +775,10 @@ setFilterPeticion(true);
                         className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     />
                     <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                        {value}
+                    {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
                     </label>
                 </div>
-            ))}
+            )})}
         </div>
         </div>
     );
@@ -788,6 +792,7 @@ setFilterPeticion(true);
           'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
           'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
         ],
+        scrollZoom: false,
         modeBarButtonsToAdd: [],
       };
     const dropdownOptions = taxonomyOptions.map((option, index) => ({

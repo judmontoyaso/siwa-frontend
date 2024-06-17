@@ -25,6 +25,7 @@ import Link from "next/link";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import { Config } from "plotly.js";
+import RequireAuth from "@/app/components/requireAtuh";
 
 
 
@@ -1018,6 +1019,7 @@ useEffect(() => {
   const title = ( <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " by Location" : " in " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualGroup === "samplelocation" ? "" : " by " + actualGroup.charAt(0).toUpperCase() + actualGroup.slice(1).replace('_', ' ')))}</div>  );
 
     return (
+        <RequireAuth>
         <div className="w-full h-full">
             <SidebarProvider>
             <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
@@ -1147,6 +1149,7 @@ data-pr-my="left center-2"/>
             </Layout>
             </SidebarProvider>
         </div>
+        </RequireAuth>
     );
 }
 

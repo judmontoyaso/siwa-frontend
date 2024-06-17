@@ -10,11 +10,11 @@ import Dashboard from "@/app/components/dashboard";
 import { useRouter } from "next/router";
 import { SidebarProvider } from "./components/context/sidebarContext";
 import PopupComponent from "./components/popUpContent";
+import { useAuth } from "./components/authContext";
 
 export default function Home() {
-  const [accessToken, setAccessToken] = useState("");
   const [projectIds, setProjectIds] = useState([]);
-  const { user, error, isLoading } = useUser();
+  const { accessToken, isLoading, error } = useAuth();
   const [empresa, setEmpresa] = useState();
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [tokenObtenido, setTokenObtenido] = useState(false);
@@ -26,7 +26,7 @@ export default function Home() {
   
         <Layout slug={""} filter={undefined} breadcrumbs={""}> cargando...      </Layout>
         </SidebarProvider></> ) : (   <>
-  {user ? (
+  {!error ? (
         <SidebarProvider>
         <Layout slug={""} filter={undefined}  breadcrumbs={""}>
           <Dashboard></Dashboard>

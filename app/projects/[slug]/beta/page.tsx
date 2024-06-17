@@ -34,7 +34,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     data: number[][];
   };
   const { accessToken } = useAuth();
-  const { user, error, isLoading } = useUser();  const [isLoaded, setIsLoaded] = useState(false);
+  const { user, error, isLoading } = useUser(); 
+   const [isLoaded, setIsLoaded] = useState(false);
   const [plotData, setPlotData] = useState<
     { type: string; y: any; name: string }[]
   >([]);

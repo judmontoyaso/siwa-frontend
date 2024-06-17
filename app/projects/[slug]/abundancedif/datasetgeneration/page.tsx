@@ -32,6 +32,7 @@ import React from "react";
 import Link from "next/link";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
+import RequireAuth from "@/app/components/requireAtuh";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -834,6 +835,7 @@ const totalSamples = totalSamplesObj ? totalSamplesObj.samples : null;
         )
 
     return (
+        <RequireAuth>
         <div className="h-full">
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
@@ -995,5 +997,6 @@ if ((columnOptions as string[]).includes(option)) {
                 </Layout>
             </SidebarProvider>
         </div>
+        </RequireAuth>
     );
 }

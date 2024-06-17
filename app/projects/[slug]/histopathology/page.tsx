@@ -355,7 +355,7 @@ const filter = (
 
     <div className="w-full h-full">
     <SidebarProvider>
-    <Layout slug={''} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
+    <Layout slug={'PFF24'} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
       {isLoaded ? (
 <div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">

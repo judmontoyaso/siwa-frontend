@@ -24,6 +24,7 @@ import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import Link from "next/link";
 import { Image } from 'primereact/image';
+import RequireAuth from "@/app/components/requireAtuh";
 
 
 
@@ -155,6 +156,7 @@ fetchConfigFile(accessToken);
 
 
     return (
+        <RequireAuth>
         <div className="w-full h-full">
             <SidebarProvider>
             <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home}  className="text-sm"/>} >
@@ -246,6 +248,7 @@ fetchConfigFile(accessToken);
             </Layout>
             </SidebarProvider>
         </div>
+        </RequireAuth>
     );
 }
 

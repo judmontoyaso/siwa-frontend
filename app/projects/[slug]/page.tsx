@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import { UrlObject } from "url";
+import RequireAuth from "@/app/components/requireAtuh";
 
 const Page = ({ params }: { params: { slug: string } }) => {
   const filterContent = ""; // Replace with the actual implementation of 'filterContent'
@@ -246,6 +247,7 @@ const plotTemplate = (plot: { link: string | UrlObject; title: any | ReactElemen
     const bg_discount_gradient = 'bg-gradient-to-tr from-navy-100 to-navy-400'
     const text_gradient = ' bg-gradient-to-br from-navy-300 via-navy-500 to-siwa-blue text-transparent bg-clip-text'
   return (
+    <RequireAuth>
     <Layout slug={params.slug} filter={filterContent}  breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
 <div className="w-full py-8 flex justify-center summary">
   <div className="bg-white w-11/12  rounded-lg overflow-hidden pb-4">
@@ -342,6 +344,7 @@ const plotTemplate = (plot: { link: string | UrlObject; title: any | ReactElemen
 </div>
 
     </Layout>
+    </RequireAuth>
   );
 };
 

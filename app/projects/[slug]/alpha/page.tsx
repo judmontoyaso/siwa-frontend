@@ -28,6 +28,7 @@ import { BreadCrumb } from "primereact/breadcrumb";
 import Link from "next/link";
 import { MenuItem } from "primereact/menuitem";
 import { root } from "postcss";
+import RequireAuth from "@/app/components/requireAtuh";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -1248,6 +1249,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     );
 
     return (
+        <RequireAuth>
         <div className="w-full h-full">
 
             <Suspense fallback={<p>Loading feed...</p>}>
@@ -1338,6 +1340,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             </Suspense>
 
         </div>
+        </RequireAuth>
     );
 }
 

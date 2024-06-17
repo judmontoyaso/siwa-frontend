@@ -24,6 +24,7 @@ import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import { Dropdown } from "primereact/dropdown";
 import Plotly from "plotly.js";
+import RequireAuth from "@/app/components/requireAtuh";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
@@ -654,6 +655,7 @@ useEffect(() => {console.log("filter",isNotFilter)}, [isNotFilter])
 
 
     return (
+        <RequireAuth>
         <div className="h-full w-full">
             <SidebarProvider>
                 <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={itemsBreadcrumbs as MenuItem[]} home={home} className="text-sm" />} >
@@ -766,5 +768,6 @@ console.log(groupTaxaRankKey)
                 </Layout>
             </SidebarProvider>
         </div>
+        </RequireAuth>
     );
 }

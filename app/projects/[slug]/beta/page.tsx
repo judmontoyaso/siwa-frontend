@@ -24,6 +24,7 @@ import { MenuItem } from "primereact/menuitem";
 import { Accordion, AccordionTab } from "primereact/accordion";
 import { Dropdown } from "primereact/dropdown";
 import { Config } from "plotly.js";
+import { Skeleton } from "primereact/skeleton";
 
 
 
@@ -47,9 +48,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     "ileum",
   ]);
   const [Location, setLocation] = useState<string[]>([
-    "cecum",
-    "feces",
-    "ileum",
+ 
   ]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
@@ -71,6 +70,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   let colorIndex = 0;
   const newScatterColors: { [key: string]: string } = {};
 
+  const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
 
   const router = useRouter();
 
@@ -881,8 +881,14 @@ const valueChecks = (
     setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
 }, [params.slug, scatterData]);
 
-const title = ( `Compositional differences (bray curtis) ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (selectedColorBy === "samplelocation" ? "" : " by " + selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1))}`)
 
+
+useEffect(() => {
+  if (Location[0] && Location.length > 0) {
+      const newTitle = `Compositional differences (bray curtis) ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (selectedColorBy === "samplelocation" ? "" : " by " + selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1))}`;
+      setTitle(newTitle);
+  }
+}, [Location, selectedColorBy]);
 
   const MyPlotComponent = ({ scatterData, scatterColors }: { scatterData: any[]; scatterColors: any }) => (
     <div className="flex flex-row w-full items-center">

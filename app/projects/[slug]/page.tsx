@@ -35,7 +35,9 @@ const Page = ({ params }: { params: { slug: string } }) => {
   ];
 
   const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
+  const categoriespa: string[] = ['Lactobacillus', 'Bacteroides', 'Clostridium'];
 
+  const categories: string[] = ['OverallArchitecture', 'MucosalIntegrity', 'LymphoidImmune', 'InflammationSeverity', 'MicrobialOrganisms'];
 
   const fetchToken = async () => {
     try {
@@ -206,9 +208,96 @@ const Page = ({ params }: { params: { slug: string } }) => {
             },
               orientation: 'h'
           }],
-          layout: {  margin: { t: 0, r: 0, l: 0, b: 0}  },
+          layout: {  margin: { t: 0, r: 0, l: 0, b: 10}  },
           link: `/projects/${params.slug}/abundancedif/datasetgeneration`
+      },
+
+      {
+        title: 'Histopathology',
+        data: [
+          {
+            x: ['Total'], // Apila en un solo grupo
+            y: [14],
+            name: 'Lactobacillus',
+            type: 'bar',
+            marker: {
+              color: "#035060" // Asigna el primer color al boxplot
+            },
+            width: 1 
+          },
+          {
+            x: ['Total'], // Apila en un solo grupo
+            y: [1],
+            name: 'Peptoclostridium',
+            type: 'bar',
+            marker: {
+              color: "#f99b35" // Segundo color
+            },
+            width: 1 
+          },
+     
+          {
+            x: ['Total'], // Apila en un solo grupo
+            y: [3],
+            name: 'Blautia',
+            type: 'bar',
+            marker: {
+              color: "#075462" // Reutiliza el primer color
+            },
+            width: 1 
+          },
+          {
+            x: ['Total'], // Apila en un solo grupo
+            y: [5],
+            name: 'Other',
+            type: 'bar',
+            marker: {
+              color: "#ff6347" // Color adicional para la categoría "Other"
+            },
+            width: 1 
+          }
+        ],
+        layout: {
+          margin: { t: 0, r: 0, l: 0, b: 10 },
+          barmode: 'stack',
+          xaxis: {
+            tickangle: -45
+          },
+          yaxis: {
+            zeroline: false,
+            gridwidth: 1
+          },
+          legend: {
+            x: 1.2, // Moves legend to the right outside of the plotting area
+            xanchor: 'left', // Anchors the legend to the right side
+            y: 1, // Positions the top of the legend at the top of the plotting area
+            font: {
+              size: 10 // Smaller font size for the legend
+            }
+          }
+        },
+        link: `/projects/${params.slug}/histopathology`
+      },
+      {
+        title: 'Personalized analyses',
+        data: [
+          {
+            labels: categoriespa,
+            values: [20, 15, 30],
+            type: 'pie',
+            marker: {
+              colors: ["#035060", "#f99b35", "#4e8e74"] // Usa todos los colores para las diferentes categorías
+            },
+            textinfo: 'none' // Oculta los porcentajes y etiquetas dentro del gráfico
+          }
+        ],
+        layout: {
+          margin: { t: 0, r: 0, l: 0, b: 0 },
+          showlegend: false // Oculta la leyenda de las categorías
+        },
+        link: `/projects/${params.slug}/personalizedAnalyses`
       }
+      
   ];
 
 

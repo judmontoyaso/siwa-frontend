@@ -29,6 +29,7 @@ import Link from "next/link";
 import { MenuItem } from "primereact/menuitem";
 import { root } from "postcss";
 import RequireAuth from "@/app/components/requireAtuh";
+import { Skeleton } from "primereact/skeleton";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -63,11 +64,10 @@ export default function Page({ params }: { params: { slug: string } }) {
     const { isWindowVisible } = usePopup();
     const [layout, setLayout] = useState({});
     const [activeIndexes, setActiveIndexes] = useState([0,1]);
+    const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
 
     const [Location, setLocation] = useState<string[]>([
-        "cecum",
-        "feces",
-        "ileum",
+
     ]);
     const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
     const [annova, setAnnova] = useState<any>();
@@ -647,6 +647,8 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     };
 
+    
+
     useEffect(() => {
         if (otus && selectedColumn) {
             // Filtrar los valores únicos de la columna seleccionada
@@ -914,12 +916,22 @@ export default function Page({ params }: { params: { slug: string } }) {
         setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
     }, [params.slug, shannonData]);
 
-    const title = (
-        <div>
-            Shannon Diversity {Location?.length === 3 ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualcolumn !== "samplelocation" ? (" by " + actualcolumn.charAt(0).toUpperCase() + (actualcolumn as string).replace('_', ' ').slice(1)) : "")}
-        </div>
+    useEffect(() => {
+        if (Location[0] && Location.length > 0) {
+            const newTitle = `Shannon Diversity ${
+                Location.length === 3 
+                ? "in All Locations" 
+                : "in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + 
+                  (actualcolumn !== "samplelocation" 
+                  ? (" by " + actualcolumn.charAt(0).toUpperCase() + (actualcolumn as string).replace('_', ' ').slice(1)) 
+                  : "")
+            }`;
+            setTitle(newTitle);
+        }
+    }, [Location, actualcolumn]);
 
-    )
+
+
     type ShannonData = {
         name: string;
         // Add other properties as needed

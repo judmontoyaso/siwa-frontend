@@ -26,6 +26,7 @@ import { BreadCrumb } from "primereact/breadcrumb";
 import { MenuItem } from "primereact/menuitem";
 import { Config } from "plotly.js";
 import RequireAuth from "@/app/components/requireAtuh";
+import { Skeleton } from "primereact/skeleton";
 
 
 
@@ -49,6 +50,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [valueOptions, setValueOptions] = useState<string[]>(['cecum', 'feces', 'ileum']);
     const [selectedLocation, setSelectedLocation] = useState<string>('');
     const newScatterColors: { [key: string]: string } = {};
+    const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
 
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
@@ -67,9 +69,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         "ileum",
     ]);
     const [Location, setLocation] = useState<string[]>([
-        "cecum",
-        "feces",
-        "ileum",
+
     ]);
     const taxonomyOptions = [
         "phylum",
@@ -1016,7 +1016,15 @@ useEffect(() => {
     setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
 }, [params.slug, plotData]);
   
-  const title = ( <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " by Location" : " in " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualGroup === "samplelocation" ? "" : " by " + actualGroup.charAt(0).toUpperCase() + actualGroup.slice(1).replace('_', ' ')))}</div>  );
+
+
+
+  useEffect(() => {
+    if (Location[0] && Location.length > 0) {
+        const newTitle = <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " by Location" : " in " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualGroup === "samplelocation" ? "" : " by " + actualGroup.charAt(0).toUpperCase() + actualGroup.slice(1).replace('_', ' ')))}</div> ;
+        setTitle(newTitle);
+    }
+  }, [Location, actualGroup]);
 
     return (
         <RequireAuth>

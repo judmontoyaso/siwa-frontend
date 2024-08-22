@@ -840,7 +840,7 @@ const valueChecks = (
             icon="pi pi-check-square "
             loadingIcon="pi pi-spin pi-spinner" 
             className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Update"
+            label="Apply Filters"
           />
         </div>
 

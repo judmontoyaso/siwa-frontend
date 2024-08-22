@@ -70,7 +70,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     setEmpresa(user?.Empresa as never);
-    setProjectIds(user?.Project as never[]);
+    setProjectIds(["E335"] as never[]);
     setProjectsLoading(false);
   }, [accessToken, user?.Empresa, user?.Project]);
 

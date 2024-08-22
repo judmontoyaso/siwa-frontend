@@ -328,9 +328,9 @@ const dropdownOptionsColorby = filteredColumns
 
 
   const [selectedColumn, setSelectedColumn] = useState(null);
-  const [uniqueValues, setUniqueValues] = useState([]);
+  const [uniqueValues, setUniqueValues] = useState<any[]>([]);
 
-  const handleColumnSelect = (option) => {
+  const handleColumnSelect = (option: React.SetStateAction<null>) => {
     setSelectedColumn(option);
   const rawData = resultFirst?.data.data;
     // Encuentra el índice correcto de la columna en result.data.columns
@@ -338,16 +338,16 @@ const dropdownOptionsColorby = filteredColumns
     if (columnIndex !== -1) {
         
         // Mapea los valores de la columna seleccionada en rawData
-        const values = rawData.map(row => row[columnIndex]);
+        const values = rawData.map((row: { [x: string]: any; }) => row[columnIndex]);
         const uniqueVals = [...new Set(values)];
         setUniqueValues(uniqueVals);
         setSelectedValues([]); 
     }
 };
 
-const [selectedValues, setSelectedValues] = useState([]);
+const [selectedValues, setSelectedValues] = useState<any[]>([]);
 
-const handleValueChange = (value) => {
+const handleValueChange = (value: any) => {
   setSelectedValues((prevValues) =>
       prevValues.includes(value)
           ? prevValues.filter((v) => v !== value) // Eliminar si ya está seleccionado

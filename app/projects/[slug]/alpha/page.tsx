@@ -12,7 +12,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
 import { Tooltip as PTooltip } from 'primereact/tooltip';
-
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { AuthProvider, useAuth } from "@/app/components/authContext";
@@ -40,6 +39,8 @@ export default function Page({ params }: { params: { slug: string } }) {
         { type: string; y: any; name: string }[]
     >([]);
     const { user } = useUser();
+    const [graphHeight, setGraphHeight] = useState(600);
+
     const [otus, setOtus] = useState<any>();
     const [dataUnique, setDataUnique] = useState<any>();
     const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
@@ -139,6 +140,11 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     }, [theRealColorByVariable, selectedLocations]);
 
+    // const toggleGraphType = () => {
+    //     setGraphType((prevType) => prevType === "boxplot" ? "violin" : "boxplot");
+    //     setGraphHeight((prevType) => prevType === "boxplot" ? 800 : 600); // Ajusta la altura según el tipo de gráfico
+    // };
+    
 
     // Función para aleatorizar la paleta de colores
     const shuffleColors = () => {
@@ -477,6 +483,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const handleGroupChange = (value: string) => {
         setTheRealColorByVariable(value);
         fetchProjectIdsFiltercolor(value);
+        setSelectedColumn(value);
     };
 
     const processData = (data: any[], index: number): any[] => {
@@ -624,22 +631,38 @@ export default function Page({ params }: { params: { slug: string } }) {
     const handleLocationChange = (event: any) => {
         if (event === 'all') {
             setSelectedLocations(['cecum', 'feces', 'ileum']);
-            setSelectedColumn('samplelocation'); // Actualiza selectedColumn a 'none' para reflejar la selección por defecto
-            setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
+            setSelectedColumn('samplelocation');
+            setIsColorByDisabled(true);
             setLocation(['cecum', 'feces', 'ileum']);
             setTheRealColorByVariable("samplelocation");
-            fetchProjectIdsFiltercolor("samplelocation");
         } else {
             setSelectedLocations([event]);
-            setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
+            setIsColorByDisabled(false);
             setLocation([event]);
         }
+    
+
     };
+    
+
+    useEffect(() => {
+                // Realizar el fetch de los datos después de actualizar la Location
+                const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+                fetchDataFilter(accessToken, columnIndex).then((result) => {
+                    fetchProjectIds(result, columnIndex);
+                });
+            
+                // Actualizar la columna actual
+                setActualcolumn(selectedColumn);
+                setFilterPeticion(true);
+            }, [selectedLocations, Location]);
 
     const handleLocationChangeColorby = (event: any) => {
         setSelectedColumn(event.target.value);
 
     };
+
+    
 
     // Función para aplicar los filtros seleccionados
     const applyFilters = (event: any) => {
@@ -745,7 +768,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         if (availableLocations.length === 1) {
             // Si solo hay una ubicación disponible, selecciónala automáticamente
             const uniqueLocation = availableLocations[0];
-            handleLocationChange(uniqueLocation); // Asume que esta función actualiza tanto `selectedLocations` como `currentLocation`
+            handleLocationChange(uniqueLocation); 
         }
     }, [availableLocations]); // Dependencia del efecto
 
@@ -991,7 +1014,8 @@ export default function Page({ params }: { params: { slug: string } }) {
         // Encontrar el índice para la columna especificada por 'selectedColumn' y para 'alphashannon'
         const locationColumnIndex = data.columns.indexOf(selectedColumn);
         const alphashannonIndex = data.columns.indexOf('alphashannon');
-
+        console.log('locationColumnIndex:', locationColumnIndex);
+        console.log('alphashannonIndex:', alphashannonIndex);
         // Asegurarse de que los índices sean válidos
         if (locationColumnIndex === -1 || alphashannonIndex === -1) {
             return 0;
@@ -1002,7 +1026,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Extraer los valores de 'alphashannon' para los datos filtrados
         const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
-
+        console.log('values:', values);
         // Encontrar y devolver el valor máximo de 'alphashannon'
         return Math.max(...values.filter((value: any) => typeof value === 'number'));
     };
@@ -1054,10 +1078,12 @@ export default function Page({ params }: { params: { slug: string } }) {
         return maxAlphaShannon;
     };
 
+    
+
     // Calcula el máximo de 'alphashannon'
     const maxYValueForLocationShannon = calculateMaxAlphaShannon();
     // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
-    const yAxisRange = [0, maxYValueForLocationShannon + 5];
+    const yAxisRange = [0, maxYValueForLocationShannon + 1.5];
 
     console.log('Max alpha shannon:', yAxisRange);
 
@@ -1069,29 +1095,41 @@ export default function Page({ params }: { params: { slug: string } }) {
             <CustomLegend shannonData={shannonData} scatterColors={scatterColors} />
         </div>
     </div>)
+function calculateAnnotations() {
+    const significanceEntries = Object.entries(annova || {});
 
-    function calculateAnnotations() {
-        console.log(otus)
-        const significanceEntries = Object.entries(annova || {});
-        console.log(significanceEntries)
-        const annotations = significanceEntries.map(([locationValue, significance]) => {
-            const xPosition = selectedLocations.indexOf(locationValue);
+    const annotations = significanceEntries
+        .filter(([locationValue, significance]) => locationValue !== null && significance !== null && locationValue != 'null' ) // Filtrar nulos
+        .map(([locationValue, significance]) => {
+            // Calcula la posición 'y' para la ubicación actual basándose en el valor máximo de 'alphashannon' en esa categoría
+            const maxY = maxYValueForLocation(locationValue, otus?.data);
+
+
             return {
                 x: locationValue,
-                y: 11.2 + (graphType === "boxplot" ? 0.5 : 4),
+                y: (graphType === "boxplot" ? 0.8 : 1.2) + maxY,  // Agrega un pequeño offset para que la anotación esté justo por encima del valor máximo
                 text: significance,
                 xref: 'x',
                 yref: 'y',
                 showarrow: false,
                 ax: 0,
-                ay: -40,
+                ay: -40, 
                 font: { size: 18 }
             };
         });
 
-        // Aplicar el filtro de valores únicos
-        return annotations
-    }
+    return annotations;
+}
+
+useEffect(() => {
+    const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
+    console.log(newAnnotations);
+    setAnnotations(newAnnotations as never[]);
+}, [annova, graphType, theRealColorByVariable]);
+
+
+
+
 
     useEffect(() => { console.log("annotations", annotations) }, [annotations]);
 
@@ -1118,11 +1156,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         fetchAndCalculateAnnotations();
     }, [theRealColorByVariable, accessToken, selectedLocations]);
 
-    useEffect(() => {
-        const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
-        console.log(newAnnotations)
-        setAnnotations(newAnnotations as never[]);
-    }, [annova]);
+
 
 
 
@@ -1179,14 +1213,14 @@ export default function Page({ params }: { params: { slug: string } }) {
         //     });
         // }
         // Calcula el máximo de 'alphashannon'
-        const maxYValueForLocationShannon = calculateMaxAlphaShannon();
+        // const maxYValueForLocationShannon = calculateMaxAlphaShannon();
         // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
-        const yAxisRange = [0, 15];
+        const yAxisRange = [0, maxYValueForLocationShannon + 1.5];
         console.log('Max alpha shannon:', yAxisRange);
         const newLayout = {
             width: plotWidth || undefined,
-
-            resposive: true,
+            height: graphHeight, // Usa el estado para la altura del gráfico
+            responsive: true,
             showlegend: true,
             legend: {
                 orientation: "h",
@@ -1198,19 +1232,17 @@ export default function Page({ params }: { params: { slug: string } }) {
             xaxis: {
                 showticklabels: false
             },
-            annotations: annotations, // Usar 'annotations' del estado
-            autosize: true,
-            yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 5] },
-            dragmode: false ,
+            annotations: annotations,
+            yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 1.5] },
             margin: {
                 l: 20, r: 10,
                 t: 60,
-                b: 10
+                b: 50
             }
         };
         setLayout(newLayout);
 
-    }, [otus, annotations, window.innerWidth, document?.getElementById('plofather')?.offsetWidth]); // 'annotations' añadido aquí para re-renderizar cuando cambian
+    }, [otus, annotations, window.innerWidth, document?.getElementById('plofather')?.offsetWidth, graphHeight, graphType, theRealColorByVariable]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         <div className="flex flex-row w-full items-center">

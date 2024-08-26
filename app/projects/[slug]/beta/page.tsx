@@ -692,9 +692,9 @@ const valueChecks = (
 
     const dropdownOptionsColorby = [
       { label: 'Sample Location', value: 'samplelocation' },
-      {label:'Treatment', value:'treatment'}, // Opción predeterminada
+      {label:'Treatment', value:'treatment'}, 
       ...colorByOptions
-        ?.filter(option => columnOptions?.includes(option)) // Filtra y mapea según tus criterios
+        ?.filter(option => columnOptions?.includes(option)) 
         .map(option => ({
             label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
             value: option

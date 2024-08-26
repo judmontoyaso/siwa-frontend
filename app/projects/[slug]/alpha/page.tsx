@@ -11,6 +11,8 @@ import { Bounce, ToastContainer, toast } from "react-toastify";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
+import { Tooltip as PTooltip } from 'primereact/tooltip';
+
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { AuthProvider, useAuth } from "@/app/components/authContext";
@@ -135,7 +137,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
             setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
         }
-    }, [theRealColorByVariable]);
+    }, [theRealColorByVariable, selectedLocations]);
 
 
     // Función para aleatorizar la paleta de colores
@@ -244,7 +246,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 body: JSON.stringify({
                     "samplelocation": selectedLocations,
                     "column": selectedColumn,
-                    "columnValues": selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    "columnValues": selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues].filter(value => value !== 'null' && value !== null),
                     "nickname": user?.nickname,
                     "colannova": theRealColorByVariable
                 }),
@@ -469,7 +471,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-    useEffect(() => { fetchProjectIdsFiltercolor(theRealColorByVariable) }, [theRealColorByVariable, otus]);
+    useEffect(() => { fetchProjectIdsFiltercolor(theRealColorByVariable) }, [theRealColorByVariable, otus, selectedLocations]);
 
 
     const handleGroupChange = (value: string) => {
@@ -624,10 +626,13 @@ export default function Page({ params }: { params: { slug: string } }) {
             setSelectedLocations(['cecum', 'feces', 'ileum']);
             setSelectedColumn('samplelocation'); // Actualiza selectedColumn a 'none' para reflejar la selección por defecto
             setIsColorByDisabled(true); // Ocultar el select de tratamiento si se selecciona 'All'
-
+            setLocation(['cecum', 'feces', 'ileum']);
+            setTheRealColorByVariable("samplelocation");
+            fetchProjectIdsFiltercolor("samplelocation");
         } else {
             setSelectedLocations([event]);
             setIsColorByDisabled(false); // Mostrar el select de tratamiento cuando se selecciona una location específica
+            setLocation([event]);
         }
     };
 
@@ -640,12 +645,14 @@ export default function Page({ params }: { params: { slug: string } }) {
     const applyFilters = (event: any) => {
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
         fetchDataFilter(accessToken, columnIndex).then((result) => { fetchProjectIds(result, columnIndex) })
-        setLocation(selectedLocations);
+        
         console.log('filter', typeof (selectedValues), selectedValues)
         setActualcolumn(selectedColumn);
         setFilterPeticion(true);
 
     };
+
+    // useEffect(() => { fetchProjectIds(otus, 0)}, [Location]);
 
     
 
@@ -656,12 +663,10 @@ export default function Page({ params }: { params: { slug: string } }) {
             const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
             const uniqueValuesCheck: Set<string> = new Set(otus?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
 
-            setValueOptions([...uniqueValues].filter(value => value !== 'null'));
-
-            // Inicializa 'selectedValues' con todos los valores únicos
-            setSelectedValues(new Set<string>(uniqueValuesCheck));
-        }
-    }, [selectedColumn, otus]);
+                setValueOptions([...uniqueValues].filter(value => value !== 'null'));
+                setSelectedValues(new Set<string>(uniqueValuesCheck));
+  
+    }}, [selectedColumn, otus]);
 
     const handleValueChange = (value: string) => {
         setSelectedValues(prevSelectedValues => {
@@ -762,148 +767,163 @@ export default function Page({ params }: { params: { slug: string } }) {
     const filter = (
         <div className={`flex flex-col w-full  rounded-lg  dark:bg-gray-800 `}>
    <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
-      <AccordionTab className="colorby-acordeon" header="Color by">
-    
+   <AccordionTab className="colorby-acordeon" header="Group by">
+  <div className="flex flex-col items-start">
+    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">
+      Select a Sample Location
+      <span className="ml-2">
+        <i 
+          className="pi pi-info-circle text-blue-500" 
+          data-pr-tooltip="Please select a Sample Location first." 
+          data-pr-position="top" 
+          id="sampleLocationTooltip"
+        />
+        <PTooltip target="#sampleLocationTooltip" />
+      </span>
+    </h3>
+    <Dropdown
+      value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
+      options={options}
+      onChange={(e) => handleLocationChange(e.value)}
+      disabled={availableLocations.length === 1}
+      className="w-full mb-4"
+      placeholder="Choose a location"
+    />
+  </div>
 
-                <div>
-
-                <Dropdown
-      value={theRealColorByVariable}
+  <div className="flex flex-col items-start mt-2">
+    <div className="flex items-center mb-2">
+      <h3 className="text-lg font-semibold text-gray-700 dark:text-white">
+        Select a variable to group
+      </h3>
+      <span className="ml-2">
+        <i 
+          className="pi pi-info-circle text-blue-500" 
+          data-pr-tooltip="Select a color category based on the chosen Sample Location, except when 'All locations' is selected."
+          data-pr-position="top"
+          id="groupByTooltip"
+        />
+        <PTooltip target="#groupByTooltip" />
+      </span>
+    </div>
+    <Dropdown
+      value={selectedLocations.length > 1 ? "samplelocation" : theRealColorByVariable}
       options={dropdownOptionsColorby}
       onChange={(e) => handleGroupChange(e.target.value)}
       optionLabel="label"
       className="w-full text-sm filtercolorby"
       id="colorby"
-      />
-          
-                </div>
-             </AccordionTab>
-                <AccordionTab className="filter-acordeon" header="Filter by">
-           
-                <div className={`tab-content `}>
-                    <div className="flex flex-col items-left mt-2 mb-4">
-                        <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location</h3>
-                        <Dropdown
-                            value={selectedLocations.length > 1 ? 'all' : selectedLocations[0]}
-                            options={options}
-                            onChange={(e) => handleLocationChange(e.value)}
-                            disabled={availableLocations.length === 1}
-
-                        />
-
-                    </div>
+      disabled={selectedLocations.length > 1} // Desactivado si 'all locations' está seleccionado
+      placeholder="Select a color category"
+    />
+  </div>
+</AccordionTab>
 
 
-                </div>
 
-                <div className=" mt-8 mb-4">
+<AccordionTab className="filter-acordeon" header="Filter by">
+  <div className="mt-8 mb-4">
+    <div className="flex items-center">
+      <h3 className="text-lg font-semibold text-gray-700 dark:text-white flex items-center">
+        Filtering options
+        <AiOutlineInfoCircle
+          className="ml-2 xl:text-lg text-lg mb-1 cursor-pointer text-siwa-blue"
+          id="filteringTip"
+        />
+        <PTooltip target="#filteringTip" position="top">
+          Select a variable and specify the values you want to include in the filtered dataset.
+        </PTooltip>
+      </h3>
+    </div>
 
-      <h3 className="text-lg font-semibold text-gray-700  my-tooltip "data-tip data-for="interpreteTip" id="group" >
-        Filtering <span>options <AiOutlineInfoCircle className="xl:text-lg  text-lg mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
-      </h3>     
-                                    <Tooltip
-                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                                        anchorSelect="#group">
-                                        <div className={`prose single-column w-28 z-50`}>
-                                            <p>Select options to include in the plot.</p>
-                                         
-                                        </div>
-                                    </Tooltip>
-      
-      
-                     <ul className="w-full flex flex-wrap items-center content-center justify-around mt-2 ">
-                        <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                            <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={isColorByDisabled ? true : selectedColumn === 'samplelocation'}
-                                onChange={handleLocationChangeColorby}
-                                disabled={isColorByDisabled} />
-                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full text-center flex justify-center">Sample location</div>
-                                </div>
+    <ul className="w-full flex flex-wrap items-center content-center justify-around mt-2">
+      <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
+        <input
+          type="radio"
+          id="treatment"
+          name="treatment"
+          value="treatment"
+          className="hidden peer"
+          checked={selectedColumn === 'treatment'}
+          onChange={handleLocationChangeColorby}
+        />
+        <label
+          htmlFor="treatment"
+          className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+        >
+          <div className="block">
+            <div className="w-full">Treatment</div>
+          </div>
+        </label>
+      </li>
 
-                            </label>
-                        </li>
-                        <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                            <input type="radio" id="treatment" name="treatment" value="treatment" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'treatment'}
-                                onChange={handleLocationChangeColorby}
-                                disabled={isColorByDisabled} />
-                            <label htmlFor="treatment" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full">Treatment</div>
-                                </div>
+      {columnOptions?.includes("samplelocation" as never) && (
+        <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
+          <input
+            type="radio"
+            id="samplelocation"
+            name="samplelocation"
+            value="samplelocation"
+            className="hidden peer"
+            checked={selectedColumn === 'samplelocation'}
+            onChange={handleLocationChangeColorby}
+          />
+          <label
+            htmlFor="samplelocation"
+            className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          >
+            <div className="block">
+              <div className="w-full">Sample Location</div>
+            </div>
+          </label>
+        </li>
+      )}
 
-                            </label>
-                        </li>
-                        {
-                            columnOptions?.includes("age" as never) && (
-                                <li className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                                    <input type="radio" id="age" name="age" value="age" className="hidden peer" checked={isColorByDisabled ? false : selectedColumn === 'age'}
-                                        onChange={handleLocationChangeColorby} />
-                                    <label htmlFor="age" className={`flex items-center justify-center w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}  ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'}  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                        <div className="block">
-                                            <div className="w-full">Age</div>
-                                        </div>
-                                    </label>
-                                </li>
-                            )
-                        }
+      {colorByOptions.map((option, index) => (
+        <li key={index} className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2 p-1">
+          <input
+            type="radio"
+            id={option}
+            name={option}
+            className="hidden peer"
+            value={option}
+            checked={selectedColumn === option}
+            onChange={handleLocationChangeColorby}
+          />
+          <label
+            htmlFor={option}
+            className={`flex items-center justify-center ${isColorByDisabled
+              ? 'cursor-not-allowed'
+              : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
+              } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          >
+            <div className="block">
+              <div className="w-full">
+                {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
+              </div>
+            </div>
+          </label>
+        </li>
+      ))}
+    </ul>
+  </div>
 
-                        {colorByOptions.map((option, index) => (
-                            <li key={index} className="w-48 xl:m-2 md:m-0 xl:mb-1 md:mb-2  p-1">
-                                <input
-                                    type="radio"
-                                    id={option}
-                                    name={option}
-                                    className="hidden peer"
-                                    value={option}
-                                    checked={isColorByDisabled ? false : selectedColumn === option}
-                                    onChange={handleLocationChangeColorby}
-                                    disabled={isColorByDisabled}
-                                />
-                                <label
-                                    htmlFor={option}
-                                    className={`flex items-center justify-center ${isColorByDisabled
-                                        ? 'cursor-not-allowed'
-                                        : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                                        } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"}   dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                                >
-                                    <div className="block">
-                                        <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-                                    </div>
-                                </label>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+  <div className="mt-4">
+    {valueChecks}
+  </div>
 
-
-                <>
-
-                    <div className=" mt-4">
-
-                        {valueChecks}
-                    </div>
-                </>
-
-
-                <Divider className="mt-0"/>
-                <div className="flex w-full items-center margin-0 justify-center my-4">
-                    <Button
-                        onClick={applyFilters}
-                        loading={filterPeticion}
-                        iconPos="right"
-                        icon="pi pi-check-square"
-                        loadingIcon="pi pi-spin pi-spinner"
-                        className=" max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-                        label="Apply Filters"
-                    />
-                </div>
-
-      
-
-          
-          
-            </AccordionTab>
+  <div className="flex w-full items-center margin-0 justify-center my-4">
+    <Button
+      onClick={applyFilters}
+      loading={filterPeticion}
+      iconPos="right"
+      icon="pi pi-check-square"
+      loadingIcon="pi pi-spin pi-spinner"
+      className="max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+      label="Apply Filters"
+    />
+  </div>
+</AccordionTab>
             </Accordion>
         </div>
     );
@@ -1096,7 +1116,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         // Invocamos la función asincrónica dentro de useEffect.
         fetchAndCalculateAnnotations();
-    }, [theRealColorByVariable, accessToken]);
+    }, [theRealColorByVariable, accessToken, selectedLocations]);
 
     useEffect(() => {
         const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.

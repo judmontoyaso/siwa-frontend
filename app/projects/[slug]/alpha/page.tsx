@@ -766,9 +766,9 @@ export default function Page({ params }: { params: { slug: string } }) {
         const valueChecks = (
             <div className="flex flex-col w-full mb-5 mt-5">
                 <div className="flex w-full flex-wrap items-center justify-start overflow-x-auto">
-                    {valueOptions?.filter(value => value !== null).map((value, index) => {
+                    {valueOptions?.filter(value => value !== null && selectedColumn !== "samplelocation").map((value, index) => {
                         const stringValue = String(value);
-        
+                        console.log('stringValue:', value);
                         return (
                             <div key={index} className="flex items-center mr-5 mb-3">
                                 <Checkbox
@@ -910,7 +910,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         />
         <label
           htmlFor="treatment"
-          className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500" } cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
         >
           <div className="block">
             <div className="w-full text-base">Treatment</div>
@@ -953,10 +953,7 @@ export default function Page({ params }: { params: { slug: string } }) {
           />
           <label
             htmlFor={option}
-            className={`flex items-center justify-center ${isColorByDisabled
-              ? 'cursor-not-allowed'
-              : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-              } w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+            className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100 w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
           >
             <div className="block">
               <div className="w-full text-base">

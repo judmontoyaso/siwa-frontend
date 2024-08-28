@@ -405,7 +405,7 @@ fetchProjectIdsFiltercolor(dataResult, value);
 const valueChecks = (
   <div className="flex flex-col w-full mb-5 mt-5">
     <div className="flex w-full flex-row flex-wrap items-start justify-start">
-      {valueOptions?.map((value, index) => {
+      {valueOptions?.filter(value => value !== null && colorBy !== "samplelocation").map((value , index) => {
         const stringValue = String(value);
 
         return (
@@ -749,7 +749,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                     />
                     <label
                       htmlFor="treatment"
-                      className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                      className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                     >
                       <div className="block">
                         <div className="w-full">Treatment</div>
@@ -792,10 +792,8 @@ const fetchProjectIdsFilter = async (result: any) => {
                       />
                       <label
                         htmlFor={option}
-                        className={`flex items-center justify-center ${isColorByDisabled
-                          ? 'cursor-not-allowed'
-                          : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-                          } w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                        className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100
+                          w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                       >
                         <div className="block">
                           <div className="w-full">

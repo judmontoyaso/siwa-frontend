@@ -6,7 +6,7 @@ export default function Maintenance() {
   return (
     <>
       <Head>
-        <title>We'll be back soon!</title>
+        <title>We&apos;ll be back soon!</title>
       </Head>
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-100 to-gray-300 text-gray-800">
         <motion.div
@@ -21,7 +21,7 @@ export default function Maintenance() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            We're Under Maintenance
+            We&apos;re Under Maintenance
           </motion.h1>
           <motion.p
             className="text-xl mb-4"
@@ -37,7 +37,7 @@ export default function Maintenance() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            We’ll be back shortly. Thanks for your patience!
+            We&apos;ll be back shortly. Thanks for your patience!
           </motion.p>
         </motion.div>
         <motion.div

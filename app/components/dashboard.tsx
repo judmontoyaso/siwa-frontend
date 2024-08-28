@@ -50,8 +50,8 @@ const Dashboard = () => {
   useEffect(() => {
     setEmpresa(user?.Empresa as never);
     setProjects([
-      { id: "E335", name: "Project Alpha" },
-      { id: "PFF24", name: "Project Beta" },
+      { id: "E335", name: "Impact of various levels of Calcium on poultry gut health and balance" },
+      { id: "PFF24", name: "Exploring the dynamics of probiotic supplementation in the canine fecal microbiome" },
     ]);
     setProjectsLoading(false);
   }, [accessToken, user?.Empresa, user?.Project]);
@@ -166,7 +166,7 @@ const Dashboard = () => {
         <div className="mx-auto w-full max-w-7xl flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-2/3 flex flex-col">
             <h3 className="text-2xl font-semibold text-siwa-blue mb-6">Your Projects</h3>
-            <p className="text-lg text-siwa-blue mb-6">
+            <p className="text-xl text-siwa-blue mb-6">
               Select any of the loaded projects below to explore detailed analysis results.
             </p>
             {!projectsLoading ? (

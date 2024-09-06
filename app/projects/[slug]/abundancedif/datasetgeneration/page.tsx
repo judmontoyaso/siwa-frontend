@@ -620,8 +620,8 @@ setRecords(records)
     deleteTempFiles(accessToken);
     // Restablece los estados a los valores predeterminados
     setSelectedColorBy("samplelocation");
-    setSelectedLocations(['cecum', 'feces', 'ileum']); 
-    setSelectedValues(new Set(['cecum', 'feces', 'ileum'])); 
+    setSelectedLocations(['Cecum', 'Feces', 'Ileum']); 
+    setSelectedValues(new Set(['Cecum', 'Feces', 'Ileum'])); 
 setLoadcsv(false)
 setTempFile(false)
     setIsGeneratingDataset(false); // Restablece el estado de 'isGeneratingDataset'

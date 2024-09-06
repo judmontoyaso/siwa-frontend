@@ -44,7 +44,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [configFile, setconfigFile] = useState({} as any);
     const [selectedColumnRemove, setSelectedColumnRemove] = useState('');
     const [columnOptions, setColumnOptions] = useState([]);
-    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set(['cecum', 'feces', 'ileum']));
+    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set(['Cecum', 'Feces', 'Ileum']));
     const [valueOptions, setValueOptions] = useState<any[]>([]);
     const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
     const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
@@ -55,14 +55,10 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [isDatasetReady, setIsDatasetReady] = useState(false);
     const [columnsWithFewerThanTwoUniqueValues, setColumnsWithFewerThanTwoUniqueValues] = useState([]);
     const [recordsAll, setRecordsAll] = useState(0);
-    const [Location, setLocation] = useState<string[]>([
-        "cecum",
-        "feces",
-        "ileum",
-    ]);
+    const [Location, setLocation] = useState<string[]>(['Cecum', 'Feces', 'Ileum']);
     const [selectedRank, setSelectedRank] = useState("Genus");
     let colorIndex = 0;
-    const initialLocations = ["cecum", "feces", "ileum"]; // Ejemplo de ubicaciones disponibles
+    const initialLocations = ['Cecum', 'Feces', 'Ileum']; // Ejemplo de ubicaciones disponibles
     const [allSelected, setAllSelected] = useState(true);
     const [confirmedLocations, setConfirmedLocations] = useState([]);
     const [loadcsv, setLoadcsv] = useState(false);

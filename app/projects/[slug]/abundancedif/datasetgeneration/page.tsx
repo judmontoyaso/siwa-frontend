@@ -43,8 +43,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [showInstructions, setShowInstructions] = useState(true);
     const [otus, setOtus] = useState<any>();
     const [dataUnique, setDataUnique] = useState<any>();
-    const [selectedLocations, setSelectedLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
-    const [availableLocations, setAvailableLocations] = useState<string[]>(['cecum', 'feces', 'ileum']);
+    const [selectedLocations, setSelectedLocations] = useState<string[]>(['Cecum', 'Feces', 'Ileum']);
+    const [availableLocations, setAvailableLocations] = useState<string[]>(['Cecum', 'Feces', 'Ileum']);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [shannonData, setShannonData] = useState([]);
     const [currentLocation, setCurrentLocation] = useState('');
@@ -56,7 +56,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [configFile, setconfigFile] = useState({} as any);
     const [selectedColumnRemove, setSelectedColumnRemove] = useState('');
     const [columnOptions, setColumnOptions] = useState([]);
-    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set(['cecum', 'feces', 'ileum']));
+    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set(['Cecum', 'Feces', 'Ileum']));
     const [valueOptions, setValueOptions] = useState<any[]>([]);
     const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
     const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
@@ -66,13 +66,9 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [records, setRecords] = useState({});
     const [isDatasetReady, setIsDatasetReady] = useState(false);
     const [columnsWithFewerThanTwoUniqueValues, setColumnsWithFewerThanTwoUniqueValues] = useState([]);
-    const [Location, setLocation] = useState<string[]>([
-        "cecum",
-        "feces",
-        "ileum",
-    ]);
+    const [Location, setLocation] = useState<string[]>(['Cecum', 'Feces', 'Ileum']);
     let colorIndex = 0;
-    const initialLocations = ["cecum", "feces", "ileum"]; // Ejemplo de ubicaciones disponibles
+    const initialLocations = ['Cecum', 'Feces', 'Ileum']; // Ejemplo de ubicaciones disponibles
     const [allSelected, setAllSelected] = useState(true);
     const [confirmedLocations, setConfirmedLocations] = useState([]);
     const [loadcsv, setLoadcsv] = useState(false);

@@ -46,8 +46,8 @@ export default function Page({ params }: { params: { slug: string } }) {
         { type: string; y: any; name: string }[]
     >([]);
     const [otus, setOtus] = useState<any>();
-    const [selectedValue, setSelectedValue] = useState<string[]>(['cecum', 'feces', 'ileum']);
-    const [valueOptions, setValueOptions] = useState<string[]>(['cecum', 'feces', 'ileum']);
+    const [selectedValue, setSelectedValue] = useState<string[]>(['Cecum', 'Feces', 'Ileum']);
+    const [valueOptions, setValueOptions] = useState<string[]>(['Cecum', 'Feces', 'Ileum']);
     const [selectedLocation, setSelectedLocation] = useState<string>('');
     const newScatterColors: { [key: string]: string } = {};
     const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);

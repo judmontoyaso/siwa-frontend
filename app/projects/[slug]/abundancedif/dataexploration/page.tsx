@@ -414,9 +414,9 @@ export default function Page({ params }: { params: { slug: string } }) {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    "samplelocation": ["cecum", "feces", "ileum"],
+                    "samplelocation": ["Cecum", "Feces", "Ileum"],
                     "column": "samplelocation",
-                    "columnValues": ["cecum", "feces", "ileum"],
+                    "columnValues": ["Cecum", "Feces", "Ileum"],
                     "nickname": user?.nickname,
                 }),
 

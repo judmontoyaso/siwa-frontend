@@ -48,7 +48,7 @@ const LefsePlot = ({ data, width, group }: { data: any, width: any, group:any })
 const colorPalettes = {
   samplelocation: ["#074b44", "#017fb1", "#f99b35"],
   treatment: ["#035060", "#f99b35", "#4e8e74"],
-  timepoint: ["#8cdbf4", "#f7927f", "#f7e76d"],
+  alphad3level: ["#8cdbf4", "#f7927f", "#f7e76d"],
   
 };
 

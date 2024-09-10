@@ -62,7 +62,7 @@ const ScatterPlot = ({ params }: { params: { slug: string } }) => {
   const fetchAnovaData = async (token: any, category: string | null) => {
     try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/histo-anova/${params.slug}`, {
+          `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/histo-anova/${params.slug}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ useEffect(() => {
   const fetchData = async (token: any) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/histo/${params.slug}`, {
+        `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/histo/${params.slug}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -245,8 +245,8 @@ useEffect(() => {
   const fetchDataFilter = async (token: any) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/histo/${params.slug}`,
-        {
+        `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/histo/${params.slug}`, 
+          {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

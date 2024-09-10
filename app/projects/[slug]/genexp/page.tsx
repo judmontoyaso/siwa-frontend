@@ -88,7 +88,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
 
   const fetchGeneExpresionData = async (token: any) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/geneexpresion/${params.slug}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/geneexpresion/${params.slug}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,7 +145,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
     const fetchFilteredData = async () => {
       if (accessToken && SampleLocation) {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/geneexpresion/${params.slug}`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/geneexpresion/${params.slug}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -223,7 +223,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
 
   const applyFilter = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/geneexpresion/${params.slug}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/geneexpresion/${params.slug}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -16,6 +16,7 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip as PTooltip } from "primereact/tooltip";
 
 const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
+  const [layout, setLayout] = useState<any>({});
   const [data, setData] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { accessToken } = useAuth();
@@ -30,6 +31,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
   const [resultFirst, setResultFirst] = useState<any>();
   const [selectedFilterColumn, setSelectedFilterColumn] = useState<string | null>(null);
   const [uniqueFilterValues, setUniqueFilterValues] = useState<string[]>([]);
+  const [anotations, setAnnotations] = useState<any[]>([]);
   const [selectedFilterValues, setSelectedFilterValues] = useState<string[]>([]);
   const [selectedReferenceColumn, setSelectedReferenceColumn] = useState<string | null>(null);
   const [selectedReferenceValue, setSelectedReferenceValue] = useState<string | null>(null);
@@ -111,6 +113,92 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
     }
   }, [accessToken]);
 
+  const fetchAnovaData = async (token: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/geneexpresion-anova/${params.slug}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            selected_gene: selectedGene,
+            group_by: groupByColumn,
+            sample_location: SampleLocation,
+          }),
+        }
+      );
+      
+      const anovaResult = await response.json();
+      console.log("ANOVA result:", anovaResult);
+      return anovaResult.significance;
+    } catch (error) {
+      console.error("Error fetching ANOVA data:", error);
+    }
+  };
+
+  
+  const generateAnnotations = (anovaData: any, plotData: any[]) => {
+    const annotations =  Object.entries(anovaData)
+    .filter(([group, significance]) => group !== null || group !== undefined || group !== 'null') // Filtrar los valores nulos o undefined
+    .map(([group, significance]) => {
+      // Encontrar el valor máximo para cada grupo, incluyendo valores negativos
+      const yMax = Math.max(...plotData.filter(d => d.name === group).map(d => Math.max(...d.y)));
+      const annotationPosition = yMax < 10 
+      ? yMax + 4  // Si es menor que 10, agregar 2 unidades
+      : yMax + Math.abs(yMax) * 0.2; // Si es mayor, agregar un 20% del valor
+
+      return {
+        x: group,
+        y: annotationPosition, // Ajustar la posición de la anotación dinámicamente
+        text: significance,
+        xanchor: 'center',
+        yanchor: 'top',
+        showarrow: false,
+        font: {
+          size: 16,
+          color: 'black',
+        },
+      };
+    });
+  
+    setAnnotations(annotations);
+  };
+  
+
+  useEffect(() => {
+    const yMaxTotal = Math.max(...data.map(d => Math.max(...d.y)));
+    const yMinTotal = Math.min(...data.map(d => Math.min(...d.y)));
+    console.log("yMaxTotal:", yMaxTotal);
+    updateLayout(yMinTotal, yMaxTotal); // Actualiza el layout con el nuevo valor máximo
+  }, [result, selectedGene, groupByColumn, SampleLocation, isRQSelected, anotations]);
+  
+  
+  useEffect(() => {
+    if (result && result.data) {
+      const rawData = result.data.data;
+      const columns = result.data.columns;
+  
+      const plotData = generatePlotData(rawData, columns);
+      setData(plotData); // Establece los datos generados
+  
+      const fetchAnovaDataAndUpdate = async () => {
+        const anovaData = await fetchAnovaData(accessToken);
+        if (anovaData) {
+          generateAnnotations(anovaData, plotData); // Genera las anotaciones y actualiza el layout
+        }
+      };
+  
+      fetchAnovaDataAndUpdate();
+    }
+  }, [result, selectedGene, groupByColumn, SampleLocation, isRQSelected]);
+  
+ 
+
+  
+
   useEffect(() => {
     if (resultFirst && resultFirst.data && !isInitialized) {
       const columns = resultFirst.data.columns;
@@ -172,23 +260,34 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
   }, [SampleLocation]);
 
   const generatePlotData = (rawData: any[], columns: string[]) => {
+    if (!rawData || rawData.length === 0 || !columns || columns.length === 0) {
+      return []; // Devuelve un array vacío si no hay datos
+    }
+  
     const category = `${isRQSelected ? "RQ" : "DD"}_${selectedGene}`;
     const categoryIndex = columns.indexOf(category);
     const groupByIndex = columns.indexOf(groupByColumn);
   
     if (groupByIndex === -1 || categoryIndex === -1) {
       console.error("Required columns not found in data.");
-      return;
+      return [];
     }
   
     const uniqueGroups = Array.from(new Set(rawData.map((row) => row[groupByIndex])));
   
+    let allYValues: number[] = []; // Para almacenar todos los valores de Y
+  
     const plotData = uniqueGroups.map((group, index) => {
       const filteredData = rawData.filter((row: any) => row[groupByIndex] === group);
-      const colorPalette: any = colorPalettes[groupByColumn] || colorPalettes['Treatment'];      return {
-        type: "violin",  // O "box" si estás utilizando boxplot
+      const colorPalette: any = colorPalettes[groupByColumn] || colorPalettes['Treatment'];
+  
+      const yValues = filteredData.map((row) => row[categoryIndex]);
+      allYValues = allYValues.concat(yValues); // Acumular los valores de Y para ajustar la escala
+  
+      return {
+        type: "violin",
         x: filteredData.map(() => group),
-        y: filteredData.map((row) => row[categoryIndex]),
+        y: yValues,
         name: group,
         points: "all",
         jitter: 0.3,
@@ -206,20 +305,50 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
       };
     });
   
-    setData(plotData);
+    return plotData;
   };
+  
+  const updateLayout = (yMin: number, yMax: number) => {
+    const adjustedYMin = yMin === 0 ? yMin - 5 : (yMin > 0 && yMin < 2 ? yMin -5 : yMin * 1.2); 
+    const adjustedYMax = yMax > 0 && yMax <= 2 
+    ? yMax + 5 
+    : yMax > 2 && yMax <= 10 
+      ? yMax + 10 
+      : yMax * 1.2;
+      
+    console.log("adjustedYMin:", adjustedYMin);
+    console.log("adjustedYMax:", adjustedYMax);
+    
+    
+    const newLayout = {
+      showlegend: true,
+      legend: {
+        orientation: "h",
+        x: 0.5,
+        xanchor: "center",
+        y: 1.1,
+        yanchor: "top",
+      },
+      width: 800,
+      height: 600,
+      xaxis: { title: groupByColumn },
+      yaxis: {
+        title: `Expression Levels of ${isRQSelected ? "RQ" : "DD"}_${selectedGene}`,
+        range: [adjustedYMin, adjustedYMax], // Usar el valor mínimo y máximo ajustado
+        autorange: false,
+      },
+      annotations: anotations, // Actualiza las anotaciones
+    };
+  
+    setLayout(newLayout);
+  };
+  
   
   useEffect(() => {
     setResult(resultFirst);
   }, [resultFirst]);
 
-  useEffect(() => {
-    if (result && result.data) {
-      const columns = result?.data?.columns;
-      const rawData = result?.data?.data;
-      generatePlotData(rawData, columns);
-    }
-  }, [result, selectedGene, isRQSelected, SampleLocation, groupByColumn]);
+
 
   const applyFilter = async () => {
     try {
@@ -482,48 +611,19 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
               title={`Gene Expression Analysis - ${SampleLocation}`}
               filter={filters}
             >
-              <Plot
-                data={data}
-                layout={{
-                  showlegend: true,
-                  legend: {
-                    orientation: "h",
-                    x: 0.5,
-                    xanchor: "center",
-                    y: 1.1,
-                    yanchor: "top",
-                  },
-                  width: 800,
-                  height: 600,
-                  xaxis: { title: groupByColumn },
-                  yaxis: {
-                    title: `Expression Levels of ${isRQSelected ? "RQ" : "DD"}_${selectedGene}`,
-                  },
-                  annotations: referenceDetails.column && referenceDetails.value
-                    ? [
-                        {
-                          text: `Reference Column: ${referenceDetails.column}, Reference Group: ${referenceDetails.value}`,
-                          xref: 'paper',
-                          yref: 'paper',
-                          x: 0.5,
-                          y: 1.2,
-                          showarrow: false,
-                          font: {
-                            size: 12,
-                            color: 'black',
-                          },
-                          align: 'center',
-                        },
-                      ]
-                    : [] ,
-                        }}
+<Plot
+  data={data}
+  layout={layout} // Si layout es undefined, usar un layout predeterminado
+  config={{
+    displaylogo: false,
+    responsive: true,
+    displayModeBar: false,
+  }}
+/>
 
-                config={{
-                  displaylogo: false,
-                  responsive: true,
-                  displayModeBar: false,
-                }}
-              />
+
+
+
             </GraphicCard>
           </div>
         ) : (

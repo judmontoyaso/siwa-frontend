@@ -584,41 +584,49 @@ useEffect(() => {
               <div className="flex">
                 <GraphicCard legend={""} filter={filter} title={`Histopathology scores aggregated by ${selectedCategory || "All Categories"} - ${SampleLocation}`}>
                   <div className="w-full flex flex-col content-center text-center items-center">
-                    <Plot
-                      data={(selectedCategory ? [selectedCategory] : categories)?.map((category, index) => ({
-                        x: (data as { Treatment: string; Category: string; Mean: number; }[])?.filter(item => item.Category === category).map(item => item.Treatment),
-                        y: (data as { Treatment: string; Category: string; Mean: number; }[])?.filter(item => item.Category === category).map(item => item.Mean),
-                        name: category,
-                        type: 'bar',
-                        marker: { color: colors[index % colors.length] },
-                      }))}
-                      config={config}
-                      layout={{
-                        barmode: 'stack',
-                        showlegend: true,
-                        legend: {
-                          orientation: "h",
-                          x: 0.5,
-                          xanchor: "center",
-                          y: 1.1,
-                          yanchor: "top",
-                          itemsizing: 'constant',
-                          font: { size: 11 }
-                        },
-                        width: 800,
-                        height: 600,
-                        xaxis: { title: 'Treatment', position: -2, tickangle: -45, tickfont: { size: 10 } },
-                        margin: { l: 50, r: 50, b: 100, t: 0, pad: 4 },
-                        yaxis: { title: 'Mean Score' }, // Ahora muestra "Mean Score" en lugar de "Mean Additive Score"
-                        dragmode: false,
-                        annotations: annotations.map(annotation => ({
-                          ...annotation,
-                          font: { size: 10, color: 'black' },
-                          xanchor: 'center' as 'center' | undefined,
-                          yanchor: 'top' as 'top' | 'auto' | 'middle' | 'bottom' | undefined
-                        }))
-                      }}
-                    />
+                   <Plot
+  data={(selectedCategory ? [selectedCategory] : categories)?.map((category, index) => ({
+    x: (data as { Treatment: string; Category: string; Mean: number; }[])?.filter(item => item.Category === category).map(item => item.Treatment),
+    y: (data as { Treatment: string; Category: string; Mean: number; }[])?.filter(item => item.Category === category).map(item => item.Mean),
+    name: category,
+    type: 'bar',
+    marker: { color: colors[index % colors.length] },
+  }))}
+  config={config}
+  layout={{
+    barmode: 'stack',
+    showlegend: true,
+    legend: {
+      orientation: "h",
+      x: 0.5,
+      xanchor: "center",
+      y: 1.1,
+      yanchor: "top",
+      itemsizing: 'constant',
+      font: { size: 11 }
+    },
+    width: 800,
+    height: 600,
+    xaxis: { title: 'Treatment', position: -2, tickangle: -45, tickfont: { size: 10 } },
+    margin: { l: 50, r: 50, b: 100, t: 0, pad: 4 },
+    yaxis: { title: 'Mean Score' },
+    dragmode: false,
+    annotations: annotations.map(annotation => ({
+      ...annotation,
+      font: { size: 10, color: 'black' },  // Tamaño de fuente ajustado
+      xanchor: 'center',  // Centra el texto sobre la barra
+      yanchor: 'top',     // Muestra el texto justo arriba de la barra
+      showarrow: false,   // Sin flecha, como en el ejemplo
+      yshift: 10,         // Desplaza el texto ligeramente hacia arriba de la barra
+      align: 'center',    // Alineación central del texto
+      bordercolor: '#000', // Borde negro alrededor del texto
+      borderwidth: 1,
+      borderpad: 4,       // Espaciado interno alrededor del texto
+      bgcolor: 'rgba(255, 255, 255, 0.8)', // Fondo blanco semi-transparente
+    })),
+  }}
+/>
+
                     <div className="w-full flex flex-row ">
                       <div className="px-6 py-8 w-full" >
                         <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>

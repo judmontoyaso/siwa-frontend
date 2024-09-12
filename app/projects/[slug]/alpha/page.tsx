@@ -1049,7 +1049,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
 
         // Encontrar el índice para la columna especificada por 'selectedColumn' y para 'alphashannon'
-        const locationColumnIndex = data.columns.indexOf(selectedColumn);
+        const locationColumnIndex = data.columns.indexOf(theRealColorByVariable);
         const alphashannonIndex = data.columns.indexOf('alphashannon');
         console.log('locationColumnIndex:', locationColumnIndex);
         console.log('alphashannonIndex:', alphashannonIndex);
@@ -1057,10 +1057,11 @@ export default function Page({ params }: { params: { slug: string } }) {
         if (locationColumnIndex === -1 || alphashannonIndex === -1) {
             return 0;
         }
-
+        console.log('locationValue:', locationValue);
+        console.log('data:', data);
         // Filtrar los datos para los que el valor de la columna 'selectedColumn' coincida con 'locationValue'
         const filteredData = data.data.filter((item: any[]) => item[locationColumnIndex] === locationValue && item[locationColumnIndex] !== "null");
-
+console.log('filteredData:', filteredData);
         // Extraer los valores de 'alphashannon' para los datos filtrados
         const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
         console.log('values:', values);

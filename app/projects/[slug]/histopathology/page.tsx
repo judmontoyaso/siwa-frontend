@@ -611,7 +611,7 @@ const handleValueChange = (value: any) => {
           {isLoaded ? (
             <div className="flex flex-col w-11/12 mx-auto">
               <div className="flex flex-row w-full text-center justify-center items-center">
-                <h1 className="text-3xl my-5 mx-2">Histopathology - {selectedCategory || "All Categories"} - {selectedColumn}</h1>
+                <h1 className="text-3xl my-5 mx-2">Histopathology </h1>
               </div>
               <div className="px-6 py-8">
                 <div className={`prose single-column`}>

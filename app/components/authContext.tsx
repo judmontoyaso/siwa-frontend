@@ -2,8 +2,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';  // Importar el nuevo useRouter y usePathname de next/navigation
 import { Toast } from 'primereact/toast';  // Importar el componente Toast de PrimeReact
-import 'primereact/resources/primereact.min.css';
-import 'primereact/resources/themes/lara-light-indigo/theme.css';  // Puedes usar cualquier tema de PrimeReact
 
 interface AuthContextType {
   accessToken: string;

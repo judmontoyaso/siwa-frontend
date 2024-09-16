@@ -7,6 +7,7 @@ import SkeletonCard from "@/app/components/skeletoncard";
 import GraphicCard from "@/app/components/graphicCard";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { Tooltip } from 'react-tooltip'
+import { Tooltip as PTooltip } from 'primereact/tooltip';
 import 'react-tooltip/dist/react-tooltip.css'
 import { SidebarProvider } from "@/app/components/context/sidebarContext";
 import { GoPlus } from "react-icons/go";
@@ -57,16 +58,16 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedGroup, setSelectedGroup] = useState("samplelocation");
     const [selectedRank, setSelectedRank] = useState("genus");
     const [observedData, setObservedData] = useState({});
-    const [colorByOptions, setColorByOptions] = useState<string[]>(['age', 'treatment']);
+    const [colorByOptions, setColorByOptions] = useState<string[]>(['treatment']);
     const [colorBy, setColorBy] = useState<string>('samplelocation');
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const [filterPeticion, setFilterPeticion] = useState(false);
     const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
     const [selectedLocations, setSelectedLocations] = useState<string[]>([
-        "cecum",
-        "feces",
-        "ileum",
+        "Cecum",
+        "Feces",
+        "Ileum",
     ]);
     const [Location, setLocation] = useState<string[]>([
 
@@ -124,7 +125,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [dataResult, setDataResult] = useState<any>(null);
     const [actualGroup, setActualGroup] = useState<any>('samplelocation');
 const [actualRank, setActualRank] = useState<any>('genus');
-    const [columnOptions, setColumnOptions] = useState([]);
+    const [columnOptions, setColumnOptions] = useState<any>([]);
     const [htmlContent, setHtmlContent] = useState('');
     const containerRef = useRef<HTMLDivElement>(null); // Update the type of containerRef to HTMLDivElement
     const [activeIndex, setActiveIndex] = useState(0); 
@@ -491,6 +492,26 @@ setObservedData(result?.Krona)
         }
     };
 
+    const applyFiltersLogic = () => {
+        fetchDataFilter(accessToken);
+    
+        setLocation(selectedLocations);
+    
+  
+    
+       
+        setActualRank(selectedRank);
+        setFilterPeticion(true);
+    };
+    
+    useEffect(() => {
+        // Llamar a applyFiltersLogic cuando cambie cualquier variable relevante
+        if (accessToken && user) {
+            applyFiltersLogic();
+        }
+    }, [selectedRank, selectedLocations, theRealColorByVariable, number]);  // Escuchar cambios en las variables clave
+    
+
     useEffect(() => {fetchDataGroups(accessToken)}, [theRealColorByVariable])
 
     // Manejar cambio de locación
@@ -566,26 +587,32 @@ fetchConfigFile(accessToken); fetchData(accessToken);
 
         setLocation(selectedLocations);
 
-        if (selectedLocations.length === 3) {
-            setSelectedGroup("samplelocation"); // Restablecer el valor de tratamiento si se selecciona 'All'
-        } 
+   
 setActualGroup(selectedGroup);
 setActualRank(selectedRank);
 setFilterPeticion(true);
 
     };
-
     const handleLocationChange = (event: any) => {
         if (event === 'all') {
-            setSelectedLocations(['cecum', 'feces', 'ileum']);
-            setSelectedColumn("samplelocation");
-            setSelectedGroup("samplelocation");
-            setIsColorByDisabled(true);
+            setSelectedLocations(['Cecum', 'Feces', 'Ileum']); // Selecciona "All Locations"
+            setTheRealColorByVariable("samplelocation"); // Asegura que "samplelocation" también sea la opción del dropdown
+            setIsColorByDisabled(true); // Deshabilitar el dropdown de "Select a variable to group"
         } else {
-            setSelectedLocations([event]);
-            setIsColorByDisabled(false);
+            setSelectedLocations([event]); // Seleccionar la ubicación individual
+            setIsColorByDisabled(false); // Habilitar el dropdown de "Select a variable to group"
         }
     };
+    
+    useEffect(() => {
+        if (selectedLocations.length === 3) {  // Si se selecciona 'All Locations'
+            setTheRealColorByVariable("samplelocation"); // Asegurarse de que la variable de agrupación también sea "samplelocation"
+            setIsColorByDisabled(true); // Deshabilitar "Select a variable to group"
+        } else {
+            setIsColorByDisabled(false); // Habilitar "Select a variable to group" si se selecciona una sola ubicación
+        }
+    }, [selectedLocations]);
+    
 
     type Plotdata = {
         name: string;
@@ -666,14 +693,14 @@ setFilterPeticion(true);
                         showlegend: true,
                         legend: {
                             orientation: "v", // Orientación vertical
-                            x: 1.3, // Posición a la derecha del gráfico
+                            x: 1.1, // Posición a la derecha del gráfico
                             xanchor: "left",
                             yanchor:"top",
                             y: 0.75, // Centrado verticalmente
                         
                         },
                         dragmode: false ,
-                        margin: { l: 50, r: 50, t: 20, b: 50 } // Asegúrate de dejar suficiente margen a la derecha
+                        margin: { l: 50, r: 50, t: 20, b: 50 }
                     }}
                 />
                 )}
@@ -759,30 +786,34 @@ setFilterPeticion(true);
       
     // Componente de checks para los valores de la columna seleccionada
     const valueChecks = (
-        <div className="flex flex-col w-full overflow-x-scroll mb-5 mt-5">
-            <div className="flex w-full flex-row flex-wrap  overflow-x-scroll items-center justify-center">
-
-            {valueOptions?.map((value, index) => { 
-                                       const stringValue = String(value);
-
-                return(
-                <div key={index} className="flex items-center mb-2 mr-2 ml-2">
-                    <input
-                        id={`value-${index}`}
-                        type="checkbox"
-                        value={value}
-                        checked={selectedValues.has(value)}
-                        onChange={() => handleValueChange(value)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                    {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
-                    </label>
-                </div>
-            )})}
-        </div>
+        <div className="flex flex-col w-full overflow-x-scroll mt-5">
+            <div className="flex w-full flex-row flex-wrap items-center justify-center">
+                {valueOptions?.map((value, index) => {
+                    const stringValue = String(value);
+    
+                    return (
+                        <div key={index} className="flex items-center mb-2 mr-2 ml-2">
+                            <input
+                                id={`value-${index}`}
+                                type="checkbox"
+                                value={value}
+                                checked={selectedValues.has(value)}
+                                onChange={() => handleValueChange(value)}
+                                className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                            />
+                            <label
+                                htmlFor={`value-${index}`}
+                                className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
+                            </label>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
+    
+    
 
     const config: Partial<Config> = {
         displaylogo: false,
@@ -813,7 +844,7 @@ setFilterPeticion(true);
     const dropdownLocationOptions = [allLocationsOption, ...locationOptions];
 
     // Determinar el valor seleccionado para el Dropdown
-    const selectedDropdownValue = selectedLocations.length === 3 ? selectedLocation : selectedLocations[0];
+    const selectedDropdownValue = selectedLocations.length === 3 ? "all" : selectedLocations[0];
     const [activeIndexes, setActiveIndexes] = useState([0,1]);
 
     const onTabChange = (e : any) => {
@@ -830,175 +861,204 @@ setFilterPeticion(true);
           }))
       ];
 
-    const filter = (
-        <div className={`flex flex-col w-full rounded-lg  dark:bg-gray-800 `}>
-   <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">    
-      <AccordionTab header="Group by"  className="colorby-acordeon"  >
-    
-<div>
-<Dropdown
-      value={theRealColorByVariable}
-      options={dropdownOptionsColorby}
-      onChange={(e) => setTheRealColorByVariable(e.target.value)}
-      optionLabel="label"
-      className="w-full"
-      />
-           
-        </div>
+      const filter = (
+        <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
+          <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
+            
+            {/* Group by Acordeón */}
+            <AccordionTab header="Group by" className="colorby-acordeon">
+              <div className="flex flex-col items-start m-2">
+                <h3 className="mb-2 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
+                  Select a Sample Location: 
+                  <span className="ml-2">
+                    <i
+                      className="pi pi-info-circle text-siwa-blue"
+                      data-pr-tooltip="Please select a sample location prior to selecting a grouping variable."
+                      data-pr-position="top"
+                      id="sampleLocationTooltip"
+                    />
+                    <PTooltip target="#sampleLocationTooltip" />
+                  </span>
+                </h3>
+                <Dropdown
+                  id="location"
+                  value={selectedDropdownValue}
+                  options={dropdownLocationOptions}
+                  onChange={(e) => handleLocationChange(e.value)}
+                  disabled={availableLocations.length === 1}
+                  className="w-full mb-6 text-sm"
+                  placeholder="Choose a location"
+                />
+              </div>
+      
+              {/* Selección de variable */}
+              <div className="flex flex-col items-start mt-2 m-2">
+                <h3 className="text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
+                  Select a variable to group:
+                  <span className="ml-2">
+                    <i
+                      className="pi pi-info-circle text-siwa-blue"
+                      data-pr-tooltip="Select a grouping variable within a sample location."
+                      data-pr-position="top"
+                      id="groupByTooltip"
+                    />
+                    <PTooltip target="#groupByTooltip" />
+                  </span>
+                </h3>
+                <Dropdown
+                  value={theRealColorByVariable}
+                  options={dropdownOptionsColorby}
+                  onChange={(e) => setTheRealColorByVariable(e.target.value)}
+                  optionLabel="label"
+                  className="w-full text-sm filtercolorby"
+                  disabled={isColorByDisabled}
+                  placeholder="Select a color category"
+                />
+              </div>
+      
+              {/* Selección del rank taxonómico */}
+              <div className="w-full flex flex-col m-2">
+                <h3 className="mb-2 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
+                  Select a taxonomic rank for display:
+                  <span className="ml-2">
+                    <i
+                      className="pi pi-info-circle text-siwa-blue"
+                      data-pr-tooltip="Select a taxonomic rank for grouping."
+                      data-pr-position="top"
+                      id="rankTooltip"
+                    />
+                    <PTooltip target="#rankTooltip" />
+                  </span>
+                </h3>
+                <Dropdown
+                  value={selectedRank}
+                  options={dropdownOptions}
+                  onChange={(e) => setSelectedRank(e.value)}
+                  placeholder="Select a Rank"
+                  className="w-full mb-4 text-sm"
+                />
+              </div>
+      
+              {/* Selección de Top */}
+              <div className="max-w-xs flex m-2 flex-col items-start mt-5 mb-5">
+                <PrimeToolTip target=".topInputText" />
+                <h3 className="mb-5 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
+                  Top:
+                  <span className="ml-2">
+                    <AiOutlineInfoCircle
+                      className="topInputText text-siwa-blue"
+                      data-pr-tooltip="This graph displays the most abundant taxa for each rank."
+                      data-pr-position="top"
+                      id="topTooltip"
+                    />
+                    <PTooltip target="#topTooltip" />
+                  </span>
+                </h3>
+                <div className="relative justify-center w-full flex flex-col items-center">
+                <div className=" flex items-center max-w-[8rem]">
 
-        </AccordionTab>
-                <AccordionTab header="Filter by"  className="filter-acordeon" >
-                <div className="flex flex-col items-left  mt-2 mb-4">
-                    <div className="w-full flex flex-col">
-
-                    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a taxonomic rank for display</h3>
-     <Dropdown 
-            value={selectedRank} 
-            options={dropdownOptions} 
-            onChange={(e) => setSelectedRank(e.value)} 
-            placeholder="Select a Rank"
-            className="w-full"
-        />
-        </div>
-
-              
-    <div className="max-w-xs mx-auto flex flex-col items-center mt-5 mb-5">
-    <PrimeToolTip target=".topInputText" />                        
-
-    <h3  className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">
-        <div className="flex flex-row mt-2">
-    Top <AiOutlineInfoCircle className="topInputText ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" data-pr-tooltip="This graph displays the most abundant taxa for each rank"
-    data-pr-position="right"
-    data-pr-at="right+5 top"
-    data-pr-my="left center-2"/>
-        </div>
-        
- </h3>
-    <div className="relative flex items-center max-w-[8rem]">
-        <button type="button" id="decrement-button" onClick={() => setNumber(Math.max(1, number - 1))} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-l-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
-            {/* SVG para el icono de decremento */}
-            <FiMinus />
-        </button>
-        <input type="text" id="topInput" value={number} onChange={e => setNumber(e.target.value === '' ? 1 : Math.max(1, Math.min(15, parseInt(e.target.value) || 1)))} className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="999" required />
-        <button type="button" id="increment-button" onClick={() => setNumber(Math.min(15, number + 1))} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-r-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
-        <GoPlus />
-        </button>
-    </div>
-    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
+<button
+  type="button"
+  onClick={() => setNumber(Math.max(1, number - 1))}
+  className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-l-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none"
+>
+  <FiMinus />
+</button>
+<input
+  type="text"
+  value={number}
+  onChange={(e) => setNumber(e.target.value === '' ? 1 : Math.max(1, Math.min(15, parseInt(e.target.value) || 1)))}
+  className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+  required
+/>
+<button
+  type="button"
+  onClick={() => setNumber(Math.min(15, number + 1))}
+  className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-r-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none"
+>
+  <GoPlus />
+</button>
 </div>
- 
-  
-    <div className="flex flex-col items-left space-x-2 mt-4 mb-4">
-
-                    <h3 className="mb-5 text-lg font-semibold text-gray-700 dark:text-white">Select a Sample Location (if applicable)</h3>
-                    <Dropdown 
-            id="location"
-            value={selectedDropdownValue}
-            options={dropdownLocationOptions}
-            onChange={(e) => handleLocationChange(e.value)}
-            disabled={availableLocations.length === 1}
-            className="w-full"
-        />
-              
-
+<p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
 
                 </div>
-
-
-     
-                <div className="mt-4 mb-4">
-
                
-      <h3 className="text-lg font-semibold text-gray-700 dark:text-white my-tooltip whitespace-pre">
-        Filtering <span>options <AiOutlineInfoCircle className="text-sm mb-1 cursor-pointer text-siwa-blue inline-block" data-tip data-for="interpreteTip" id="group" /></span>
-      </h3>     
-                                    <Tooltip
-                                        style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "8px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                                        anchorSelect="#group">
-                                        <div className={`prose single-column w-28 z-50`}>
-                                            <p>Select options to include in the plot.</p>
-                                         
-                                        </div>
-                                    </Tooltip>
-                <ul className="w-full flex flex-wrap items-center content-center justify-around ">
-
-                        <li className="w-48 m-2 mb-1 p-1">
-                            <input type="radio" id="samplelocation" name="samplelocation" value="samplelocation" className="hidden peer" required checked={selectedGroup === 'samplelocation'}
-                                onChange={(e) => setSelectedGroup(e.target.value)}
-                                disabled={isColorByDisabled}
-                              />
-                            <label htmlFor="samplelocation" className={`flex items-center justify-center w-full p-1 text-center text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100  dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}>
-                                <div className="block">
-                                    <div className="w-full text-center flex justify-center">Sample location</div>
-                                </div>
-                            </label>
+              </div>
+            </AccordionTab>
+      
+            {/* Filter by Acordeón */}
+            <AccordionTab header="Filter by" className="filter-acordeon">
+              <div className="mt-4 ml-2 mb-4">
+                <h3 className="text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
+                  Filtering options:
+                  <span className="ml-2">
+                    <AiOutlineInfoCircle
+                      className="text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
+                      id="filteringTip"
+                    />
+                    <PTooltip target="#filteringTip" position="top">
+                      Select options to include in the plot.
+                    </PTooltip>
+                  </span>
+                </h3>
+      
+                <ul className="w-full flex flex-wrap items-center content-center justify-around">
+                  {colorByOptions?.map((option:any, index) => {
+                    if (columnOptions?.includes(option)) {
+                      return (
+                        <li className="w-48 mb-1 p-1" key={index}>
+                          <input
+                            type="radio"
+                            id={option}
+                            name={option}
+                            className="hidden peer"
+                            value={option}
+                            checked={selectedGroup === option}
+                            onChange={(e) => setSelectedGroup(e.target.value)}
+                          />
+                          <label
+                            htmlFor={option}
+                            className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${
+                              selectedGroup === actualGroup ? 'peer-checked:bg-navy-600' : 'peer-checked:bg-navy-500'
+                            } dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                          >
+                            <div className="block">
+                              <div className="w-full">{option.charAt(0).toUpperCase() + option.replace('_', ' ').slice(1)}</div>
+                            </div>
+                          </label>
                         </li>
-                        {colorByOptions?.map((option, index) => {
-  // Solo renderizar el elemento si 'option' está presente en 'columnOptions'
-if ((columnOptions as string[])?.includes(option)) {
-    return (
-      <li className="w-48 m-2 mb-1 p-1" key={index}>
-        <input
-          type="radio"
-          id={option}
-          name={option}
-          className="hidden peer"
-          value={option}
-          checked={selectedGroup === option}
-          onChange={(e) => setSelectedGroup(e.target.value)}
-          disabled={isColorByDisabled}
-        />
-        <label
-          htmlFor={option}
-          className={`flex items-center justify-center 
-          ${isColorByDisabled
-              ? 'cursor-not-allowed'
-              : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'
-          } w-full p-1 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400  peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-        >
-          <div className="block">
-            <div className="w-full">{(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}</div>
-          </div>
-        </label>
-      </li>
-    );
-  } else {
-    // No retorna nada si 'option' no está en 'columnOptions'
-    return null;
-  }
-})}
-
-                    </ul>
+                      );
+                    } else {
+                      return null;
+                    }
+                  })}
+                </ul>
+              </div>
+      
+              {selectedGroup !== 'samplelocation' && (
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg shadow-inner flex flex-col items-start">
+                  {valueChecks}
                 </div>
+              )}
 
-           
-     
-
-           
-            <div className="">
-{valueChecks}
-            </div>
+<div className="flex w-full items-center justify-center my-4">
+            <Button
+              onClick={applyFilters}
+              loading={filterPeticion}
+              iconPos="right"
+              icon="pi pi-check-square"
+              loadingIcon="pi pi-spin pi-spinner"
+              className="max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none mt-3"
+              label="Update"
+            />
+          </div>
+            </AccordionTab>
+          </Accordion>
+      
          
-             
-       
-
-</div>
-<Divider className="mt-0"/>
-                <div className="flex w-full items-center margin-0 justify-center my-4">
-          <Button
-            onClick={applyFilters}
-            loading={filterPeticion}
-            iconPos="right"
-            icon="pi pi-check-square"
-            loadingIcon="pi pi-spin pi-spinner" 
-            className=" max-w-56  justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-            label="Update"
-          />
         </div>
-        </AccordionTab>
-            </Accordion>
-
-        </div>);
+      );
+      
 
 
 useEffect(() => {

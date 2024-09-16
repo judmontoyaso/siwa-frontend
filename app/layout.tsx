@@ -26,16 +26,9 @@ export default function RootLayout({
     <html lang="en">
       <><head>
 
-      <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              const style = document.createElement('style')
-              style.innerHTML = '@layer tailwind-base, primereact, tailwind-utilities;'
-              style.setAttribute('type', 'text/css')
-              document.querySelector('head').prepend(style)
-            `,
-          }}
-        />
+<link id="theme-link" rel="stylesheet" href="/themes/lara-light-blue/theme.css"/>
+        
+
 </head>
    
         <UserProvider>

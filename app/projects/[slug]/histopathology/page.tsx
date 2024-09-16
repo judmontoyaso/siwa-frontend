@@ -44,6 +44,9 @@ const ScatterPlot = ({ params }: { params: { slug: string } }) => {
   const categories: string[] = ['OverallArchitecture', 'MucosalIntegrity', 'LymphoidImmune', 'InflammationSeverity', 'MicrobialOrganisms'];
   const [SampleLocation, setSampleLocation] = useState<any>('Cecum');
   const router = useRouter();
+  const [selectedValuesByTab, setSelectedValuesByTab] = useState<{ [tabId: string]: any[] }>({});
+  const [activeTab, setActiveTab] = useState<string>('tab0'); // El valor por defecto es la primera pestaña
+  const [selectedValuesByColumn, setSelectedValuesByColumn] = useState<{ [key: string]: any[] }>({});
 
   const[rawData, setRawData] = useState<any[]>([]);
 
@@ -122,41 +125,53 @@ useEffect(() => {
           return;
         }
   
-        const categoriesToUse = selectedCategory ? [selectedCategory] : categories;
-  
+        const categoriesToUse = selectedCategory ? [selectedCategory] : categories; // Si hay categoría seleccionada, usar esa, si no, todas
+
         categoriesToUse.forEach(category => {
-          const categoryValue = row[columns.indexOf(category)];
-  
+          const categoryValue = selectedCategory 
+            ? row[columns.indexOf(category)]  // Si se selecciona una categoría, usar su valor
+            : row[columns.indexOf("AdditiveScore")]; // Si no, usar el "Additive Score"
+        
           if (categoryValue !== undefined) {
-            const key = `${group}-${category}-${sampleLocation}`;
+            const key = `${group}-${category}-${sampleLocation}`; // Agrupa por tratamiento, categoría y ubicación
             if (!groupedData[key]) {
               groupedData[key] = [];
             }
-            groupedData[key].push(categoryValue);
+            groupedData[key].push(categoryValue); // Añade el valor de la categoría (o del Additive Score) al grupo
           }
         });
+        
+        
+
+
       });
-  
       const meanData = Object.keys(groupedData).map((key: string) => {
         const [treatment, category, sampleLocation] = key.split('-');
-        const scores = groupedData[key];
-        const mean = scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length;
+        const scores = groupedData[key]; // Los valores de la categoría o del Additive Score
+        const mean = scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length; // Cálculo del promedio
         return { Treatment: treatment, Category: category, SampleLocation: sampleLocation, Mean: mean };
       });
+      
   
       // Generar las anotaciones basadas en los resultados de ANOVA
+      const maxMean = Math.max(...meanData.map(item => item.Mean)); // Encontrar el valor máximo de mean
+      const offsetFactor = maxMean * 0.05; // El 5% del valor máximo se usa como offset
+      
       const annotations = Object.entries(anovaResult?.significance).map(([key, value]) => {
         console.log("group", key);
         console.log("significance", value);
-  
+      
         // Sumar todas las medias para las categorías correspondientes a un mismo tratamiento
         const totalMean = meanData
           .filter(item => item?.Treatment === key)
           .reduce((sum, item) => sum + item.Mean, 0);
-  
+      
+        // Ajuste dinámico del offset basado en la escala de 'mean'
+        const offset = totalMean * 0.05 || offsetFactor;  // Si no se puede calcular el 5%, usar un valor fijo basado en el máximo de las medias
+      
         return {
           x: key,
-          y: totalMean + 0.5 || 1, // Posición en y es la suma de todas las medias + 0.5
+          y: totalMean + offset, // Posición ajustada en y usando el offset dinámico
           text: value,
           xanchor: 'center',
           yanchor: 'top',
@@ -167,6 +182,7 @@ useEffect(() => {
           },
         };
       });
+      
   
       setAnnotations(annotations);
       console.log("anovaResult", anovaResult);
@@ -245,8 +261,8 @@ useEffect(() => {
   const fetchDataFilter = async (token: any) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/histo/${params.slug}`, 
-          {
+        `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/histo/${params.slug}`,
+        {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -254,21 +270,21 @@ useEffect(() => {
           },
           body: JSON.stringify({
             sample_location: SampleLocation,
-            selected_column: realcolumn,
-            selected_values: selectedValues,
+            selected_column: selectedColumn,
+            selected_values: selectedValuesByColumn[selectedColumn || ''] || [],  // Solo enviar valores de la columna actual
           }),
         }
       );
-
+  
       const result = await response.json();
       console.log('result:', result);
       setResult(result);
-
       setIsLoaded(true);
     } catch (error) {
-      console.error("Error al obtener datos filtrados:", error);
+      console.error('Error al obtener datos filtrados:', error);
     }
   };
+  
 
   const [filteredColumns, setFilteredColumns] = useState([]);
 
@@ -328,18 +344,31 @@ useEffect(() => {
       value: category,
     })),
   ];
+// Función para manejar la selección de columnas
+const handleColumnSelect = (option: string | null) => {
+  console.log('Columna seleccionada:', option); // Verificar la columna seleccionada
+  setSelectedColumn(option);
 
-  const handleColumnSelect = (option: string | null) => {
-    setSelectedColumn(option);
-    const rawData = resultFirst?.data.data;
-    
-    const columnIndex = resultFirst?.data.columns.indexOf(option);
-    if (columnIndex !== -1) {
-      const values = rawData.map((row: { [x: string]: any; }) => row[columnIndex]);
-      const uniqueVals = Array.from(new Set(values)).filter(val => values.filter((v: any) => v === val).length > 1);
-      setUniqueValues(uniqueVals);
-    }
-  };
+  const rawData = resultFirst?.data.data;
+  const columnIndex = resultFirst?.data.columns.indexOf(option);
+
+  if (columnIndex !== -1) {
+    const values = rawData.map((row: { [x: string]: any }) => row[columnIndex]);
+    const uniqueVals = Array.from(new Set(values)).filter(val => values.filter((v: any) => v === val).length > 1);
+
+    setUniqueValues(uniqueVals);
+    console.log('Valores únicos para la columna seleccionada:', uniqueVals); // Verificar los valores únicos
+
+    // Cargar los valores previamente seleccionados para esta columna, si existen
+    const previouslySelectedValues = selectedValuesByColumn[option || ''] || [];
+    setSelectedValues(previouslySelectedValues);
+    console.log('Valores previamente seleccionados para la columna:', previouslySelectedValues); // Verificar los valores previos
+  } else {
+    setUniqueValues([]);
+    setSelectedValues([]);
+    console.log('No se encontraron valores únicos o la columna no es válida'); // Si no hay valores válidos
+  }
+};
 
   useEffect(() => {  
     const rawData = resultFirst?.data?.data;
@@ -357,24 +386,50 @@ useEffect(() => {
         prevSelectedValues.current = selectedValues;
       }, [selectedValues]);
 
-  const handleValueChange = (value: any) => {
-    if (selectedValues.includes(value) && selectedValues.length === 1) {
-      return;
-    }
+      // Verificar el estado completo de las selecciones de columnas y valores al cambiar de columna
+useEffect(() => {
+  console.log('Estado actual de selectedValuesByColumn:', selectedValuesByColumn);
+}, [selectedValuesByColumn]);
 
-    setSelectedValues((prevValues) =>
-      prevValues.includes(value)
-        ? prevValues.filter((v) => v !== value)
-        : [...prevValues, value]
-    );
-  };
+useEffect(() => {
+  console.log('Columna actual:', selectedColumn, 'Valores seleccionados:', selectedValues);
+}, [selectedColumn, selectedValues]);
 
-  const onTabChange = (e : any) => {
-    setActiveIndexes(e.index);
-    if (e.index === 1) { // Si el índice de la pestaña de filtrado es 1
-        setSelectedValues(prevSelectedValues.current);
-      }
-  };
+const handleValueChange = (value: any) => {
+  const updatedValues = selectedValues.includes(value)
+    ? selectedValues.filter((v) => v !== value) // Si ya está seleccionado, lo elimina
+    : [...selectedValues, value]; // Si no está seleccionado, lo agrega
+
+  setSelectedValues(updatedValues);
+
+  // Guardar los valores seleccionados en el estado específico de la columna
+  setSelectedValuesByColumn((prevValues) => ({
+    ...prevValues,
+    [selectedColumn || '']: updatedValues, // Guardar los valores para la columna seleccionada
+  }));
+};
+      const onTabChange = (e: any) => {
+        const newTab = `tab${e.index}`; // Identifica la nueva pestaña en base al índice
+        setActiveTab(newTab); // Actualiza la pestaña activa
+      };
+      
+      const renderUniqueValues = () => {
+        return uniqueValues.map((value, index) => (
+          <li key={index} className="text-gray-700 dark:text-white flex items-center">
+            <Checkbox
+              inputId={`value-${index}`}
+              name={`value-${index}`}
+              value={value}
+              checked={selectedValues.includes(value)} // Aquí reflejamos correctamente si el valor está seleccionado
+              onChange={() => handleValueChange(value)}
+              className="mr-2"
+            />
+            <label htmlFor={`value-${index}`} className="ml-2">
+              {value}
+            </label>
+          </li>
+        ));
+      };
 
   const filter = (
     <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
@@ -386,7 +441,7 @@ useEffect(() => {
               <span className="ml-2">
                 <i
                   className="pi pi-info-circle text-siwa-blue"
-                  data-pr-tooltip="Please select a Sample Location first."
+                  data-pr-tooltip="Please select a sample location prior to selected a grouping variable."
                   data-pr-position="top"
                   id="sampleLocationTooltip"
                 />
@@ -410,7 +465,7 @@ useEffect(() => {
               <span className="ml-2">
                 <i
                   className="pi pi-info-circle text-siwa-blue"
-                  data-pr-tooltip="Select a color category based on the chosen Sample Location, except when 'All locations' is selected."
+                  data-pr-tooltip="Only available when a specific location is selected.  Select a grouping variable within a sample location."
                   data-pr-position="top"
                   id="groupByTooltip"
                 />
@@ -436,7 +491,7 @@ useEffect(() => {
               <span className="ml-2">
                 <i
                   className="pi pi-info-circle text-siwa-blue"
-                  data-pr-tooltip="Choose a histo category for the analysis."
+                  data-pr-tooltip="Choose a histopathology category for the analysis."
                   data-pr-position="top"
                   id="categoryTooltip"
                 />
@@ -465,8 +520,7 @@ useEffect(() => {
                   id="filteringTip"
                 />
                 <PTooltip target="#filteringTip" position="top">
-                  Select a variable and specify the values you want to include in the filtered dataset.
-                </PTooltip>
+                Select a variable and specify the groups you want to include in the filtered dataset.                </PTooltip>
               </h3>
             </div>
       
@@ -505,23 +559,10 @@ useEffect(() => {
             <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg shadow-inner flex flex-col items-start">
               {selectedColumn && (
                 <div>
-                  <ul className="mt-2">
-                    {uniqueValues.map((value, index) => (
-                      <li key={index} className="text-gray-700 dark:text-white flex items-center">
-                        <Checkbox
-                          inputId={`value-${index}`}
-                          name={`value-${index}`}
-                          value={value}
-                          checked={selectedValues.includes(value)}
-                          onChange={(e) => handleValueChange(value)}
-                          className="mr-2"
-                        />
-                        <label htmlFor={`value-${index}`} className="ml-2">
-                          {value}
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
+                <ul className="mt-2">
+  {renderUniqueValues()}
+</ul>
+
                 </div>
               )}
             </div>
@@ -584,7 +625,7 @@ useEffect(() => {
               <div className="flex">
                 <GraphicCard legend={""} filter={filter} title={`Histopathology scores aggregated by ${selectedCategory || "All Categories"} - ${SampleLocation}`}>
                   <div className="w-full flex flex-col content-center text-center items-center">
-                   <Plot
+                  <Plot
   data={(selectedCategory ? [selectedCategory] : categories)?.map((category, index) => ({
     x: (data as { Treatment: string; Category: string; Mean: number; }[])?.filter(item => item.Category === category).map(item => item.Treatment),
     y: (data as { Treatment: string; Category: string; Mean: number; }[])?.filter(item => item.Category === category).map(item => item.Mean),
@@ -592,9 +633,8 @@ useEffect(() => {
     type: 'bar',
     marker: { color: colors[index % colors.length] },
   }))}
-  config={config}
   layout={{
-    barmode: 'stack',
+    barmode: 'stack',  // Mantener las barras apiladas
     showlegend: true,
     legend: {
       orientation: "h",
@@ -607,25 +647,28 @@ useEffect(() => {
     },
     width: 800,
     height: 600,
-    xaxis: { title: 'Treatment', position: -2, tickangle: -45, tickfont: { size: 10 } },
+    xaxis: { 
+      title: {
+        text: theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1).replace('_', ' '), // El título del eje X basado en la variable de agrupación
+      },
+      tickangle: -45,
+      tickfont: { size: 10 }
+    },
     margin: { l: 50, r: 50, b: 100, t: 0, pad: 4 },
-    yaxis: { title: 'Mean Score' },
+    yaxis: { title: selectedCategory ? 'Mean Score' : 'Mean Additive Score' }, // Cambiar el título del eje Y dinámicamente
     dragmode: false,
     annotations: annotations.map(annotation => ({
       ...annotation,
-      font: { size: 10, color: 'black' },  // Tamaño de fuente ajustado
-      xanchor: 'center',  // Centra el texto sobre la barra
-      yanchor: 'top',     // Muestra el texto justo arriba de la barra
-      showarrow: false,   // Sin flecha, como en el ejemplo
-      yshift: 10,         // Desplaza el texto ligeramente hacia arriba de la barra
-      align: 'center',    // Alineación central del texto
-      bordercolor: '#000', // Borde negro alrededor del texto
-      borderwidth: 1,
-      borderpad: 4,       // Espaciado interno alrededor del texto
-      bgcolor: 'rgba(255, 255, 255, 0.8)', // Fondo blanco semi-transparente
-    })),
+      font: { size: 10, color: 'black' },
+      xanchor: 'center',
+      yanchor: 'top'
+    }))
   }}
 />
+
+
+
+
 
                     <div className="w-full flex flex-row ">
                       <div className="px-6 py-8 w-full" >

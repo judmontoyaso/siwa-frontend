@@ -496,7 +496,7 @@ const valueChecks = (
               type: "scatter",
               name: sampleLocation,
               text: [],
-              marker: { size: 8, color: colorOrder[colorIndex % colorOrder.length] }
+              marker: { size: 11, color: colorOrder[colorIndex % colorOrder.length] }
           };
           const key = sampleLocation;
           newScatterColors[key] = colorOrder[colorIndex % colorOrder.length];
@@ -559,7 +559,7 @@ const valueChecks = (
                     type: "scatter",
                     name: name,
                     text: [],
-                    marker: { size: 8, color: scatterColors[key] } // Usa el color asignado
+                    marker: { size: 11, color: scatterColors[key] } // Usa el color asignado
                 };
             }
 
@@ -585,7 +585,7 @@ const fetchProjectIdsFilter = async (result: any) => {
           let key = colorValue; 
           let name = `${colorValue}`;
 
-          // Si el color ya está asignado, no lo reasignes
+        
           if (!scatterColors[key]) {
               scatterColors[key] = colorOrder[colorIndex % colorOrder.length];
               colorIndex++;
@@ -599,7 +599,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                   type: "scatter",
                   name: name,
                   text: [],
-                  marker: { size: 8, color: scatterColors[key] } // Usa el color asignado
+                  marker: { size: 11, color: scatterColors[key] } // Usa el color asignado
               };
           }
 
@@ -676,7 +676,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Please select a Sample Location."
+                      data-pr-tooltip="Please select a sample location prior to selected a grouping variable."
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
@@ -701,7 +701,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Select a color category based on the chosen Sample Location, except when 'All locations' is selected."
+                      data-pr-tooltip="Only available when a specific location is selected.  Select a grouping variable within a sample location."
                       data-pr-position="top"
                       id="groupByTooltip"
                     />
@@ -731,8 +731,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                       id="filteringTip"
                     />
                     <PTooltip target="#filteringTip" position="top">
-                      Select a variable and specify the values you want to include in the filtered dataset.
-                    </PTooltip>
+                    Select a variable and specify the groups you want to include in the filtered dataset.                    </PTooltip>
                   </h3>
                 </div>
       
@@ -888,7 +887,7 @@ useEffect(() => {
           },          
           xaxis: {
             title: {
-              text: `PC1 (${dataResult.proportions_explained.PC1}%)`,
+              text: `PCoA 1 (${dataResult.proportions_explained.PC1}%)`,
               font: { 
                 family: 'Roboto, sans-serif',
                 size: 18,
@@ -899,7 +898,7 @@ useEffect(() => {
           },
           yaxis: {
             title: {
-              text: `PC2 (${dataResult.proportions_explained.PC2}%)`,
+              text: `PCoA 2 (${dataResult.proportions_explained.PC2}%)`,
               font: {
                 family: 'Roboto, sans-serif',
                 size: 18, // Aumenta el tamaño para mayor énfasis
@@ -941,26 +940,13 @@ useEffect(() => {
 <div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">
 <h1 className="text-3xl my-5 mx-2">Community make-up</h1>
-<AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip"/> 
-         <Tooltip 
-           style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px",textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)"}}
-         anchorSelect="#interpreteTip">
-        <div className={`prose single-column w-96 z-50`}>
-    {configFile?.betadiversity?.interpretation ? (
-             <p className="text-gray-700 text-justify text-xl m-3">
-             {configFile?.betadiversity?.interpretation}
-         </p>
-            
-    ) : (""
-    )}
-</div>
-</Tooltip> 
+        
         </div>
       <div className="px-6 py-8">
 
-      <div className={`prose ${configFile?.betadiversity?.text ? 'single-column' : 'column-text'}`}>
+      <div className={`prose single-column`}>
     <p className="text-gray-700 text-justify text-xl">
-        {configFile?.betadiversity?.text}
+    For exploring the composition of the microbiome in different groups, we use methods that evaluate Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA). Each axis represents a combination of features (OTUs) that account for high amounts of variation between samples. The proportion of the differences for which this combination of features accounts is shown on the axis (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability.
     </p>
 </div>
 

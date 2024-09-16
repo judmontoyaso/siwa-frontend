@@ -837,7 +837,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Please select a Sample Location first."
+                      data-pr-tooltip="Please select a sample location prior to selected a grouping variable."
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
@@ -862,7 +862,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Select a color category based on the chosen Sample Location, except when 'All locations' is selected."
+                      data-pr-tooltip="Only available when a specific location is selected.  Select a grouping variable within a sample location."
                       data-pr-position="top"
                       id="groupByTooltip"
                     />
@@ -892,8 +892,7 @@ export default function Page({ params }: { params: { slug: string } }) {
           id="filteringTip"
         />
         <PTooltip target="#filteringTip" position="top">
-          Select a variable and specify the values you want to include in the filtered dataset.
-        </PTooltip>
+        Select a variable and specify the groups you want to include in the filtered dataset.        </PTooltip>
       </h3>
     </div>
 
@@ -1049,7 +1048,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
 
         // Encontrar el índice para la columna especificada por 'selectedColumn' y para 'alphashannon'
-        const locationColumnIndex = data.columns.indexOf(selectedColumn);
+        const locationColumnIndex = data.columns.indexOf(theRealColorByVariable);
         const alphashannonIndex = data.columns.indexOf('alphashannon');
         console.log('locationColumnIndex:', locationColumnIndex);
         console.log('alphashannonIndex:', alphashannonIndex);
@@ -1057,10 +1056,11 @@ export default function Page({ params }: { params: { slug: string } }) {
         if (locationColumnIndex === -1 || alphashannonIndex === -1) {
             return 0;
         }
-
+        console.log('locationValue:', locationValue);
+        console.log('data:', data);
         // Filtrar los datos para los que el valor de la columna 'selectedColumn' coincida con 'locationValue'
         const filteredData = data.data.filter((item: any[]) => item[locationColumnIndex] === locationValue && item[locationColumnIndex] !== "null");
-
+console.log('filteredData:', filteredData);
         // Extraer los valores de 'alphashannon' para los datos filtrados
         const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
         console.log('values:', values);
@@ -1190,9 +1190,16 @@ export default function Page({ params }: { params: { slug: string } }) {
                 showticklabels: false
             },
             annotations: annotations,
-            yaxis: graphType === "boxplot" ? { range: yAxisRange } : { range: [yAxisRange[0], yAxisRange[1] + 1.5] },
+            yaxis: {title:{
+                text: `Shannon Index`,
+                font: {
+                  family: 'Roboto, sans-serif',
+                  size: 18, // Aumenta el tamaño para mayor énfasis
+                },
+                standoff: 15,
+              }, range: graphType === "boxplot" ? yAxisRange : [yAxisRange[0], yAxisRange[1] + 1.5]},
             margin: {
-                l: 20, r: 10,
+                l: 50, r: 10,
                 t: 60,
                 b: 50
             }
@@ -1288,24 +1295,11 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                                     <div className="flex flex-row w-full text-center justify-center items-center">
                                         <h1 className="text-3xl my-5 mx-2"> Richness</h1>
-                                        {/* <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" /> */}
-                                        {/* <Tooltip
-                                            style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                                            anchorSelect="#interpreteTip">
-                                            <div className={`prose single-column w-96 z-50`}>
-                                                {configFile?.alphadiversity?.interpretation ? (
-                                                    <p className="text-gray-700 text-justify text-xl m-3">
-                                                        {configFile.alphadiversity.interpretation}
-                                                    </p>
-                                                ) : (""
-                                                )}
-                                            </div>
-                                        </Tooltip> */}
+                                      
                                     </div>    <div className="px-6 py-8">
-                                        <div className={`prose ${configFile?.alphadiversity?.text ? 'single-column' : 'column-text'}`}>
+                                        <div className={`prose single-column`}>
                                             <p className="text-gray-700 text-justify text-xl">
-                                                {configFile?.alphadiversity?.text}
-                                            </p>
+                                            Microbiome diversity can be assessed through multiple ecological indices that can be divided into two kinds of measures, Alpha and Beta diversity. Alpha diversity measures the variability of species within a sample, while Beta diversity accounts for the differences in composition between samples. The Shannon index is used to estimate how complex the community is.                                          </p>
                                         </div>
 
                                     </div>

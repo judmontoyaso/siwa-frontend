@@ -91,7 +91,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
   const plotsData = [
     {
-      title: 'Richness',
+      title: 'Richness', // Mantiene el título, sin leyendas
       data: [
         {
           y: [1.2, 2.3, 5.2, 6, 7.3, 9.1],
@@ -114,11 +114,11 @@ const Page = ({ params }: { params: { slug: string } }) => {
           jitter: 0.3,
         }
       ],
-      layout: { margin: { t: 0, r: 0, l: 0, b: 0 }, showlegend: false },
+      layout: { margin: { t: 0, r: 0, l: 0, b: 0 }, showlegend: false }, // Sin leyenda
       link: `/projects/${params.slug}/alpha`,
     },
     {
-      title: 'Community make-up',
+      title: 'Community make-up', // Mantiene el título, sin leyendas
       data: [{
         x: [1, 2, 3, 4, 5],
         y: [1, 6, 3, 6, 1],
@@ -128,56 +128,56 @@ const Page = ({ params }: { params: { slug: string } }) => {
           color: "#035060",
         },
       }],
-      layout: { margin: { t: 0, r: 0, l: 0, b: 0 } },
+      layout: { margin: { t: 0, r: 0, l: 0, b: 0 }, showlegend: false }, // Sin leyenda
       link: `/projects/${params.slug}/beta`,
     },
     {
-      title: 'Taxonomic abundance',
+      title: 'Taxonomic abundance', // Título manteniendo las barras apiladas y dos columnas
       data: [
         {
-          x: ['Total'],
-          y: [20],
+          x: ['Column 1', 'Column 2'],
+          y: [20, 15],
           name: 'Lactobacillus',
           type: 'bar',
           marker: {
             color: "#035060",
           },
-          width: 1,
+          width: 0.8,
         },
         {
-          x: ['Total'],
-          y: [12],
+          x: ['Column 1', 'Column 2'],
+          y: [12, 10],
           name: 'Peptoclostridium',
           type: 'bar',
           marker: {
             color: "#f99b35",
           },
-          width: 1,
+          width: 0.8,
         },
         {
-          x: ['Total'],
-          y: [10],
+          x: ['Column 1', 'Column 2'],
+          y: [10, 9],
           name: 'Fusobacterium',
           type: 'bar',
           marker: {
             color: "#4e8e74",
           },
-          width: 1,
+          width: 0.8,
         },
         {
-          x: ['Total'],
-          y: [9],
+          x: ['Column 1', 'Column 2'],
+          y: [9, 7],
           name: 'Blautia',
           type: 'bar',
           marker: {
             color: "#075462",
           },
-          width: 1,
+          width: 0.8,
         }
       ],
       layout: {
         margin: { t: 0, r: 0, l: 0, b: 0 },
-        barmode: 'stack',
+        barmode: 'stack', // Apiladas
         xaxis: {
           tickangle: -45,
         },
@@ -185,19 +185,12 @@ const Page = ({ params }: { params: { slug: string } }) => {
           zeroline: false,
           gridwidth: 1,
         },
-        legend: {
-          x: 1.2,
-          xanchor: 'left',
-          y: 1,
-          font: {
-            size: 10,
-          },
-        },
+        showlegend: false , // Leyendas deshabilitadas
       },
       link: `/projects/${params.slug}/taxonomy/composition`,
     },
     {
-      title: 'Differential abundance',
+      title: 'Differential abundance', // Mantiene el título
       data: [{
         x: [20, 14, 23],
         y: ['Category 1', 'Category 2', 'Category 3'],
@@ -207,11 +200,11 @@ const Page = ({ params }: { params: { slug: string } }) => {
         },
         orientation: 'h',
       }],
-      layout: { margin: { t: 0, r: 0, l: 0, b: 10 } },
+      layout: { margin: { t: 0, r: 0, l: 0, b: 0 }, showlegend: false }, // Sin leyenda
       link: `/projects/${params.slug}/abundancedif/datasetgeneration`,
     },
     {
-      title: 'Histopathology',
+      title: 'Histopathology', // Mantiene el título
       data: [
         {
           x: ['MicrobialOrganisms'],
@@ -234,78 +227,69 @@ const Page = ({ params }: { params: { slug: string } }) => {
           width: 1,
         },
         {
+          x: ['inmunity'],
+          y: [7],
+          name: 'inmunity',
+          type: 'bar',
+          marker: {
+            color: "#y9jb55", // Color naranja
+          },
+          width: 1,
+        },
+        {
           x: ['LymphoidImmune'],
-          y: [3],
+          y: [12],
           name: 'LymphoidImmune',
           type: 'bar',
           marker: {
-            color: "#4e8e74", // Color verde oscuro
+            color: "#f55c66", // Color naranja
           },
           width: 1,
         },
-        {
-          x: ['MucosalIntegrity'],
-          y: [5],
-          name: 'MucosalIntegrity',
-          type: 'bar',
-          marker: {
-            color: "#035060", // Reutilización del color azul oscuro
-          },
-          width: 1,
-        },
-        {
-          x: ['OverallArchitecture'],
-          y: [7],
-          name: 'OverallArchitecture',
-          type: 'bar',
-          marker: {
-            color: "#f99b35", // Reutilización del color naranja
-          },
-          width: 1,
-        }
-      ],
-      layout: {
-        margin: { t: 0, r: 0, l: 0, b: 10 },
-        barmode: 'stack',
-        xaxis: {
-          tickangle: -45
-        },
-        yaxis: {
-          zeroline: false,
-          gridwidth: 1
-        },
-        legend: {
-          x: 1.2,
-          xanchor: 'left',
-          y: 1,
-          font: {
-            size: 10
-          }
-        }
-      },
-      link: `/projects/${params.slug}/histopathology`,
-    },
-    
-    {
-      title: 'Personalized analyses',
-      data: [
-        {
-          labels: categoriespa,
-          values: [20, 15, 30],
-          type: 'pie',
-          marker: {
-            colors: ["#035060", "#f99b35", "#4e8e74"],
-          },
-          textinfo: 'none',
-        }
       ],
       layout: {
         margin: { t: 0, r: 0, l: 0, b: 0 },
-        showlegend: false,
-      },
-      link: `/projects/${params.slug}/personalizedAnalyses`,
+        barmode: 'stack',
+        xaxis: {
+          tickangle: -45,
+        },
+        yaxis: {
+          zeroline: false,
+          gridwidth: 1,
+        },
+         showlegend: false }, // Sin leyenda
+      
+      link: `/projects/${params.slug}/histopathology`,
+    },
+    {
+      title: 'Gene Expression', // Cambiado de "Personalized analyses" a "Gene Expression"
+      data: [
+        {
+          y: [2.3, 5.2, 6, 7.3, 9.1],
+          type: 'violin',
+          marker: {
+            color: "#035060",
+          },
+          box: { visible: false },
+          boxpoints: 'all',
+          meanline: { visible: true },
+        },
+        {
+          y: [3.3, 6.2, 7.8, 9.2, 12.5],
+          type: 'violin',
+          marker: {
+            color: "#f99b35",
+          },
+          box: { visible: false },
+          boxpoints: 'all',
+          meanline: { visible: true },
+        }
+      ],
+      layout: { margin: { t: 0, r: 0, l: 0, b: 0 }, showlegend: false }, // Sin leyenda
+      link: `/projects/${params.slug}/genexp`,
     }
   ];
+  
 const [loadingPlot, setLoadingPlot] = useState("");
 const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
   setLoadingPlot(title);

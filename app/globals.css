@@ -1,13 +1,10 @@
-@layer tailwind-base, primereact, tailwind-utilities;
-@import 'primereact/resources/themes/saga-blue/theme.css' layer(primereact);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@layer tailwind-base {
-  @tailwind base;
-}
-@layer tailwind-utilities {
-  @tailwind components;
-  @tailwind utilities;
-}
+@import 'primereact/resources/themes/saga-blue/theme.css';
+@import 'primereact/resources/primereact.min.css'; 
+@import 'primeicons/primeicons.css';          
 
 @layer utilities {
   .text-balance {

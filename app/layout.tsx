@@ -1,10 +1,11 @@
-import { Inter } from 'next/font/google'
 import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { Roboto } from 'next/font/google'
 import { AuthProvider } from './components/authContext';
 import { PrimeReactProvider } from "primereact/api";
 import { PopupProvider } from './components/context/popupContext';
-import './globals.css'
+// Usa un tema moderno de PrimeReact en lugar de primereact.min.css
+import './globals.css'; // Tus estilos de Tailwind y globales
+
 // theme
 
 const roboto = Roboto({

@@ -309,17 +309,19 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
   };
   
   const updateLayout = (yMin: number, yMax: number) => {
-    const adjustedYMin = yMin === 0 ? yMin - 5 : (yMin > 0 && yMin < 2 ? yMin -5 : yMin * 1.2); 
+    const adjustedYMin = yMin === 0 ? yMin - 5 : (yMin > 0 && yMin < 2 ? yMin - 5 : yMin * 1.2);
     const adjustedYMax = yMax > 0 && yMax <= 2 
-    ? yMax + 5 
-    : yMax > 2 && yMax <= 10 
-      ? yMax + 10 
-      : yMax * 1.2;
-      
+      ? yMax + 5 
+      : yMax > 2 && yMax <= 10 
+        ? yMax + 10 
+        : yMax * 1.2;
+  
+    // Calcular el número total de muestras procesadas
+    const totalSamples = data.reduce((acc, groupData) => acc + groupData.y.length, 0);
+  
     console.log("adjustedYMin:", adjustedYMin);
     console.log("adjustedYMax:", adjustedYMax);
-    
-    
+  
     const newLayout = {
       showlegend: true,
       legend: {
@@ -333,15 +335,53 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
       height: 600,
       xaxis: { title: groupByColumn },
       yaxis: {
-        title: `Expression Levels of ${isRQSelected ? "RQ" : "DD"}_${selectedGene}`,
+        title: `Expression Levels of ${!isRQSelected ? "RQ" : "DD"}_${selectedGene}`,
         range: [adjustedYMin, adjustedYMax], // Usar el valor mínimo y máximo ajustado
         autorange: false,
       },
-      annotations: anotations, // Actualiza las anotaciones
+      shapes: !isRQSelected
+        ? [
+            {
+              type: 'line',
+              x0: 0,
+              x1: 1,
+              y0: 1,
+              y1: 1,
+              xref: 'paper',
+              yref: 'y',
+              line: {
+                color: 'red',
+                width: 2,
+                dash: 'dot', // Define que la línea sea punteada
+              },
+            },
+          ]
+        : [],
+      annotations: [
+        ...(referenceDetails.column && referenceDetails.value
+          ? [
+              {
+                text: `Reference Column: ${referenceDetails.column}, Reference Group: ${referenceDetails.value}, n = ${totalSamples}`,  // Agregar número total de muestras
+                xref: 'paper',
+                yref: 'paper',
+                x: 0.5,
+                y: 1.2,
+                showarrow: false,
+                font: {
+                  size: 12,
+                  color: 'black',
+                },
+                align: 'center',
+              },
+            ]
+          : []),
+        ...anotations, // Otras anotaciones generadas dinámicamente
+      ],
     };
   
     setLayout(newLayout);
   };
+  
   
   
   useEffect(() => {
@@ -401,7 +441,18 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
       <AccordionTab header="Group by">
         {/* Group by logic */}
         <div className="flex flex-col items-start m-2">
-          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white">Select a Sample Location:</h3>
+          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
+            Select a Sample Location: 
+            <span className="ml-2">
+              <i
+                className="pi pi-info-circle text-siwa-blue"
+                data-pr-tooltip="Please select a sample location prior to selecting a grouping variable."
+                data-pr-position="top"
+                id="sampleLocationTooltip"
+              />
+              <PTooltip target="#sampleLocationTooltip" />
+            </span>
+          </h3>
           <Dropdown
             value={SampleLocation}
             options={dropdownOptionsSampleLocation}
@@ -410,9 +461,20 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
             placeholder="Choose a location"
           />
         </div>
-
+  
         <div className="flex flex-col items-start m-2">
-          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white">Select a Gene:</h3>
+          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
+            Select a Gene: 
+            <span className="ml-2">
+              <i
+                className="pi pi-info-circle text-siwa-blue"
+                data-pr-tooltip="Choose a gene to display expression data."
+                data-pr-position="top"
+                id="geneTooltip"
+              />
+              <PTooltip target="#geneTooltip" />
+            </span>
+          </h3>
           <Dropdown
             value={selectedGene}
             options={genes}
@@ -421,9 +483,20 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
             placeholder="Select a gene"
           />
         </div>
-
+  
         <div className="flex flex-col items-start m-2">
-          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white">RQ / DD:</h3>
+          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
+            RQ / DD: 
+            <span className="ml-2">
+              <i
+                className="pi pi-info-circle text-siwa-blue"
+                data-pr-tooltip="Toggle between RQ and DD expression values."
+                data-pr-position="top"
+                id="rqDdTooltip"
+              />
+              <PTooltip target="#rqDdTooltip" />
+            </span>
+          </h3>
           <div className="flex items-center mb-4">
             <label className="mr-2">RQ</label>
             <label className="switch">
@@ -440,9 +513,20 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
             <label className="ml-2">DD</label>
           </div>
         </div>
-
+  
         <div className="flex flex-col items-start m-2">
-          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white">Group by:</h3>
+          <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
+            Group by: 
+            <span className="ml-2">
+              <i
+                className="pi pi-info-circle text-siwa-blue"
+                data-pr-tooltip="Select a column to group the data by."
+                data-pr-position="top"
+                id="groupByTooltip"
+              />
+              <PTooltip target="#groupByTooltip" />
+            </span>
+          </h3>
           <Dropdown
             value={groupByColumn}
             options={dropdownOptionsGroupBy}
@@ -452,84 +536,22 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
           />
         </div>
       </AccordionTab>
-
+  
       <AccordionTab header="Reference">
-        {/* <div className="mt-2 ml-2 mb-4">
-          <div className="flex items-center">
-            <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center">
-              Filtering options:
-              <AiOutlineInfoCircle
-                className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
-                id="filteringTip"
-              />
-              <PTooltip target="#filteringTip" position="top">
-                Select a variable and specify the values you want to include in the filtered dataset.
-              </PTooltip>
-            </h3>
-          </div>
-
-          <ul className="w-full flex flex-wrap items-center content-center justify-start mt-2">
-            {dropdownOptionsGroupBy
-              .filter((option) => option.value !== "SampleLocation")
-              .map((option, index) => (
-                <li key={index} className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
-                  <input
-                    type="radio"
-                    id={option.value}
-                    name="filteredColumn"
-                    className="hidden peer"
-                    value={option.value}
-                    checked={selectedFilterColumn === option.value}
-                    onChange={() => handleFilterColumnSelect(option.value)}
-                  />
-                  <label
-                    htmlFor={option.value}
-                    className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100 w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${
-                      selectedFilterColumn === option.value
-                        ? "peer-checked:bg-navy-600"
-                        : "peer-checked:bg-navy-500"
-                    } dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                  >
-                    <div className="block">
-                      <div className="w-full text-base">{option.label}</div>
-                    </div>
-                  </label>
-                </li>
-              ))}
-          </ul>
-        </div>
-
-        <div className="mt-4">
-          <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg shadow-inner flex flex-col items-start">
-            {selectedFilterColumn && (
-              <div>
-                <ul className="mt-2">
-                  {uniqueFilterValues.map((value, index) => (
-                    <li key={index} className="text-gray-700 dark:text-white flex items-center">
-                      <Checkbox
-                        inputId={`value-${index}`}
-                        name={`value-${index}`}
-                        value={value}
-                        checked={selectedFilterValues.includes(value)}
-                        onChange={() => handleFilterValueChange(value)}
-                        className="mr-2"
-                      />
-                      <label htmlFor={`value-${index}`} className="ml-2">
-                        {value}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div> */}
-
         <div className="mt-4">
           <h3 className="text-base font-medium text-gray-700 dark:text-white"></h3>
           <div className="flex flex-col items-start m-2">
-            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-white">
-              Select a column for reference:
+            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-white flex items-center">
+              Select a column for reference: 
+              <span className="ml-2">
+                <i
+                  className="pi pi-info-circle text-siwa-blue"
+                  data-pr-tooltip="Choose a column to use as a reference for comparisons."
+                  data-pr-position="top"
+                  id="referenceColumnTooltip"
+                />
+                <PTooltip target="#referenceColumnTooltip" />
+              </span>
             </h4>
             <Dropdown
               value={selectedReferenceColumn}
@@ -539,10 +561,19 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
               placeholder="Select a reference column"
             />
           </div>
-
+  
           <div className="flex flex-col items-start m-2">
-            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-white">
-              Select reference value:
+            <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-white flex items-center">
+              Select reference value: 
+              <span className="ml-2">
+                <i
+                  className="pi pi-info-circle text-siwa-blue"
+                  data-pr-tooltip="Choose a specific value within the reference column."
+                  data-pr-position="top"
+                  id="referenceValueTooltip"
+                />
+                <PTooltip target="#referenceValueTooltip" />
+              </span>
             </h4>
             <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg shadow-inner flex flex-col items-start">
               {selectedReferenceColumn && (
@@ -570,7 +601,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
             </div>
           </div>
         </div>
-
+  
         <div className="flex w-full items-center justify-center my-4">
           <Button
             onClick={() => {
@@ -587,7 +618,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
       </AccordionTab>
     </Accordion>
   );
-
+  
   return (
     <div className="w-full h-full">
       <SidebarProvider>

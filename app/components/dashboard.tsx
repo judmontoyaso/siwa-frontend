@@ -10,12 +10,14 @@ import { useRouter } from "next/router";
 import SkeletonCard from "./skeletoncard";
 import { Bounce, Slide, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { GiSpinalCoil } from "react-icons/gi";
 import { BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
 import { IoCloudOffline } from "react-icons/io5";
 import { FaSpinner } from "react-icons/fa";
 import { RoughNotation } from "react-rough-notation";
 import Spinner from "./pacmanLoader";
+import { GiChicken, GiPig, GiCow, GiCat, GiSpinalCoil } from "react-icons/gi"; // Importamos más íconos
+import { FaDog } from "react-icons/fa"; // Perro
+
 
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
@@ -50,11 +52,12 @@ const Dashboard = () => {
   useEffect(() => {
     setEmpresa(user?.Empresa as never);
     setProjects([
-      { id: "E335", name: "Impact of various levels of Calcium on poultry gut health and balance" },
-      { id: "PFF24", name: "Exploring the dynamics of probiotic supplementation in the canine fecal microbiome" },
+      { id: "E335", name: "Impact of various levels of Calcium on poultry gut health and balance", animalType: "broiler" },
+      { id: "PFF24", name: "Exploring the dynamics of probiotic supplementation in the canine fecal microbiome", animalType: "dog" },
     ]);
     setProjectsLoading(false);
   }, [accessToken, user?.Empresa, user?.Project]);
+  
 
   const fetchProjectData = async (projectId: string, token: string) => {
     setLoadedProjects((prevStatus:any) => ({ ...prevStatus, [projectId]: false }));
@@ -140,6 +143,28 @@ const Dashboard = () => {
     );
   }
 
+  const getAnimalIcon = (animalType: string, isLoaded: boolean) => {
+    const size = "w-6 h-6 ml-2";
+    const color = isLoaded ? "" : "text-gray-500"; // Si no está cargado, lo mostramos en gris
+    
+    switch (animalType) {
+      case "broiler":
+      case "chicken":
+        return <GiChicken className={`${size} ${isLoaded ? "text-yellow-500" : color}`} />;
+      case "dog":
+        return <FaDog className={`${size} ${isLoaded ? "text-brown-500" : color}`} />;
+      case "pig":
+        return <GiPig className={`${size} ${isLoaded ? "text-pink-500" : color}`} />;
+      case "cow":
+        return <GiCow className={`${size} ${isLoaded ? "text-black" : color}`} />;
+      case "cat":
+        return <GiCat className={`${size} ${isLoaded ? "text-gray-800" : color}`} />;
+      default:
+        return <GiSpinalCoil className={`${size} ${color} animate-spin`} />;
+    }
+  };
+  
+
   return (
     <>
       <div className="min-h-screen flex flex-col justify-start w-full bg-siwa-green-50 p-8">
@@ -189,21 +214,22 @@ const Dashboard = () => {
                           <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
                         </div>
                       )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xl text-siwa-blue flex items-center">
-                          {id}
-                          {loadedProjects[id] ? (
-                            <BsFillCloudCheckFill className="w-6 h-6 text-green-500 ml-2" />
-                          ) : (
-                            <IoCloudOffline className="w-6 h-6 text-gray-500 opacity-50 ml-2" />
-                          )}
-                        </span>
-                        {loadedProjects[id] ? (
-                          <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
-                        ) : (
-                          <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
-                        )}
-                      </div>
+<div className="flex items-center justify-between">
+  <span className="text-xl text-siwa-blue flex items-center">
+    {id}
+    {loadedProjects[id] ? (
+      getAnimalIcon(projects.find((p: { id: string }) => p.id === id)?.animalType || "", true)
+    ) : (
+      getAnimalIcon(projects.find((p: { id: string }) => p.id === id)?.animalType || "", false)
+    )}
+  </span>
+  {loadedProjects[id] ? (
+    <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
+  ) : (
+    <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
+  )}
+</div>
+
                       <p className="text-lg text-siwa-blue mt-4">{name}.</p>
                       {loadedProjects[id] && (
                         <span className="mt-6 text-center text-siwa-blue font-semibold">View Project</span>

@@ -945,9 +945,10 @@ useEffect(() => {
       <div className="px-6 py-8">
 
       <div className={`prose single-column`}>
-    <p className="text-gray-700 text-justify text-xl">
-    For exploring the composition of the microbiome in different groups, we use methods that evaluate Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA). Each axis represents a combination of features (OTUs) that account for high amounts of variation between samples. The proportion of the differences for which this combination of features accounts is shown on the axis (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability.
-    </p>
+      <p className="text-gray-700 m-3 text-justify text-xl">
+  {`For exploring the composition of the microbiome in different groups, we use methods that evaluate Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA). Each axis represents a combination of features (OTUs) that account for high amounts of variation between samples. The proportion of the differences for which this combination of features accounts is shown on the axis (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability.`}
+</p>
+
 </div>
 
 

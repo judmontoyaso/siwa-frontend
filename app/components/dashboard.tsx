@@ -51,7 +51,7 @@ const Dashboard = () => {
   // Nueva función para consultar los proyectos por email
   const fetchProjectsByEmail = async (email: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/projects_by_email/${email}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/projectsemail/${email}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`, // Enviar el token
         },

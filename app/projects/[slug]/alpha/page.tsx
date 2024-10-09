@@ -173,7 +173,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     };
 
     const fetchData = async (token: any, columnIndex: number | undefined) => {
-
+        console.log("fetchData")
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/alpha/${params.slug}`, {
@@ -231,7 +231,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
     const fetchDataFilter = async (token: any, columnIndex: number | undefined) => {
-
+        console.log("fetchDataFilter")
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/alpha/${params.slug}`, {
@@ -676,7 +676,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         fetchDataFilter(accessToken, columnIndex).then((result) => {
             fetchProjectIds(result, columnIndex);
         });
-
+        console.log("fetchDataFilter use efect 1")
         // Actualizar la columna actual
         setActualcolumn(selectedColumn);
         setFilterPeticion(true);
@@ -699,7 +699,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
                 const result = await fetchDataFilter(accessToken, columnIndex);
                 const filteredData = result.data.data.filter((item: any[]) => selectedLocations.includes(item[1]));
-    
+                console.log("fetchDataAndUpdate")
                 // Mantener colores ya asignados
                 const updatedScatterColors = { ...scatterColors };
                 filteredData.forEach((item: any[]) => {
@@ -1001,7 +1001,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
         setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
-    }, [params.slug, shannonData]);
+    }, [params.slug, availableLocations]);
 
     useEffect(() => {
         if (Location[0] && Location.length > 0) {

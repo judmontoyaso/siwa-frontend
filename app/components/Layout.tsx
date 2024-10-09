@@ -21,7 +21,6 @@ type LayoutProps = {
 const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:any }> = ({ children, slug, filter , breadcrumbs}) => {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
   const { user, error, isLoading } = useUser();
-  useEffect(() => { console.log("layout", isSidebarOpen) }, [isSidebarOpen]);
   return (
           <PopupProvider>
     <Suspense fallback={<p>Loading feed...</p>}><div className="flex flex-row h-full">

@@ -642,6 +642,7 @@ const GeneExpresionPlot = ({ params }: { params: { slug: string } }) => {
               </div>
             <GraphicCard
               legend={""}
+              text={''}
               title={`Gene Expression Analysis - ${SampleLocation}`}
               filter={filters}
             >

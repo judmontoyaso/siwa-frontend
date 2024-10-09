@@ -623,7 +623,7 @@ const handleValueChange = (value: any) => {
                 </div>
               </div>
               <div className="flex">
-                <GraphicCard legend={""} filter={filter} title={`Histopathology scores aggregated by ${selectedCategory || "All Categories"} - ${SampleLocation}`}>
+                <GraphicCard legend={""} text={""} filter={filter} title={`Histopathology scores aggregated by ${selectedCategory || "All Categories"} - ${SampleLocation}`}>
                   <div className="w-full flex flex-col content-center text-center items-center">
                   <Plot
   data={(selectedCategory ? [selectedCategory] : categories)?.map((category, index) => ({

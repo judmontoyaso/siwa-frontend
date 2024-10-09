@@ -32,6 +32,9 @@ import { root } from "postcss";
 import RequireAuth from "@/app/components/requireAtuh";
 import { Skeleton } from "primereact/skeleton";
 import { Checkbox } from 'primereact/checkbox';
+import { motion } from "framer-motion";
+import { FaQuestionCircle } from "react-icons/fa";
+import HelpText from "@/app/components/helpTextDropdown";
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -54,6 +57,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
     const newScatterColors: { [key: string]: string } = {};
     const [configFile, setconfigFile] = useState({} as any);
+    const [initialValueOptions, setInitialValueOptions] = useState<Set<string>>(new Set()); // Copia estática de valueOptions
 
     const [columnOptions, setColumnOptions] = useState([]);
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
@@ -68,7 +72,9 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [layout, setLayout] = useState({});
     const [activeIndexes, setActiveIndexes] = useState([0, 1]);
     const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
-
+    const [tempSelectedColumn, setTempSelectedColumn] = useState<string>(selectedColumn);
+    const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set([...selectedValues]));
+    
     const [Location, setLocation] = useState<string[]>([
 
     ]);
@@ -141,7 +147,6 @@ export default function Page({ params }: { params: { slug: string } }) {
     }, [theRealColorByVariable, selectedLocations]);
 
 
-    useEffect(() => { console.log(theRealColorByVariable) }, [theRealColorByVariable]);
 
 
 
@@ -159,7 +164,9 @@ export default function Page({ params }: { params: { slug: string } }) {
             }
             const configfile = await response.json();
             setconfigFile(configfile.configFile);
+        
             setColorByOptions(configfile.configFile.columns);
+   
         } catch (error) {
             console.error("Error al cargar las opciones del dropdown:", error);
         }
@@ -201,15 +208,13 @@ export default function Page({ params }: { params: { slug: string } }) {
             //     throw new Error("Respuesta no válida desde el servidor");
             // }
             const result = await response.json();
-            console.log('result:', result);
-            console.log(otus)
+
             const locations = new Set(
                 result.data.data.map((item: any[]) => item[1])
             );
             const uniqueLocations = Array.from(locations) as string[];
 
             setAvailableLocations(uniqueLocations);
-            console.log('locations:', uniqueLocations);
             setDataUnique(result);
             setColumnOptions(result.data.columns);
             setValueOptions(result.data.data);
@@ -261,8 +266,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             //     throw new Error("Respuesta no válida desde el servidor");
             // }
             const result = await response.json();
-            console.log('result:', result);
-            console.log(otus)
+
 
             setOtus(result);
             setAnnova(result.significance)
@@ -273,13 +277,21 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
-
-
     useEffect(() => {
-        if (Object.keys(scatterColors).length > 0) {
-            console.log("scatterColors:", scatterColors);
+        if (selectedLocations.length === 1 && selectedColumn) {
+            const formattedColumn = selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1);
+            const key = `SampleLocation_${selectedLocations[0]}_${formattedColumn}`;
+    
+        } else if (selectedLocations.length > 1 && selectedColumn) {
+            const formattedColumn = selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1);
+            const key = `SampleLocation_All_${formattedColumn}`;
+    
+          
         }
-    }, [scatterColors]);
+    }, [selectedLocations, selectedColumn]);
+    
+    
+
 
 
     const fetchAnnova = async (token: any) => {
@@ -317,7 +329,6 @@ export default function Page({ params }: { params: { slug: string } }) {
             //     throw new Error("Respuesta no válida desde el servidor");
             // }
             const result = await response.json();
-            console.log('result:', result);
             if (!otus && otus !== undefined) {
                 setOtus((prevOtus: any) => ({
                     ...prevOtus,
@@ -410,7 +421,6 @@ export default function Page({ params }: { params: { slug: string } }) {
                     marker: { color: newScatterColors[colorIndex] }
                 }))
             );
-            console.log('shannonData:', shannonData);
             setIsLoaded(true);
             setFilterPeticion(false);
         } catch (error) {
@@ -503,7 +513,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const handleGroupChange = (value: string) => {
         setTheRealColorByVariable(value);
         fetchProjectIdsFiltercolor(value);
-        setSelectedColumn(value);
+        // setSelectedColumn(value);
     };
 
     const processData = (data: any[], index: number): any[] => {
@@ -514,24 +524,19 @@ export default function Page({ params }: { params: { slug: string } }) {
             return [];
         }
 
-        console.log('Data before filtering:', data);
 
         data = data.filter(item => item[index] !== null); // Filtramos los elementos nulos
-
-        console.log('Data after filtering:', data);
 
         const result = data.reduce((acc, item) => {
             const location = item[1];
             const value = item[index];
             const key = `${location}-${value}`;
-            console.log('Processing key:', key);
 
             if (!acc[key]) {
                 acc[key] = {
                     y: [], text: [], name: `${value === undefined ? location : value}`,
                     marker: { color: scatterColors[key] || colorOrder[colorIndex % colorOrder.length] } // Usar color del estado
                 };
-                console.log('Assigned color for key:', key, scatterColors[key]);
                 colorIndex++;
             }
 
@@ -541,7 +546,6 @@ export default function Page({ params }: { params: { slug: string } }) {
             return acc;
         }, {});
 
-        console.log('Processed data result:', Object.values(result));
 
         return Object.values(result);
     };
@@ -554,31 +558,26 @@ export default function Page({ params }: { params: { slug: string } }) {
 
         if (plotContainerRef.current) {
             setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-            console.log(plotWidth)
-            console.log(plotContainerRef.current)
+
             setLoaded(true)
 
         };
     };
     const observedElementId = 'plofather';
-    useEffect(() => { console.log("isWindowVisible", isWindowVisible) }, [isWindowVisible]);
     useEffect(() => {
         // Función para actualizar el ancho de la ventana
         const updatePlotWidth = () => {
             if (plotContainerRef.current) {
                 setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-                console.log(plotWidth);
-                console.log(plotContainerRef.current);
+
                 setLoaded(true);
             }
         };
 
         const plofatherElement = document.getElementById('plofather');
-        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
 
         // Añade el event listener cuando el componente se monta
         window.addEventListener('resize', updatePlotWidth);
-        console.log('plotWidth:', plotWidth);
         updatePlotWidth();
 
         // Limpieza del event listener cuando el componente se desmonte
@@ -596,7 +595,6 @@ export default function Page({ params }: { params: { slug: string } }) {
                 const updatePlotWidth = () => {
                     const newWidth = element.offsetWidth - 75;
                     setPlotWidth(newWidth);
-                    console.log('Actualizado plotWidth:', newWidth);
                     setLoaded(true);
                 };
 
@@ -622,8 +620,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     useEffect(() => {
         updatePlotWidth(); // Establece el ancho inicial
-        console.log('plotWidth:', plotWidth);
-        console.log(isWindowVisible)
+
     }, [otus, isWindowVisible]);
 
 
@@ -640,7 +637,6 @@ export default function Page({ params }: { params: { slug: string } }) {
     }, [currentLocation, otus, selectedLocations]);
 
     useEffect(() => {
-        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
         fetchConfigFile(accessToken);
     }, [accessToken]);
 
@@ -687,68 +683,76 @@ export default function Page({ params }: { params: { slug: string } }) {
     }, [selectedLocations, Location]);
 
     const handleLocationChangeColorby = (event: any) => {
-        setSelectedColumn(event.target.value);
-
+        setTempSelectedColumn(event.target.value); // Actualizar estado temporal
     };
 
-
-
-    const applyFilters = async (event: any) => {
-        const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
-        const result = await fetchDataFilter(accessToken, columnIndex);
-        const filteredData = result.data.data.filter((item: any[]) => selectedLocations.includes(item[1]));
-
-        // Mantener colores ya asignados
-        const updatedScatterColors = { ...scatterColors };
-
-        filteredData.forEach((item: any[]) => {
-            const value = item[columnIndex];
-            if (value && !updatedScatterColors[value]) {
-                updatedScatterColors[value] = colorOrder[Object.keys(updatedScatterColors).length % colorOrder.length];
-            }
-        });
-
-        setScatterColors(updatedScatterColors);
-        fetchProjectIds(result, columnIndex);
+    const applyFilters = () => {
+        setInitialValueOptions(new Set(valueOptions));
+        setSelectedColumn(tempSelectedColumn);  // Aplicar columna temporal al estado real
+        setSelectedValues(tempSelectedValues);  // Aplicar valores temporales al estado real
+        setFilterPeticion(true);  // Activar el estado de solicitud de filtro
     };
-
-    // useEffect(() => { fetchProjectIds(otus, 0)}, [Location]);
-
-
+    
+    useEffect(() => {
+        if (filterPeticion && selectedColumn && selectedValues.size > 0) {
+            const fetchDataAndUpdate = async () => {
+                const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+                const result = await fetchDataFilter(accessToken, columnIndex);
+                const filteredData = result.data.data.filter((item: any[]) => selectedLocations.includes(item[1]));
+    
+                // Mantener colores ya asignados
+                const updatedScatterColors = { ...scatterColors };
+                filteredData.forEach((item: any[]) => {
+                    const value = item[columnIndex];
+                    if (value && !updatedScatterColors[value]) {
+                        updatedScatterColors[value] = colorOrder[Object.keys(updatedScatterColors).length % colorOrder.length];
+                    }
+                });
+    
+                setScatterColors(updatedScatterColors);
+                fetchProjectIds(result, columnIndex);
+                setFilterPeticion(false);  // Resetear el estado de solicitud de filtro
+            };
+    
+            fetchDataAndUpdate();  // Ejecutar la función asíncrona
+        }
+    }, [selectedColumn, selectedValues, filterPeticion]);  // Se ejecuta cuando cambian selectedColumn, selectedValues o filterPeticion
+    
 
     useEffect(() => {
-        if (otus && selectedColumn) {
+        if (otus && tempSelectedColumn) {
             // Filtrar los valores únicos de la columna seleccionada
-            const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
+            const columnIndex = otus?.data?.columns.indexOf(tempSelectedColumn);
             const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
             const uniqueValuesCheck: Set<string> = new Set(otus?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
 
             setValueOptions([...uniqueValues].filter(value => value !== 'null'));
-            setSelectedValues(new Set<string>(uniqueValuesCheck));
+            setTempSelectedValues(new Set<string>(uniqueValuesCheck));
 
         }
-    }, [selectedColumn, otus]);
+    }, [otus, tempSelectedColumn]);
 
     const handleValueChange = (value: string) => {
-        setSelectedValues(prevSelectedValues => {
-            const newSelectedValues = new Set(prevSelectedValues);
-
+        setTempSelectedValues(prevTempSelectedValues => {
+            const newTempSelectedValues = new Set(prevTempSelectedValues);
+    
             // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
-            if (newSelectedValues.size === 1 && newSelectedValues.has(value)) {
-                return prevSelectedValues;
+            if (newTempSelectedValues.size === 1 && newTempSelectedValues.has(value)) {
+                return prevTempSelectedValues;
             }
-
+    
             // Si el valor está presente, lo eliminamos
-            if (newSelectedValues.has(value)) {
-                newSelectedValues.delete(value);
+            if (newTempSelectedValues.has(value)) {
+                newTempSelectedValues.delete(value);
             } else if (value !== null && value !== 'null') { // Verifica que el valor no sea null antes de añadirlo
                 // Si el valor no está presente y no es null, lo añadimos
-                newSelectedValues.add(value);
+                newTempSelectedValues.add(value);
             }
-
-            return newSelectedValues;
+    
+            return newTempSelectedValues;
         });
     };
+    
 
     const options = availableLocations.length > 1
         ? [{ label: 'All Locations', value: 'all' }, ...availableLocations.map(location => ({
@@ -766,16 +770,15 @@ export default function Page({ params }: { params: { slug: string } }) {
         const valueChecks = (
             <div className="flex flex-col w-full mb-5 mt-5">
                 <div className="flex w-full flex-wrap items-center justify-start overflow-x-auto">
-                    {valueOptions?.filter(value => value !== null && selectedColumn !== "samplelocation").map((value, index) => {
+                    {valueOptions?.filter(value => value !== null && tempSelectedColumn !== "samplelocation").map((value, index) => {
                         const stringValue = String(value);
-                        console.log('stringValue:', value);
                         return (
                             <div key={index} className="flex items-center mr-5 mb-3">
                                 <Checkbox
                                     inputId={`value-${index}`}
                                     value={value}
-                                    checked={selectedValues.has(value)}
-                                    onChange={() => handleValueChange(value)}
+                                    checked={tempSelectedValues.has(value)}  // Se usa el estado temporal aquí
+                                    onChange={() => handleValueChange(value)}  // Se actualiza el estado temporal
                                     className="p-checkbox"
                                 />
                                 <label htmlFor={`value-${index}`} className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
@@ -787,6 +790,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                 </div>
             </div>
         );
+        
         
         
 
@@ -904,12 +908,12 @@ export default function Page({ params }: { params: { slug: string } }) {
           name="treatment"
           value="treatment"
           className="hidden peer"
-          checked={selectedColumn === 'treatment'}
+          checked={tempSelectedColumn === 'treatment'}
           onChange={handleLocationChangeColorby}
         />
         <label
           htmlFor="treatment"
-          className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500" } cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${tempSelectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500" } cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
         >
           <div className="block">
             <div className="w-full text-base">Treatment</div>
@@ -925,12 +929,12 @@ export default function Page({ params }: { params: { slug: string } }) {
             name="samplelocation"
             value="samplelocation"
             className="hidden peer"
-            checked={selectedColumn === 'samplelocation'}
+            checked={tempSelectedColumn === 'samplelocation'}
             onChange={handleLocationChangeColorby}
           />
           <label
             htmlFor="samplelocation"
-            className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+            className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${tempSelectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
           >
             <div className="block">
               <div className="w-full">Sample Location</div>
@@ -947,12 +951,12 @@ export default function Page({ params }: { params: { slug: string } }) {
             name={option}
             className="hidden peer"
             value={option}
-            checked={selectedColumn === option}
+            checked={tempSelectedColumn === option}
             onChange={handleLocationChangeColorby}
           />
           <label
             htmlFor={option}
-            className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100 w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+            className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100 w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === tempSelectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
           >
             <div className="block">
               <div className="w-full text-base">
@@ -972,16 +976,18 @@ export default function Page({ params }: { params: { slug: string } }) {
   </div>
 
   <div className="flex w-full items-center justify-center my-4">
-    <Button
-      onClick={applyFilters}
-      loading={filterPeticion}
-      iconPos="right"
-      icon="pi pi-check-square"
-      loadingIcon="pi pi-spin pi-spinner"
-      className="max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
-      label="Apply Filters"
-    />
-  </div>
+  <Button
+    onClick={applyFilters}
+    loading={filterPeticion}
+    iconPos="right"
+    icon="pi pi-check-square"
+    loadingIcon="pi pi-spin pi-spinner"
+    className="max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+    label="Apply Filters"
+    disabled={tempSelectedColumn === "samplelocation"}
+  />
+</div>
+
 </AccordionTab>
 
           </Accordion>
@@ -1002,13 +1008,13 @@ export default function Page({ params }: { params: { slug: string } }) {
             const newTitle = `Shannon Diversity ${Location.length === 3
                     ? "in All Locations"
                     : "in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) +
-                    (actualcolumn !== "samplelocation"
-                        ? (" by " + actualcolumn.charAt(0).toUpperCase() + (actualcolumn as string).replace('_', ' ').slice(1))
+                    (theRealColorByVariable !== "samplelocation"
+                        ? (" by " + theRealColorByVariable.charAt(0).toUpperCase() + (theRealColorByVariable as string).replace('_', ' ').slice(1))
                         : "")
                 }`;
             setTitle(newTitle);
         }
-    }, [Location, actualcolumn]);
+    }, [Location, theRealColorByVariable]);
 
 
 
@@ -1047,23 +1053,19 @@ export default function Page({ params }: { params: { slug: string } }) {
             return 0;
         }
 
-        // Encontrar el índice para la columna especificada por 'selectedColumn' y para 'alphashannon'
+        // Encontrar el índice para la columna especificada por 'tempSelectedColumn' y para 'alphashannon'
         const locationColumnIndex = data.columns.indexOf(theRealColorByVariable);
         const alphashannonIndex = data.columns.indexOf('alphashannon');
-        console.log('locationColumnIndex:', locationColumnIndex);
-        console.log('alphashannonIndex:', alphashannonIndex);
+
         // Asegurarse de que los índices sean válidos
         if (locationColumnIndex === -1 || alphashannonIndex === -1) {
             return 0;
         }
-        console.log('locationValue:', locationValue);
-        console.log('data:', data);
+
         // Filtrar los datos para los que el valor de la columna 'selectedColumn' coincida con 'locationValue'
         const filteredData = data.data.filter((item: any[]) => item[locationColumnIndex] === locationValue && item[locationColumnIndex] !== "null");
-console.log('filteredData:', filteredData);
         // Extraer los valores de 'alphashannon' para los datos filtrados
         const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
-        console.log('values:', values);
         // Encontrar y devolver el valor máximo de 'alphashannon'
         return Math.max(...values.filter((value: any) => typeof value === 'number'));
     };
@@ -1100,7 +1102,6 @@ console.log('filteredData:', filteredData);
     // Calcula el rango del eje y sumando uno al máximo de 'alphashannon'
     const yAxisRange = [0, maxYValueForLocationShannon + 1.5];
 
-    console.log('Max alpha shannon:', yAxisRange);
 
     const legend = (<div className="w-full flex flex-row overflow-x-scroll max-h-full  justify-center mt-5 items-center">
         <div className="">
@@ -1138,15 +1139,147 @@ console.log('filteredData:', filteredData);
 
     useEffect(() => {
         const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
-        console.log(newAnnotations);
         setAnnotations(newAnnotations as never[]);
     }, [annova, graphType, theRealColorByVariable]);
 
 
+    useEffect(() => {
+        if (valueOptions.length > 0) {
+            setInitialValueOptions(new Set(valueOptions)); // Solo actualizar cuando se carguen los datos o se aplique un filtro
+        }
+    }, [selectedValues]);
+    
+
+// Función para buscar el texto basado en la estructura anidada
+const findTextInRichness = (config: any, location: string, column: string): string | null => {
+    const analysis = config?.Richness?.Analysis;
+    if (!analysis) return null;
+
+    // Buscar en el objeto por la ubicación (SampleLocation_<location>) y luego la columna
+    const locationKey = `SampleLocation_${location}`;
+    
+    // Verificar si existe el padre (SampleLocation_<location>) en el análisis
+    const locationData = analysis[locationKey];
+    if (locationData && typeof locationData[column] === "string") {
+        return locationData[column]; // Retornar el valor asociado a la columna
+    }
+
+    return null; // Retorna null si no encuentra el valor
+};
 
 
+// Función para obtener propiedades anidadas de forma insensible a mayúsculas/minúsculas
+const getNestedProperty = (obj: any, keys: any[]) => {
+    let currentObj = obj;
+  
+    for (const key of keys) {
+      if (currentObj && typeof currentObj === 'object') {
+        const foundKey = Object.keys(currentObj).find(k => k.toLowerCase() === key.toLowerCase());
+        if (foundKey) {
+          currentObj = currentObj[foundKey];
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+  
+    return currentObj;
+  };
 
-    useEffect(() => { console.log("annotations", annotations) }, [annotations]);
+  
+  // Función para buscar el texto basado en la estructura anidada y claves insensibles a mayúsculas/minúsculas
+const findTextInRichnessNested = (config: { Richness: { Analysis: any; }; }, location: string, formedKey: string, column: string) => {
+    const analysis = config?.Richness?.Analysis;
+    if (!analysis) return null;
+  
+    const keys = [
+      `SampleLocation_${location}`,
+      formedKey,
+      column
+    ];
+    const value = getNestedProperty(analysis, keys);
+  
+    if (typeof value === 'string') {
+      return value;
+    }
+  
+    return null;
+  };
+
+  
+
+  useEffect(() => {
+    if (selectedLocations.length === 1 && theRealColorByVariable) {
+      const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+      const location = selectedLocations[0];
+  
+    // Verificar si los selectedValues son iguales a los valueOptions
+// Verificar si los selectedValues son iguales a los valueOptions
+const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
+                        console.log(initialValueOptions)
+                        console.log(selectedColumn)
+                        console.log(theRealColorByVariable) 
+
+                    console.log(availableLocations)
+      console.log(selectedValues)
+      console.log(valueOptions)
+    console.log(allValuesSelected)
+    
+      if (allValuesSelected) {
+        console.log("The real color by", theRealColorByVariable, selectedColumn)
+        // Caso existente cuando todos los valores están seleccionados
+        const textForConfig = findTextInRichness(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
+        if (textForConfig) {
+          setTextForConfigKey(textForConfig);
+        } else {
+          setTextForConfigKey("");
+        }
+      } else if (selectedColumn !== 'SampleLocation' && selectedValues.size > 0) {
+        // Nuevo caso cuando hay filtros aplicados y selectedColumn no es 'SampleLocation'
+  
+       // Formar la clave con selectedColumn y los valores seleccionados sin espacios
+const valuesArray = Array.from(selectedValues)
+.map(value => value.replace(/\s+/g, '')) // Remover espacios dentro de los valores
+.sort(); // Ordenar para consistencia
+
+const formedKey = `${selectedColumn}_${valuesArray.join('+')}`;
+
+        // Buscar el texto en la estructura anidada
+        const textForConfig = findTextInRichnessNested(configFile, location, formedKey,(theRealColorByVariable === selectedColumn ? "Self" : formattedColumn) );
+        if (textForConfig) {
+          setTextForConfigKey(textForConfig);
+        } else {
+          setTextForConfigKey("");
+        }
+      } else {
+        setTextForConfigKey("");
+      }
+    } else if (selectedLocations.length > 1 && theRealColorByVariable) {
+      const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+  
+      // Verificar si los selectedValues son iguales a los valueOptions
+      const allValuesSelected = valueOptions.every(option => selectedValues.has(option));
+  
+      if (allValuesSelected) {
+        // Cuando hay más de una location seleccionada, se usa el nodo `SampleLocation_All`
+        const textForConfig = findTextInRichness(configFile, 'All', (theRealColorByVariable === selectedColumn ? "Self" : formattedColumn));
+        if (textForConfig) {
+          setTextForConfigKey(textForConfig);
+        } else {
+          setTextForConfigKey("");
+        }
+      } else {
+        setTextForConfigKey("");
+      }
+    }
+  }, [selectedLocations, selectedColumn, theRealColorByVariable, selectedValues, valueOptions, configFile]);
+  
+
+// Estado para almacenar el texto correspondiente a la clave generada
+const [textForConfigKey, setTextForConfigKey] = useState("");
+
 
 
     useEffect(() => {
@@ -1155,7 +1288,6 @@ console.log('filteredData:', filteredData);
         const fetchAndCalculateAnnotations = async () => {
             try {
                 const annovaData = await fetchAnnova(accessToken);
-                console.log(annovaData)
 
             } catch (error) {
                 console.error("Failed to fetch Annova data:", error);
@@ -1173,7 +1305,6 @@ console.log('filteredData:', filteredData);
     useEffect(() => {
 
         const yAxisRange = [0, maxYValueForLocationShannon + 1.5];
-        console.log('Max alpha shannon:', yAxisRange);
         const newLayout = {
             width: plotWidth || undefined,
             height: graphHeight, // Usa el estado para la altura del gráfico
@@ -1210,13 +1341,11 @@ console.log('filteredData:', filteredData);
 
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         <div className="flex flex-row w-full items-center">
-
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <>
                         <div className="flex w-full justify-end mb-5">
                             <div className="flex items-center">
-
                                 <Button
                                     className=" p-button-rounded p-button-outlined p-button-sm"
                                     onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
@@ -1237,7 +1366,6 @@ console.log('filteredData:', filteredData);
                                         .map((item, index) => {
                                             const color = scatterColors[item.name] || colorOrder[0]; // Usar color de scatterColors o un color por defecto
 
-                                            console.log('Color assigned to item:', item.name, color);
 
                                             return {
                                                 ...(item as object),
@@ -1281,7 +1409,7 @@ console.log('filteredData:', filteredData);
         </div>
 
     );
-
+    const [isOpen, setIsOpen] = useState(false);
     return (
         <RequireAuth>
             <div className="w-full h-full">
@@ -1299,46 +1427,28 @@ console.log('filteredData:', filteredData);
                                     </div>    <div className="px-6 py-8">
                                         <div className={`prose single-column`}>
                                             <p className="text-gray-700 text-justify text-xl">
-                                            Microbiome diversity can be assessed through multiple ecological indices that can be divided into two kinds of measures, Alpha and Beta diversity. Alpha diversity measures the variability of species within a sample, while Beta diversity accounts for the differences in composition between samples. The Shannon index is used to estimate how complex the community is.                                          </p>
+                                            Microbiome diversity can be assessed through multiple ecological indices that can be divided into two kinds of measures, Alpha and Beta diversity. Alpha diversity measures the variability of species within a sample, while Beta diversity accounts for the differences in composition between samples.                                        </p>
                                         </div>
 
                                     </div>
-
+                                    
                                     <div className="flex">
-                                        <GraphicCard filter={filter} legend={""} title={title}>
+                                        <GraphicCard filter={filter} legend={""} title={title} text = {"The Shannon index is a metric used to quantify the complexity and diversity of a community."}>
                                             {shannonData.length > 0 ? (
                                                 <> <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
                                                     <div className="w-full flex flex-row ">
-
-                                                        <div className="px-6 py-8" >
-                                                            <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                                                {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                                                    if (key === "samplelocation" && actualcolumn === "samplelocation" && typeof value === 'string') {
-
-                                                                        return (
-                                                                            <div key={key} className="col-span-2">
-                                                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                                            </div>
-                                                                        );
-                                                                    }
-                                                                    return null;  // No renderizar nada si no se cumplen las condiciones
-                                                                })}
-                                                            </div>
-                                                            <div className="prose flex flex-row flex-wrap">
-                                                                {Object.entries(configFile?.alphadiversity?.graph || {}).map(([key, value]) => {
-                                                                    if (key === actualcolumn && key !== "samplelocation") {
-                                                                        if (typeof value === 'string' && value !== null) {
+                                                    <div className="px-6 py-8">
+    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
 
 
-                                                                            return (<div key={key} className="col-span-2">
-                                                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                                            </div>);
-                                                                        }
-                                                                    }
-                                                                    return null;
-                                                                })}
-                                                            </div>
-                                                        </div>
+        {/* Mostrar el texto correspondiente a la columna y location */}
+        {textForConfigKey && (
+            <div className="col-span-2">
+                <p className="text-gray-700 m-3 text-justify text-xl">{textForConfigKey}</p>
+            </div>
+        )}
+    </div>
+</div>
                                                     </div>
                                                 </>
 

@@ -35,9 +35,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any, }) {
   useEffect(() => { setVisible(isSidebarOpen) }, [isSidebarOpen]);
 
 
-  useEffect(() => { console.log("sidebar", isSidebarOpen) }, [isSidebarOpen]);
 
-  console.log(user)
   if (isLoading) {
     return (
       <div className="flex items-center h-full justify-center">

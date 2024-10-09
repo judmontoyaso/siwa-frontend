@@ -910,16 +910,16 @@ setFilterPeticion(true);
                   options={dropdownOptionsColorby}
                   onChange={(e) => setTheRealColorByVariable(e.target.value)}
                   optionLabel="label"
-                  className="w-full text-sm filtercolorby"
+                  className="w-full mb-6 text-sm filtercolorby"
                   disabled={isColorByDisabled}
                   placeholder="Select a color category"
                 />
               </div>
       
               {/* Selección del rank taxonómico */}
-              <div className="w-full flex flex-col m-2">
+              <div className="items-start flex flex-col m-2">
                 <h3 className="mb-2 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
-                  Select a taxonomic rank for display:
+                  Select a taxonomic rank:
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
@@ -1166,7 +1166,7 @@ data-pr-my="left center-2"/>
                             </div>
 
                         <div className="flex flex-row">
-                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}>
+                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}  text={undefined}>
                                 {plotData.length > 0 ? (
 
                                     <div className="w-full ml-4">

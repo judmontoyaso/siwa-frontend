@@ -954,7 +954,7 @@ useEffect(() => {
 
     </div>
   <div className="flex">
-    <GraphicCard legend={""} filter={filter} title={title}>
+    <GraphicCard legend={""} text={''} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <div className="w-full flex flex-col">
 

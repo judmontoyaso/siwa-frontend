@@ -5,6 +5,7 @@ import { IoCloseOutline, IoFilterOutline } from "react-icons/io5";
 import { Card } from 'primereact/card';
 import { usePopup } from './context/popupContext';
 import { usePathname } from 'next/navigation';
+import HelpText from './helpTextDropdown';
 
 type CardProps = {
   children: ReactNode;
@@ -13,12 +14,14 @@ type CardProps = {
   legend: any; // Para la leyenda del gráfico
   orientation?: 'horizontal' | 'vertical';
   slug?: string | null;
+  text:any
 };
 
-const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, orientation = "vertical", slug = "none" }) => {
+const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, orientation = "vertical", slug = "none", text }) => {
   const { isWindowVisible, setIsWindowVisible } = usePopup();
   const [isTaxo, setIsTaxo] = useState(false);
   const router = usePathname();
+  const [widthAfterAnimation, setWidthAfterAnimation] = useState("100%"); // Estado para el width final
 
   // Función para alternar la visibilidad del filtro
   const toggleFilterVisibility = () => {
@@ -43,24 +46,30 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, ori
 
       <motion.div
         animate={{
-          width: isWindowVisible ? "75%" : "100%",
-          transition: { duration: 0.5, ease: "easeInOut" },
+          width: isWindowVisible ? "75%" : "85%",
+          transition: { duration: 0.5, ease: "circOut" },
         }}
+        onAnimationComplete={() => {
+          setWidthAfterAnimation(isWindowVisible ? "75%" : "100%"); // Seteamos el width después de la animación
+        }}
+        style={{ width: widthAfterAnimation }} // Aplicamos el estado final del width
         className={`relative m-5`}
-      >
+      >        
+      
         <Card
           id='plofather'
-          className={`h-auto relative`}
+          className={`h-auto relative card-graphic`}
         >
           {/* Botón de filtro */}
           <button
             onClick={toggleFilterVisibility}
-            className={`absolute top-0 ${isWindowVisible ? '-left-14' : '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg p-2`}
+            className={`absolute top-0 ${isWindowVisible ? '-left-14' : '-left-4'} text-white bg-siwa-blue opacity-80 border border-gray-300 rounded-lg px-2`}
           >
             {isWindowVisible ? <IoCloseOutline size="20" /> : <IoFilterOutline size="20" />}
           </button>
 
           {/* Título de la tarjeta */}
+          <HelpText text={text}></HelpText>
           {title && (
             <div className="px-5 py-3 text-2xl font-semibold text-gray-800">
               {title}

@@ -46,7 +46,7 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, ori
 
       <motion.div
         animate={{
-          width: isWindowVisible ? "75%" : "85%",
+          width: isWindowVisible ? "75%" : "95%",
           transition: { duration: 0.5, ease: "circOut" },
         }}
         onAnimationComplete={() => {

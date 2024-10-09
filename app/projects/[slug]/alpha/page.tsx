@@ -1339,6 +1339,90 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
 
     }, [otus, annotations, window.innerWidth, document?.getElementById('plofather')?.offsetWidth, graphHeight, graphType, theRealColorByVariable]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
+
+
+    useEffect(() => {
+        const updateLayoutWithScale = () => {
+            const screenWidth = window.innerWidth;
+    
+            // Escala dinámica del tamaño del texto basado en el ancho de la pantalla
+            const textScale = screenWidth < 600 
+            ? 0.6                   // Para pantallas pequeñas (móviles)
+            : screenWidth < 1024 
+              ? 0.8                 // Para pantallas medianas (tabletas o pantallas pequeñas)
+              : screenWidth < 1440 
+                ? 1                 // Para pantallas de tamaño estándar (portátiles o monitores)
+                : screenWidth < 1920 
+                  ? 1.2             // Para pantallas grandes (monitores de mayor resolución)
+                  : 1.4;            // Para pantallas muy grandes (monitores UltraWide o 4K)
+              
+            const yAxisRange = [0, maxYValueForLocationShannon + 1.5];
+    
+            // Solo actualiza el layout si hay anotaciones definidas
+            const newAnnotations = annotations?.length 
+                ? annotations.map(annotation => ({
+                    ...annotation,
+                    font: {
+                        size: 12 * textScale, // Escala las anotaciones
+                    },
+                })) 
+                : [];
+    
+            const newLayout = {
+                width: plotWidth || undefined,
+                height: graphHeight, // Usa el estado para la altura del gráfico
+                responsive: true,
+                showlegend: true,
+                legend: {
+                    orientation: "h",
+                    x: 0.5,
+                    xanchor: "center",
+                    y: 1.1,
+                    yanchor: "top",
+                    font: {
+                        size: 12 * textScale, // Escala la leyenda
+                    },
+                },
+                xaxis: {
+                    showticklabels: false
+                },
+                yaxis: {
+                    title: {
+                        text: `Shannon Index`,
+                        font: {
+                            size: 14 * textScale, // Escala el título del eje y
+                        },
+                    },
+                    tickfont: {
+                        size: 14 * textScale, // Escala el texto de los ticks del eje y
+                    },
+                    range: graphType === "boxplot" ? yAxisRange : [yAxisRange[0], yAxisRange[1] + 1.5],
+                },
+                annotations: newAnnotations,
+                margin: {
+                    l: 50,
+                    r: 10,
+                    t: 60,
+                    b: 50,
+                },
+            };
+            setLayout(newLayout);
+        };
+    
+        // Usa un `setTimeout` para asegurarte de que el gráfico ya esté montado
+        setTimeout(() => {
+            updateLayoutWithScale();
+        }, 0);
+    
+        window.addEventListener('resize', updateLayoutWithScale);
+    
+        // Limpia el event listener cuando el componente se desmonta
+        return () => {
+            window.removeEventListener('resize', updateLayoutWithScale);
+        };
+    }, [plotWidth, graphHeight, maxYValueForLocationShannon, graphType, annotations, window.innerWidth, otus]);
+    
+
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
         <div className="flex flex-row w-full items-center">
             <div className="w-full" ref={plotContainerRef}>

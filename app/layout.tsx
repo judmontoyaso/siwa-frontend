@@ -25,29 +25,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <><head>
-
+      <head>
 <link id="theme-link" rel="stylesheet" href="/themes/lara-light-blue/theme.css"/>
-        
-
 </head>
-   
+              <body className={`h-screen ${roboto.className}`}>
         <UserProvider>
             <PrimeReactProvider>
           <AuthProvider>
-
-              <body className={`h-screen ${roboto.className}`}>
-
                 {children}
-                
-                </body>   
           </AuthProvider>
               </PrimeReactProvider>
-
         </UserProvider>
-
-      </>
-
+                </body>   
     </html>
   )
 }

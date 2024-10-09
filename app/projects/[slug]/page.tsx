@@ -59,9 +59,10 @@ const Page = ({ params }: { params: { slug: string } }) => {
         throw new Error("Network response was not ok");
       }
       const configfile = await response.json();
+      console.log("Config file:", configfile);
       setConfigFile(configfile.configFile);
       setSummaryText(Object.values(configfile.configFile.summary.text || {}));
-      const title = configfile.configFile.summary.title.replace(/project: /i, '').trim();
+      const title = configfile.configFile.Summary.Title.replace(/project: /i, '').trim();
       setSummaryTitle(title.charAt(0).toUpperCase() + title.slice(1));
     } catch (error) {
       console.error("Error al cargar las opciones del dropdown:", error);

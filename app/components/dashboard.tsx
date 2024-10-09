@@ -18,7 +18,6 @@ import Spinner from "./pacmanLoader";
 import { GiChicken, GiPig, GiCow, GiCat, GiSpinalCoil } from "react-icons/gi"; // Importamos más íconos
 import { FaDog } from "react-icons/fa"; // Perro
 
-
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
   const [projects, setProjects] = useState<any>([]);
@@ -49,19 +48,37 @@ const Dashboard = () => {
     }
   };
 
+  // Nueva función para consultar los proyectos por email
+  const fetchProjectsByEmail = async (email: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/projectsemail/${email}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // Enviar el token
+        },
+      })
+      ;
+      if (!response.ok) {
+        throw new Error("Error al consultar los proyectos por email");
+      }
+      const projectsData = await response.json();
+      setProjects(projectsData);
+    } catch (error) {
+      console.error("Error fetching projects by email:", error);
+    }
+  };
+
   useEffect(() => {
     setEmpresa(user?.Empresa as never);
-    setProjects([
-      { id: "E335", name: "Impact of various levels of Calcium on poultry gut health and balance", animalType: "broiler" },
-      { id: "PFF24", name: "Exploring the dynamics of probiotic supplementation in the canine fecal microbiome", animalType: "dog" },
-    ]);
+    if (user?.email) {
+      // Llamamos a la función para obtener los proyectos
+      fetchProjectsByEmail(user.email);
+    }
     setProjectsLoading(false);
-  }, [accessToken, user?.Empresa, user?.Project]);
-  
+  }, [accessToken, user?.email]);
 
-  const fetchProjectData = async (projectId: string, token: string) => {
+  const fetchProjectData = async (projectId: string, animalType:string, token: string) => {
     setLoadedProjects((prevStatus:any) => ({ ...prevStatus, [projectId]: false }));
-  
+   console.log("animaltype", animalType)
     let tostifyTimeout;
   
     try {
@@ -79,11 +96,15 @@ const Dashboard = () => {
         });
       }, 2000);
   
-      const response = await fetch(`api/project/data/${projectId}`, {
-        mode: 'cors',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/data/${projectId}`, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          "animaltype": animalType,
+ 
+      })
       });
   
       clearTimeout(tostifyTimeout);
@@ -116,8 +137,10 @@ const Dashboard = () => {
   }, [user, path]);
 
   useEffect(() => {
-    projects?.forEach(({ id }: { id: string }) => { 
-      fetchProjectData(id, accessToken);
+    console.log("Projects:", projects);
+    projects?.forEach(({ id, animalType }: { id: string, animalType: string }) => { 
+      console.log("Fetching project data for:", id, animalType);
+      fetchProjectData(id, animalType, accessToken);
     })},[accessToken, projects]);
 
   const handleClick = (e:any, id: string | number | SetStateAction<any>) => {
@@ -149,9 +172,9 @@ const Dashboard = () => {
     
     switch (animalType) {
       case "broiler":
-      case "chicken":
+      case "Producción":
         return <GiChicken className={`${size} ${isLoaded ? "text-yellow-500" : color}`} />;
-      case "dog":
+      case "Pet":
         return <FaDog className={`${size} ${isLoaded ? "text-brown-500" : color}`} />;
       case "pig":
         return <GiPig className={`${size} ${isLoaded ? "text-pink-500" : color}`} />;
@@ -196,7 +219,7 @@ const Dashboard = () => {
             </p>
             {!projectsLoading ? (
               <div className="flex flex-wrap justify-center">
-                {projects?.map(({ id, name }: { id: string, name: string }) => (
+                {projects?.map(({ id, name, animalType }: { id: string, name: string, animalType: string }) => (
                   <Link
                     href={loadedProjects[id] ? `/projects/${id}` : ''}
                     passHref
@@ -205,7 +228,8 @@ const Dashboard = () => {
                     <div
                       className={`relative bg-white shadow-md rounded-lg p-6 m-4 flex flex-col justify-between h-72 w-64 ${
                         loadedProjects[id] ? "cursor-pointer hover:shadow-blue-500/50" : "opacity-50 cursor-not-allowed"
-                      } transition duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-lg`}
+                      } transition duration-200 ease-in-out
+                      transform hover:-translate-y-1 hover:shadow-lg`}
                       onClick={(e) => handleClick(e, id)}
                       onTransitionEnd={handleTransitionEnd}
                     >
@@ -214,25 +238,27 @@ const Dashboard = () => {
                           <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
                         </div>
                       )}
-<div className="flex items-center justify-between">
-  <span className="text-xl text-siwa-blue flex items-center">
-    {id}
-    {loadedProjects[id] ? (
-      getAnimalIcon(projects.find((p: { id: string }) => p.id === id)?.animalType || "", true)
-    ) : (
-      getAnimalIcon(projects.find((p: { id: string }) => p.id === id)?.animalType || "", false)
-    )}
-  </span>
-  {loadedProjects[id] ? (
-    <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
-  ) : (
-    <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
-  )}
-</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xl text-siwa-blue flex items-center">
+                          {id}
+                          {loadedProjects[id] ? (
+                            getAnimalIcon(animalType, true)
+                          ) : (
+                            getAnimalIcon(animalType, false)
+                          )}
+                        </span>
+                        {loadedProjects[id] ? (
+                          <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
+                        ) : (
+                          <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
+                        )}
+                      </div>
 
-                      <p className="text-lg text-siwa-blue mt-4">{name}.</p>
+                      <p className="text-lg text-siwa-blue mt-4">{name}</p>
                       {loadedProjects[id] && (
-                        <span className="mt-6 text-center text-siwa-blue font-semibold">View Project</span>
+                        <span className="mt-6 text-center text-siwa-blue font-semibold">
+                          View Project
+                        </span>
                       )}
                     </div>
                   </Link>

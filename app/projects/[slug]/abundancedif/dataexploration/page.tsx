@@ -674,7 +674,7 @@ useEffect(() => {console.log("filter",isNotFilter)}, [isNotFilter])
                         </div>
                         <div className="flex justify-center items-center w-full">
                             {tempfile ? (
-                                <div className="flex flex-col h-full w-full">   <GraphicCard filter={filter} legend={""} title={title}>
+                                <div className="flex flex-col h-full w-full">   <GraphicCard filter={filter} legend={""} text={""} title={title}>
                                     {abundanceData ? (
                                         dataExist ?
 

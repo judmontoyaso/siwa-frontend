@@ -1116,9 +1116,9 @@ useEffect(() => {
 
 
                         <div className="px-6 py-8">
-                            <div className={`prose ${configFile?.taxonomic_composition?.text ? 'single-column' : 'column-text'}`}>
+                            <div className={`prose column-text}`}>
     <p className="text-gray-700 text-justify text-xl">
-        {configFile?.taxonomic_composition?.text}
+    The taxonomic composition of the microbiome can be assessed at different levels, from the kingdom to the species level. In this study, we are focusing on the phylum and genus levels.
     </p>
 </div>
 

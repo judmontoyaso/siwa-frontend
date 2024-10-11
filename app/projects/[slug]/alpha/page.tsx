@@ -35,6 +35,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { motion } from "framer-motion";
 import { FaQuestionCircle } from "react-icons/fa";
 import HelpText from "@/app/components/helpTextDropdown";
+import { labelReplacements, colorPalettes } from '@/config/dictionaries';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -94,50 +95,9 @@ export default function Page({ params }: { params: { slug: string } }) {
     const home = { icon: 'pi pi-home', template: (item: any, option: any) => <Link href={`/`}><i className={home.icon}></i></Link> };
 
 
-
-    const colors = [
-        "#092538", // Azul oscuro principal
-        "#34675C", // Verde azulado más claro
-        "#2E4057", // Azul petróleo oscuro
-
-        // Amarillos y naranjas
-        "#FEF282", // Amarillo claro principal
-        "#F6C324", // Amarillo mostaza
-        "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
-        "#FFA726", // Naranja
-        "#FF7043", // Naranja rojizo
-
-        // Grises y neutrales
-        "#BFBFBF", // Gris claro
-        "#8C8C8C", // Gris medio
-        "#616161", // Gris oscuro
-        "#424242", // Gris muy oscuro
-
-        // Rojos y púrpuras
-        "#E53935", // Rojo
-        "#D81B60", // Fucsia
-        "#8E24AA", // Púrpura
-
-        // Verdes y azules
-        "#43A047", // Verde
-        "#00ACC1", // Cian
-        "#1E88E5", // Azul
-
-        // Colores adicionales para diversidad
-        "#6D4C41", // Marrón
-        "#FDD835", // Amarillo dorado
-        "#26A69A", // Verde azulado claro
-        "#7E57C2", // Lavanda oscuro
-        "#EC407A", // Rosa
-    ];
-
     const [colorOrder, setColorOrder] = useState<string[]>([]);
 
-    const colorPalettes = {
-        samplelocation: ["#074b44", "#017fb1", "#f99b35", "#e57373", "#64b5f6"],
-        treatment: ["#035060", "#f99b35", "#4e8e74", "#ffb74d", "#4caf50"],
-        alphad3level: ["#8cdbf4", "#f7927f", "#f7e76d", "#ba68c8", "#81c784"],
-    };
+
     
 
     useEffect(() => {
@@ -820,16 +780,26 @@ export default function Page({ params }: { params: { slug: string } }) {
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
-    const dropdownOptionsColorby = [
-        { label: 'Sample Location', value: 'samplelocation' },
-        { label: 'Treatment', value: 'treatment' }, // Opción predeterminada
-        ...colorByOptions
-            ?.filter(option => columnOptions?.includes(option)) // Filtra y mapea según tus criterios
-            .map(option => ({
-                label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
-                value: option
-            }))
-    ];
+
+
+
+
+const dropdownOptionsColorby = [
+    { label: 'Sample Location', value: 'samplelocation' },
+    ...colorByOptions
+        ?.filter(option => columnOptions?.map(col => String(col).toLowerCase()).includes(String(option).toLowerCase())) // Asegurarse de que ambas listas se tratan como cadenas
+        .map(option => ({
+            // Reemplazar el label si existe en el diccionario, si no, usar el valor por defecto
+            label: labelReplacements[String(option).toLowerCase()] 
+                ? labelReplacements[String(option).toLowerCase()] 
+                : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1),
+            value: String(option).toLowerCase()
+        }))
+];
+
+
+    
+
 
     const filter = (
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
@@ -841,7 +811,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Please select a sample location prior to selected a grouping variable."
+                      data-pr-tooltip="This allows you to view all samples locations together, or to focus on only 1: Some analysis options are only available when looking at individual locations."
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
@@ -866,7 +836,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Only available when a specific location is selected.  Select a grouping variable within a sample location."
+                      data-pr-tooltip="This changes the way in which the samples are grouped together in the analysis: To use, please select a sample location above, then an available grouping variable."
                       data-pr-position="top"
                       id="groupByTooltip"
                     />
@@ -896,30 +866,12 @@ export default function Page({ params }: { params: { slug: string } }) {
           id="filteringTip"
         />
         <PTooltip target="#filteringTip" position="top">
-        Select a variable and specify the groups you want to include in the filtered dataset.        </PTooltip>
+        This changes the samples that are included in the analysis: You can focus on specific subsets of samples by selecting a variable and then the groups within that variable that you wish to include in the analysis.  You can only filter by one variable at a time.     </PTooltip>
       </h3>
     </div>
 
     <ul className="w-full flex flex-wrap items-center content-center justify-start mt-2">
-      <li className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
-        <input
-          type="radio"
-          id="treatment"
-          name="treatment"
-          value="treatment"
-          className="hidden peer"
-          checked={tempSelectedColumn === 'treatment'}
-          onChange={handleLocationChangeColorby}
-        />
-        <label
-          htmlFor="treatment"
-          className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${tempSelectedColumn === actualcolumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500" } cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-        >
-          <div className="block">
-            <div className="w-full text-base">Treatment</div>
-          </div>
-        </label>
-      </li>
+
 
       {/* {columnOptions?.includes("samplelocation" as never) && (
         <li className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
@@ -942,30 +894,33 @@ export default function Page({ params }: { params: { slug: string } }) {
           </label>
         </li>
       )} */}
+{colorByOptions.map((option: string, index: number) => (
+  option = String(option).toLowerCase(),
+  <li key={index} className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
+    <input
+      type="radio"
+      id={option}
+      name={option}
+      className="hidden peer"
+      value={option}
+      checked={tempSelectedColumn === option}
+      onChange={handleLocationChangeColorby}
+    />
+    <label
+      htmlFor={option}
+      className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100 w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === tempSelectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+    >
+      <div className="block">
+        <div className="w-full text-base">
+          {labelReplacements[String(option).toLowerCase()] 
+            ? labelReplacements[String(option).toLowerCase()] 
+            : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1)}
+        </div>
+      </div>
+    </label>
+  </li>
+))}
 
-      {colorByOptions.map((option, index) => (
-        <li key={index} className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
-          <input
-            type="radio"
-            id={option}
-            name={option}
-            className="hidden peer"
-            value={option}
-            checked={tempSelectedColumn === option}
-            onChange={handleLocationChangeColorby}
-          />
-          <label
-            htmlFor={option}
-            className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100 w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === tempSelectedColumn ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-          >
-            <div className="block">
-              <div className="w-full text-base">
-                {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
-              </div>
-            </div>
-          </label>
-        </li>
-      ))}
     </ul>
   </div>
 
@@ -1241,7 +1196,7 @@ const allValuesSelected = Array.from(initialValueOptions).every(option => select
   
        // Formar la clave con selectedColumn y los valores seleccionados sin espacios
 const valuesArray = Array.from(selectedValues)
-.map(value => value.replace(/\s+/g, '')) // Remover espacios dentro de los valores
+.map(value => String(value).replace(/\s+/g, '')) // Remover espacios dentro de los valores
 .sort(); // Ordenar para consistencia
 
 const formedKey = `${selectedColumn}_${valuesArray.join('+')}`;
@@ -1511,13 +1466,13 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
                                     </div>    <div className="px-6 py-8">
                                         <div className={`prose single-column`}>
                                             <p className="text-gray-700 text-justify text-xl">
-                                            Microbiome diversity can be assessed through multiple ecological indices that can be divided into two kinds of measures, Alpha and Beta diversity. Alpha diversity measures the variability of species within a sample, while Beta diversity accounts for the differences in composition between samples.                                        </p>
+                                            Microbiome diversity can be assessed through multiple ecological indices One of these is Alpha diversity, which measures the richness, or number of species within a sample.  Our current understanding of GI microbiomes suggests that higher alpha diversity is better, with low diversity being associated with more instances of disease or dysbiosis.                </p>
                                         </div>
 
                                     </div>
                                     
                                     <div className="flex">
-                                        <GraphicCard filter={filter} legend={""} title={title} text = {"The Shannon index is a metric used to quantify the complexity and diversity of a community."}>
+                                        <GraphicCard filter={filter} legend={""} title={title} text = {"The Shannon index is a metric used to quantify both the complexity and evenness of the community."}>
                                             {shannonData.length > 0 ? (
                                                 <> <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
                                                     <div className="w-full flex flex-row ">

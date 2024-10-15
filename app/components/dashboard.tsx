@@ -212,76 +212,79 @@ const Dashboard = () => {
         </div>
 
         <div className="mx-auto w-full max-w-7xl flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-2/3 flex flex-col">
-            <h3 className="text-2xl font-semibold text-siwa-blue mb-6">Your Projects</h3>
-            <p className="text-xl text-siwa-blue mb-6">
-              Select any of the loaded projects below to explore detailed analysis results.
-            </p>
-            {!projectsLoading ? (
-              <div className="flex flex-wrap justify-center">
-                {projects?.map(({ id, name, animalType }: { id: string, name: string, animalType: string }) => (
-                  <Link
-                    href={loadedProjects[id] ? `/projects/${id}` : ''}
-                    passHref
-                    key={id}
-                  >
-                    <div
-                      className={`relative bg-white shadow-md rounded-lg p-6 m-4 flex flex-col justify-between h-72 w-64 ${
-                        loadedProjects[id] ? "cursor-pointer hover:shadow-blue-500/50" : "opacity-50 cursor-not-allowed"
-                      } transition duration-200 ease-in-out
-                      transform hover:-translate-y-1 hover:shadow-lg`}
-                      onClick={(e) => handleClick(e, id)}
-                      onTransitionEnd={handleTransitionEnd}
-                    >
-                      {loadingProject === id && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                          <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xl text-siwa-blue flex items-center">
-                          {id}
-                          {loadedProjects[id] ? (
-                            getAnimalIcon(animalType, true)
-                          ) : (
-                            getAnimalIcon(animalType, false)
-                          )}
-                        </span>
-                        {loadedProjects[id] ? (
-                          <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
-                        ) : (
-                          <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
-                        )}
-                      </div>
+  <div className="w-full md:w-2/3 flex flex-col">
+    <h3 className="text-2xl font-semibold text-siwa-blue mb-6">Your Projects</h3>
+    <p className="text-xl text-siwa-blue mb-6">
+      Select any of the loaded projects below to explore detailed analysis results.
+    </p>
 
-                      <p className="text-lg text-siwa-blue mt-4">{name}</p>
-                      {loadedProjects[id] && (
-                        <span className="mt-6 text-center text-siwa-blue font-semibold">
-                          View Project
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+    {!projectsLoading ? (
+      // Agregamos el contenedor con overflow para scroll
+      <div className="flex flex-wrap gap-4 justify-center h-full overflow-y-auto max-h-96"> {/* max-h para limitar la altura del contenedor */}
+        {projects?.map(({ id, name, animalType }: { id: string, name: string, animalType: string }) => (
+          <Link
+            href={loadedProjects[id] ? `/projects/${id}` : ''}
+            passHref
+            key={id}
+          >
+            <div
+              className={`relative bg-white shadow-md rounded-lg p-6 flex flex-col justify-between h-72 w-64 ${
+                loadedProjects[id] ? "cursor-pointer hover:shadow-blue-500/50" : "opacity-50 cursor-not-allowed"
+              } transition duration-200 ease-in-out
+              transform hover:-translate-y-1 hover:shadow-lg`}
+              onClick={(e) => handleClick(e, id)}
+              onTransitionEnd={handleTransitionEnd}
+            >
+              {loadingProject === id && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+                  <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-xl text-siwa-blue flex items-center">
+                  {id}
+                  {loadedProjects[id] ? (
+                    getAnimalIcon(animalType, true)
+                  ) : (
+                    getAnimalIcon(animalType, false)
+                  )}
+                </span>
+                {loadedProjects[id] ? (
+                  <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
+                ) : (
+                  <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
+                )}
               </div>
-            ) : (
-              <SkeletonCard width={"100%"} height={"288px"} />
-            )}
-          </div>
 
-          <div className="w-full md:w-1/3 flex justify-center items-center">
-            <div className="relative w-80 h-80">
-              <div className="perspective-container">
-                <div className="absolute w-full h-full transform backface-hidden">
-                  <img src="/perrito.webp" alt="Decorative" className="w-full h-full object-cover rounded-lg shadow-lg" />
-                </div>
-                <div className="absolute w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 rounded-lg flex items-center justify-center">
-                  <p className="text-siwa-blue text-center font-semibold text-xl">Decoding the Mysteries of the Gut</p>
-                </div>
-              </div>
+              <p className="text-lg text-siwa-blue mt-4">{name}</p>
+              {loadedProjects[id] && (
+                <span className="mt-6 text-center text-siwa-blue font-semibold">
+                  View Project
+                </span>
+              )}
             </div>
-          </div>
+          </Link>
+        ))}
+      </div>
+    ) : (
+      <SkeletonCard width={"100%"} height={"288px"} />
+    )}
+  </div>
+
+  <div className="w-full md:w-1/3 flex justify-center items-center">
+    <div className="relative w-80 h-80">
+      <div className="perspective-container">
+        <div className="absolute w-full h-full transform backface-hidden">
+          <img src="/perrito.webp" alt="Decorative" className="w-full h-full object-cover rounded-lg shadow-lg" />
         </div>
+        <div className="absolute w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 rounded-lg flex items-center justify-center">
+          <p className="text-siwa-blue text-center font-semibold text-xl">Decoding the Mysteries of the Gut</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
       </div>
       <ToastContainer />
     </>

@@ -1007,23 +1007,35 @@ const dropdownOptionsColorby = [
         if (!data || !data.columns) {
             return 0;
         }
-
-        // Encontrar el índice para la columna especificada por 'tempSelectedColumn' y para 'alphashannon'
+    
+        // Encontrar el índice para la columna especificada por 'theRealColorByVariable' y para 'alphashannon'
         const locationColumnIndex = data.columns.indexOf(theRealColorByVariable);
         const alphashannonIndex = data.columns.indexOf('alphashannon');
-
+    
         // Asegurarse de que los índices sean válidos
         if (locationColumnIndex === -1 || alphashannonIndex === -1) {
             return 0;
         }
-
-        // Filtrar los datos para los que el valor de la columna 'selectedColumn' coincida con 'locationValue'
-        const filteredData = data.data.filter((item: any[]) => item[locationColumnIndex] === locationValue && item[locationColumnIndex] !== "null");
+    
+        console.log("locationColumnIndex", locationColumnIndex);
+    
+        // Filtrar los datos, asegurándonos de comparar los valores como cadenas
+        const filteredData = data.data.filter((item: any[]) => 
+            String(item[locationColumnIndex]) === String(locationValue) && 
+            item[locationColumnIndex] !== "null"
+        );
+    
+        console.log("filteredData", filteredData);
+    
         // Extraer los valores de 'alphashannon' para los datos filtrados
         const values = filteredData.map((item: any[]) => item[alphashannonIndex]);
+    
+        console.log("values", values);
+    
         // Encontrar y devolver el valor máximo de 'alphashannon'
         return Math.max(...values.filter((value: any) => typeof value === 'number'));
     };
+    
 
 
 
@@ -1075,7 +1087,8 @@ const dropdownOptionsColorby = [
                 // Calcula la posición 'y' para la ubicación actual basándose en el valor máximo de 'alphashannon' en esa categoría
                 const maxY = maxYValueForLocation(locationValue, otus?.data);
 
-
+                console.log("maxY", maxY)
+                console.log("locationValue", locationValue)
                 return {
                     x: locationValue,
                     y: (graphType === "boxplot" ? 0.8 : 1.2) + maxY,  // Agrega un pequeño offset para que la anotación esté justo por encima del valor máximo

@@ -7,7 +7,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const token = req.headers.authorization;
 
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/${slug}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/users-projects`, {
             method: req.method,
             headers: {
                 'Content-Type': 'application/json',

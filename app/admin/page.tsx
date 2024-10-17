@@ -94,7 +94,7 @@ export default function Dashboard({ params }: { params: { slug: string } }) {
   const handleSaveClick = async (index: number) => {
     const project = projectDetails[index]
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/projects/${project.project_id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/projects-edit/${project.project_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export default function Dashboard({ params }: { params: { slug: string } }) {
   const handleSaveUserClick = async (index: number) => {
     const user = usersProjects[index];
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/user-projects`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/users-projects`, {
             method: 'PUT', // Cambiado a PUT
             headers: {
                 'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ const handleClearCache = async () => {
       return
     }
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/projects`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/projects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ const handleClearCache = async () => {
       return
     }
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/users`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

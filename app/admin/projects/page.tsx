@@ -11,8 +11,8 @@ import { InputText } from 'primereact/inputtext'
 import { MultiSelect } from 'primereact/multiselect'
 import { motion } from 'framer-motion'
 import { FaSpinner } from 'react-icons/fa6'
-import Layout from '../components/Layout'
-import { SidebarProvider } from '../components/context/sidebarContext'
+import Layout from '../../components/Layout'
+import { SidebarProvider } from '../../components/context/sidebarContext'
 
 type Project = {
   project_id: string
@@ -223,7 +223,6 @@ const handleClearCache = async () => {
 
   useEffect(() => {
     fetchProjectDetails()
-    fetchUsersProjects()
   }, [params.slug])
 
   return (
@@ -341,57 +340,7 @@ const handleClearCache = async () => {
                   
                     </div>
                   </TabPanel>
-                  <TabPanel header="Usuarios y sus Proyectos">
-                    <div className="p-4">
-                      <h3 className="text-xl font-bold mb-4">Agregar Nuevo Usuario</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <InputText
-                          placeholder="Email Usuario"
-                          value={newUser.email}
-                          onChange={(e) => handleNewUserChange(e, "email")}
-                        />
-                        <MultiSelect
-                          value={selectedProjects}
-                          options={projectDetails.map((proj) => ({ label: proj.project_id, value: proj.project_id }))}
-                          onChange={(e) => setSelectedProjects(e.value)}
-                          placeholder="Asignar Proyectos"
-                          className="w-full"
-                        />
-                        <Button label="Agregar Usuario" icon="pi pi-plus" onClick={handleAddNewUser} className="mt-4" />
-                      </div>
-                      <DataTable value={usersProjects} responsiveLayout="scroll" stripedRows>
-                        <Column field="email" header="Email Usuario" sortable />
-                        <Column
-                          field="projects"
-                          header="Proyectos Asignados"
-                          body={(rowData, { rowIndex }) =>
-                            editUserIndex === rowIndex ? (
-                              <MultiSelect
-                                value={selectedProjects}
-                                options={projectDetails.map((proj) => ({ label: proj.project_id, value: proj.project_id }))}
-                                onChange={(e) => setSelectedProjects(e.value)}
-                                placeholder="Asignar Proyectos"
-                                className="w-full"
-                              />
-                            ) : (
-                              rowData.projects
-                            )
-                          }
-                          sortable
-                        />
-                        <Column
-                          body={(_, { rowIndex }) =>
-                            editUserIndex === rowIndex ? (
-                              <Button label="Guardar" icon="pi pi-check" onClick={() => handleSaveUserClick(rowIndex)} />
-                            ) : (
-                              <Button label="Editar" icon="pi pi-pencil" onClick={() => handleEditUserClick(rowIndex)} />
-                            )
-                          }
-                          header="Acciones"
-                        />
-                      </DataTable>
-                    </div>
-                  </TabPanel>
+         
                 </TabView>
               </div>
                 </>

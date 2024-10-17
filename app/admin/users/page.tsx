@@ -31,6 +31,7 @@ export default function Dashboard({ params }: { params: { slug: string } }) {
   const [projectDetails, setProjectDetails] = useState<Project[]>([])
   const [usersProjects, setUsersProjects] = useState<UserProject[]>([])
   const [editIndex, setEditIndex] = useState<number | null>(null)
+  const [loadProj, setLoadProj] = useState(false)
   const [editUserIndex, setEditUserIndex] = useState<number | null>(null)
   const [newProject, setNewProject] = useState<Project>({
     project_id: '',
@@ -58,10 +59,11 @@ export default function Dashboard({ params }: { params: { slug: string } }) {
         toast.error('Error al cargar detalles de proyectos');
     } finally {
         setLoading(false);
+        setLoadProj(false);
     }
 };
 
-useEffect(() => {fetchProjectDetails()}, [usersProjects]);
+// useEffect(() => {fetchProjectDetails()}, [usersProjects]);
 
 
   const fetchUsersProjects = async () => {
@@ -82,6 +84,7 @@ useEffect(() => {fetchProjectDetails()}, [usersProjects]);
       toast.error('Error al cargar datos de usuarios y proyectos')
     } finally {
       setLoading(false)
+      setLoadProj(true)
     }
   }
 
@@ -190,7 +193,6 @@ const handleClearCache = async () => {
       })
       if (!response.ok) throw new Error('Failed to add new project')
       toast.success('Nuevo proyecto agregado con éxito')
-      fetchProjectDetails()
       setNewProject({ project_id: '', tipo_de_animal: '', specie: '', nombre_del_proyecto: '' })
     } catch (error) {
       console.error('Error adding new project:', error)
@@ -224,7 +226,7 @@ const handleClearCache = async () => {
   }
 
   useEffect(() => {
-    fetchUsersProjects()
+    fetchUsersProjects().then(() => fetchProjectDetails())
   }, [params.slug])
 
   return (

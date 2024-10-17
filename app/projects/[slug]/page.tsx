@@ -61,8 +61,10 @@ const Page = ({ params }: { params: { slug: string } }) => {
       const configfile = await response.json();
       console.log("Config file:", configfile);
       setConfigFile(configfile.configFile);
+      // setSummaryText(Object.values(configfile.configFile.Dashboard.Description || {}));
       setSummaryText(Object.values(configfile.configFile.summary.text || {}));
       const title = configfile.configFile.Summary.Title.replace(/project: /i, '').trim();
+      // const title = configfile.configFile.Dashboard.Title.replace(/project: /i, '').trim();
       setSummaryTitle(title.charAt(0).toUpperCase() + title.slice(1));
     } catch (error) {
       console.error("Error al cargar las opciones del dropdown:", error);
@@ -316,7 +318,8 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
         <div className="w-full py-8 flex justify-center">
           <div className="bg-white w-11/12 rounded-lg overflow-hidden pb-4">
             <div className="w-full flex justify-center text-center">
-              {configFile?.summary?.image ? (
+            {configFile?.summary?.image ? (
+              // {configFile?.Dashboard?.Image ? (
                 <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-5xl text-siwa-blue leading-[70px]">
                   {summaryTitle}
                 </h1>
@@ -338,6 +341,8 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
                         <p key={index} className="text-gray-700 text-2xl font-light mb-4 p-2">{text}</p>
                       ))}
                       <div className="w-full flex justify-center items-center xl:justify-end p-4">
+                      <Image src={configFile?.Dashboard?.Image || imageload.src} alt="Summary Image" className="w-full" height="300" preview={!configFile?.Dashboard?.Image} />
+
                         <Image src={configFile?.summary?.image || imageload.src} alt="Summary Image" className="w-full" height="300" preview={!configFile?.summary?.image} />
                       </div>
                     </Card>

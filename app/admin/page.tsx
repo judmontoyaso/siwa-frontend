@@ -1,243 +1,405 @@
-"use client";
-import 'react-toastify/dist/ReactToastify.css';
-import { use, useEffect, useState } from 'react';
-import Layout from '../components/Layout';
-import { Bounce, ToastContainer, toast } from 'react-toastify';
-import { FaSpinner } from "react-icons/fa6";
-import { GrDocumentConfig } from "react-icons/gr";
-import { FaDownload } from "react-icons/fa6";
-import { RiUploadCloud2Fill } from "react-icons/ri"
-import Link from 'next/link';
-import CardButton from '../components/cardButton';
-import { SidebarProvider } from '../components/context/sidebarContext';
-import ConfettiTrigger from '../components/confettiTrigger';
+'use client'
 
-export default function Page({ params }: { params: { slug: string } }) {
-    const [file, setFile] = useState(null);
-    const [projectName, setProjectName] = useState('');
-    const [accessToken, setAccessToken] = useState();
-    const [loading, setLoading] = useState(false);
-    const [isFormVisible, setIsFormVisible] = useState(false);
-    const [isDownloadVisible, setIsDownloadVisible] = useState(false);
+import { useEffect, useState } from 'react'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { TabView, TabPanel } from 'primereact/tabview'
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+import { Button } from 'primereact/button'
+import { InputText } from 'primereact/inputtext'
+import { MultiSelect } from 'primereact/multiselect'
+import { motion } from 'framer-motion'
+import { FaSpinner } from 'react-icons/fa6'
+import Layout from '../components/Layout'
+import { SidebarProvider } from '../components/context/sidebarContext'
 
-    const fetchToken = async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/token`);
-            const { accessToken } = await response.json();
-            setAccessToken(accessToken);
-            console.log("Token obtenido:", accessToken);
-            return accessToken; // Retorna el token obtenido para su uso posterior
-        } catch (error) {
-            console.error("Error al obtener token:", error);
-        }
-    };
+type Project = {
+  project_id: string
+  tipo_de_animal: string
+  specie: string
+  nombre_del_proyecto: string
+}
 
-    useEffect(() => { fetchToken() }, [params.slug]);
+type UserProject = {
+  email: string
+  projects: string
+}
+
+export default function Dashboard({ params }: { params: { slug: string } }) {
+  const [loading, setLoading] = useState(false)
+  const [projectDetails, setProjectDetails] = useState<Project[]>([])
+  const [usersProjects, setUsersProjects] = useState<UserProject[]>([])
+  const [editIndex, setEditIndex] = useState<number | null>(null)
+  const [editUserIndex, setEditUserIndex] = useState<number | null>(null)
+  const [newProject, setNewProject] = useState<Project>({
+    project_id: '',
+    tipo_de_animal: '',
+    specie: '',
+    nombre_del_proyecto: '',
+  })
+  const [newUser, setNewUser] = useState<UserProject>({
+    email: '',
+    projects: ''
+  })
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([])
+
+  const fetchProjectDetails = async () => {
+    setLoading(true);
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/projects`, {
+            headers: { Authorization: `Bearer ${params.slug}` },
+        });
+        if (!response.ok) throw new Error('Failed to fetch project details');
+        const data = await response.json();
+        setProjectDetails(data);
+    } catch (error) {
+        console.error('Error fetching project details:', error);
+        toast.error('Error al cargar detalles de proyectos');
+    } finally {
+        setLoading(false);
+    }
+};
 
 
-    const handleFileChange = (e: any) => {
-        console.log(e.target.files[0])
-        setFile(e.target.files[0]);
-    };
+  const fetchUsersProjects = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/users-projects`, {
+        headers: { Authorization: `Bearer ${params.slug}` },
+      })
+      if (!response.ok) throw new Error('Failed to fetch user projects')
+      const data = await response.json()
+      const formattedData: UserProject[] = Object.entries(data).map(([email, projectIds]) => ({
+        email,
+        projects: Array.isArray(projectIds) ? projectIds.join(', ') : String(projectIds),
+    }));
+      setUsersProjects(formattedData)
+    } catch (error) {
+      console.error('Error fetching user projects:', error)
+      toast.error('Error al cargar datos de usuarios y proyectos')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    const handleProjectNameChange = (e: any) => {
-        setProjectName(e.target.value);
-    };
+  const handleEditClick = (index: number) => setEditIndex(index)
+  const handleEditUserClick = (index: number) => {
+    setEditUserIndex(index)
+    const user = usersProjects[index]
+    const assignedProjects = user.projects.split(', ').map(proj => proj.trim())
+    setSelectedProjects(assignedProjects)
+  }
 
-    const handleSubmit = async (e: any) => {
-        e.preventDefault();
+  const handleSaveClick = async (index: number) => {
+    const project = projectDetails[index]
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/projects/${project.project_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${params.slug}`,
+        },
+        body: JSON.stringify(project),
+      })
+      if (!response.ok) throw new Error('Failed to update project details')
+      toast.success('Detalles del proyecto actualizados con éxito')
+      setEditIndex(null)
+    } catch (error) {
+      console.error('Error updating project details:', error)
+      toast.error('Error al actualizar detalles del proyecto')
+    }
+  }
 
-        if (!projectName || !file) {
-            alert('Por favor, ingresa el nombre del proyecto y selecciona un archivo.');
-            return;
-        }
-        setLoading(true);
-        console.log(loading)
-        const formData = new FormData();
-        formData.append("file", file);
-
-        // Nota: No es necesario establecer el encabezado 'Content-Type' al usar FormData.
-        // El navegador lo establecerá automáticamente con el 'boundary' adecuado para 'multipart/form-data'.
-        const result = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/uploadconfig/${projectName}`, {
-            method: 'POST',
+  const handleSaveUserClick = async (index: number) => {
+    const user = usersProjects[index];
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/user-projects`, {
+            method: 'PUT', // Cambiado a PUT
             headers: {
-                // Incluye el token de Auth0 en los encabezados de la solicitud
-                'Authorization': `Bearer ${accessToken}`
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${params.slug}`,
             },
-            body: formData,
+            body: JSON.stringify({ user_id: user.email, project_id: selectedProjects }),
+        });
+        if (!response.ok) throw new Error('Failed to update user details');
+        toast.success('Usuario actualizado con éxito');
+        setEditUserIndex(null);
+    } catch (error) {
+        console.error('Error updating user details:', error);
+        toast.error('Error al actualizar usuario');
+    }
+};
+
+
+
+
+const handleClearCache = async () => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/admin/clear-cache`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${params.slug}`,
+            },
         });
 
-        const resultData = await result.json();
-        if (resultData.detail === "OK") {
-            toast.success('Archivo subido con exito', {
-                position: "top-center",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
-            });
-            setProjectName('');
-            setFile(null);
-            document.getElementById('fileInput')?.setAttribute('value', '');
-            setLoading(false);
-            console.log(loading)
-        } else {
-            toast.error('Error al subir el archivo', {
-                position: "top-center",
-                autoClose: 4996,
-                hideProgressBar: true,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: 0,
-                theme: "light",
-                transition: Bounce,
-            });
+        if (!response.ok) {
+            throw new Error('Failed to clear cache');
         }
-    };
 
-
-    const downloadConfigFile = async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/downloadconfigfile/${projectName}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`, // Asegúrate de incluir el token de autorización si es necesario
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Error downloading the file');
-            }
-
-            // Obtén el nombre del archivo del header 'content-disposition' y crea un URL de descarga
-            const contentDisposition = response.headers.get('content-disposition');
-            // Establece el nombre del archivo explícitamente
-            const fileName = `${projectName}_configFile.json`;
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-
-            // Crea un enlace temporal y simula un click para descargar el archivo
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            toast.success('Archivo descargado con exito', {
-                position: "top-center",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
-            });
-        } catch (error) {
-            console.error('Error downloading the file:', error);
-        }
-    };
+        toast.success('Cache cleared successfully');
+    } catch (error) {
+        console.error('Error clearing cache:', error);
+        toast.error('Error al limpiar el cache');
+    }
+};
 
 
 
 
-    return (
-        <div className='h-full'>
-            <SidebarProvider>
-            <Layout slug={params.slug} filter={""}  breadcrumbs={""}>
-                <div className='w-full flex justify-center items-center h-full'>
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof Project, index: number) => {
+    const updatedProjects = [...projectDetails]
+    updatedProjects[index][field] = e.target.value
+    setProjectDetails(updatedProjects)
+  }
 
+  const handleNewProjectChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof Project) => {
+    setNewProject({ ...newProject, [field]: e.target.value })
+  }
 
- 
-               
-                <div className='flex flex-grow items-center justify-center align-middle h-full content-center w-3/4'>
-                <ConfettiTrigger>
-<CardButton href={''} Icon={ RiUploadCloud2Fill} onClick={undefined} title={'Load Project'}/>
-</ConfettiTrigger>
-  
-                {isFormVisible && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
-                        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                            <div className="mt-3 text-center">
-                                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                                    <GrDocumentConfig />
-                                </div>
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Upload Config File</h3>
-                                <div className="mt-2 px-7 py-3">
-                                    <form onSubmit={handleSubmit} className="space-y-4">
-                                        <input id='textInput' type="text" value={projectName} onChange={handleProjectNameChange} placeholder="Nombre del Proyecto" className="block w-full px-4 py-2 border rounded-md" />
-                                        <input id='fileInput' type="file" onChange={handleFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
-                                        <button type="submit" className="flex flex-row text-center justify-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 w-52">{loading ? ("Subiendo ") : "Subir Archivo"}  {loading ? <FaSpinner className="mr-2 w-4 h-4  text-gray-300 animate-spin dark:text-gray-600 fill-blue-400" /> : ""}</button>
-                                    </form>
-                                </div>
-                                <div className="items-center px-4 py-3">
-                                    <button id="ok-btn" className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" onClick={() => setIsFormVisible(false)}>
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
+  const handleNewUserChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof UserProject) => {
+    setNewUser({ ...newUser, [field]: e.target.value })
+  }
+
+  const handleAddNewProject = async () => {
+    if (Object.values(newProject).some(value => !value)) {
+      toast.error('Todos los campos son obligatorios para agregar un proyecto')
+      return
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${params.slug}`,
+        },
+        body: JSON.stringify(newProject),
+      })
+      if (!response.ok) throw new Error('Failed to add new project')
+      toast.success('Nuevo proyecto agregado con éxito')
+      fetchProjectDetails()
+      setNewProject({ project_id: '', tipo_de_animal: '', specie: '', nombre_del_proyecto: '' })
+    } catch (error) {
+      console.error('Error adding new project:', error)
+      toast.error('Error al agregar nuevo proyecto')
+    }
+  }
+
+  const handleAddNewUser = async () => {
+    if (!newUser.email || selectedProjects.length === 0) {
+      toast.error('El email y al menos un proyecto son obligatorios para agregar un usuario')
+      return
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${params.slug}`,
+        },
+        body: JSON.stringify({ email: newUser.email, projects: selectedProjects }),
+      })
+      if (!response.ok) throw new Error('Failed to add new user')
+      toast.success('Nuevo usuario agregado con éxito')
+      fetchUsersProjects()
+      setNewUser({ email: '', projects: '' })
+      setSelectedProjects([])
+    } catch (error) {
+      console.error('Error adding new user:', error)
+      toast.error('Error al agregar nuevo usuario')
+    }
+  }
+
+  useEffect(() => {
+    fetchProjectDetails()
+    fetchUsersProjects()
+  }, [params.slug])
+
+  return (
+    <div className="h-full bg-gray-100">
+      <SidebarProvider>
+        <Layout slug={params.slug} filter="" breadcrumbs="">
+          <motion.div
+            className="p-6 w-full h-full"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            {loading ? (
+              <div className="flex justify-center items-center">
+                <FaSpinner className="animate-spin text-4xl text-primary" />
+                <span className="ml-2 text-xl font-semibold">Cargando...</span>
+              </div>
+            ) : (
+                <>
+                <Button 
+  label="Limpiar Caché" 
+  icon="pi pi-trash" 
+  onClick={handleClearCache} 
+  className="p-button-danger mt-4" 
+/>
+              <div className="bg-white rounded-lg shadow-md flex w-full h-full overflow-scroll">
+                <TabView className='w-full' aria-orientation='vertical'>
+                <TabPanel header="Detalles de Proyectos">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-xl font-bold mb-4">Agregar Nuevo Proyecto</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <InputText
+                            placeholder="ID Proyecto"
+                            value={newProject.project_id}
+                            onChange={(e) => handleNewProjectChange(e, "project_id")}
+                          />
+                          <InputText
+                            placeholder="Tipo de Animal"
+                            value={newProject.tipo_de_animal}
+                            onChange={(e) => handleNewProjectChange(e, "tipo_de_animal")}
+                          />
+                          <InputText
+                            placeholder="Especie"
+                            value={newProject.specie}
+                            onChange={(e) => handleNewProjectChange(e, "specie")}
+                          />
+                          <InputText
+                            placeholder="Nombre del Proyecto"
+                            value={newProject.nombre_del_proyecto}
+                            onChange={(e) => handleNewProjectChange(e, "nombre_del_proyecto")}
+                          />
                         </div>
+                        <Button label="Agregar Proyecto" icon="pi pi-plus" onClick={handleAddNewProject} className="mt-4" />
+                      </div>
+                    <div className="p-4">
+                      <DataTable value={projectDetails} responsiveLayout="scroll" stripedRows className="mb-6">
+                        <Column field="project_id" header="ID Proyecto" sortable />
+                        <Column
+                          field="tipo_de_animal"
+                          header="Tipo de Animal"
+                          sortable
+                          body={(rowData, { rowIndex }) =>
+                            editIndex === rowIndex ? (
+                              <InputText
+                                value={rowData.tipo_de_animal}
+                                onChange={(e) => handleInputChange(e, "tipo_de_animal", rowIndex)}
+                              />
+                            ) : (
+                              rowData.tipo_de_animal
+                            )
+                          }
+                        />
+                        <Column
+                          field="specie"
+                          header="Especie"
+                          sortable
+                          body={(rowData, { rowIndex }) =>
+                            editIndex === rowIndex ? (
+                              <InputText
+                                value={rowData.specie}
+                                onChange={(e) => handleInputChange(e, "specie", rowIndex)}
+                              />
+                            ) : (
+                              rowData.specie
+                            )
+                          }
+                        />
+                        <Column
+                          field="nombre_del_proyecto"
+                          header="Nombre del Proyecto"
+                          sortable
+                          body={(rowData, { rowIndex }) =>
+                            editIndex === rowIndex ? (
+                              <InputText
+                                value={rowData.nombre_del_proyecto}
+                                onChange={(e) => handleInputChange(e, "nombre_del_proyecto", rowIndex)}
+                              />
+                            ) : (
+                              rowData.nombre_del_proyecto
+                            )
+                          }
+                        />
+                        <Column
+                          body={(_, { rowIndex }) =>
+                            editIndex === rowIndex ? (
+                              <Button label="Guardar" icon="pi pi-check" onClick={() => handleSaveClick(rowIndex)} />
+                            ) : (
+                              <Button label="Editar" icon="pi pi-pencil" onClick={() => handleEditClick(rowIndex)} />
+                            )
+                          }
+                          header="Acciones"
+                        />
+                      </DataTable>
+
+                  
                     </div>
-                )}
-
-
-
-<CardButton href={'/admin/loadproject/'} Icon={ FaDownload} onClick={() => setIsDownloadVisible(true)} title={'Download Config File'}/>
-
-
-<div className="w-96 h-36 flex items-center justify-evenly p-6 max-w-md mx-5 bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out m-4 cursor-pointer dark:bg-gray-800 dark:border-gray-700" onClick={() => setIsFormVisible(true)}>
-            <h5 className="text-2xl font-bold tracking-tight text-gray-700 dark:text-white">Upload Config File</h5>
-            <GrDocumentConfig className="text-3xl text-gray-700" />
-        </div>
-
- 
-
-                {isDownloadVisible && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
-                        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                            <div className="mt-3 text-center">
-                                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                                    <GrDocumentConfig />
-                                </div>
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Download Config File</h3>
-                                <div className="mt-2 px-7 py-3">
-                                    <form onSubmit={downloadConfigFile} className="space-y-4">
-                                        <input id='textInput' type="text" value={projectName} onChange={handleProjectNameChange} placeholder="Nombre del Proyecto" className="block w-full px-4 py-2 border rounded-md" />
-                                        <button
-  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition duration-150 ease-in-out"
-  onClick={(e) => {
-    e.preventDefault(); // Previene el comportamiento por defecto del evento
-    downloadConfigFile();
-  }}
->
-{loading ? ("Descargando ") : "Descargar Archivo"}{loading ? <FaSpinner className="mr-2 w-4 h-4  text-gray-300 animate-spin dark:text-gray-600 fill-blue-400" /> : ""} </button>                                    </form>
-                                </div>
-                                <div className="items-center px-4 py-3">
-                                    <button id="ok-btn" className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" onClick={() => setIsDownloadVisible(false)}>
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                  </TabPanel>
+                  <TabPanel header="Usuarios y sus Proyectos">
+                    <div className="p-4">
+                      <h3 className="text-xl font-bold mb-4">Agregar Nuevo Usuario</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <InputText
+                          placeholder="Email Usuario"
+                          value={newUser.email}
+                          onChange={(e) => handleNewUserChange(e, "email")}
+                        />
+                        <MultiSelect
+                          value={selectedProjects}
+                          options={projectDetails.map((proj) => ({ label: proj.project_id, value: proj.project_id }))}
+                          onChange={(e) => setSelectedProjects(e.value)}
+                          placeholder="Asignar Proyectos"
+                          className="w-full"
+                        />
+                        <Button label="Agregar Usuario" icon="pi pi-plus" onClick={handleAddNewUser} className="mt-4" />
+                      </div>
+                      <DataTable value={usersProjects} responsiveLayout="scroll" stripedRows>
+                        <Column field="email" header="Email Usuario" sortable />
+                        <Column
+                          field="projects"
+                          header="Proyectos Asignados"
+                          body={(rowData, { rowIndex }) =>
+                            editUserIndex === rowIndex ? (
+                              <MultiSelect
+                                value={selectedProjects}
+                                options={projectDetails.map((proj) => ({ label: proj.project_id, value: proj.project_id }))}
+                                onChange={(e) => setSelectedProjects(e.value)}
+                                placeholder="Asignar Proyectos"
+                                className="w-full"
+                              />
+                            ) : (
+                              rowData.projects
+                            )
+                          }
+                          sortable
+                        />
+                        <Column
+                          body={(_, { rowIndex }) =>
+                            editUserIndex === rowIndex ? (
+                              <Button label="Guardar" icon="pi pi-check" onClick={() => handleSaveUserClick(rowIndex)} />
+                            ) : (
+                              <Button label="Editar" icon="pi pi-pencil" onClick={() => handleEditUserClick(rowIndex)} />
+                            )
+                          }
+                          header="Acciones"
+                        />
+                      </DataTable>
                     </div>
-                )}
-
-
-
-
-                <ToastContainer />
-                </div>
-                </div>
-            </Layout>
-            </SidebarProvider>
-        </div>
-    );
-
+                  </TabPanel>
+                </TabView>
+              </div>
+                </>
+            )}
+          </motion.div>
+        </Layout>
+      </SidebarProvider>
+      <ToastContainer />
+    </div>
+  )
 }

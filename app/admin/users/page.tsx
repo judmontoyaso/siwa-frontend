@@ -61,6 +61,8 @@ export default function Dashboard({ params }: { params: { slug: string } }) {
     }
 };
 
+useEffect(() => {fetchProjectDetails()}, [usersProjects]);
+
 
   const fetchUsersProjects = async () => {
     setLoading(true)
@@ -294,7 +296,7 @@ const handleClearCache = async () => {
                             editUserIndex === rowIndex ? (
                               <Button label="Guardar" icon="pi pi-check" onClick={() => handleSaveUserClick(rowIndex)} />
                             ) : (
-                              <Button label="Editar" icon="pi pi-pencil" onClick={() => handleEditUserClick(rowIndex)} />
+                              projectDetails.length > 0 && (    <Button label="Editar" icon="pi pi-pencil" onClick={() => handleEditUserClick(rowIndex)} />)
                             )
                           }
                           header="Acciones"

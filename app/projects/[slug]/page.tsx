@@ -94,7 +94,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
   const fetchModules = async (projectId: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/get-modules/${projectId}`);
+      const response = await fetch(`/api/project/getmodules/${projectId}`);
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }

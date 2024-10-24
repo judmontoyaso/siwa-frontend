@@ -135,7 +135,7 @@ const Dashboard = () => {
       console.log(`Datos del proyecto ${projectId}:`, projectData);
   
       // Aquí consultamos el nuevo endpoint para obtener las estadísticas del proyecto
-      const statsResponse = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/modules/${projectId}`, {
+      const statsResponse = await fetch(`api/project/modules/${projectId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

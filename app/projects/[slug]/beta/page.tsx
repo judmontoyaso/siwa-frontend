@@ -736,47 +736,6 @@ const fetchProjectIdsFilter = async (result: any) => {
                 </div>
       
                 <ul className="w-full flex flex-wrap items-center content-center justify-start mt-2">
-                  <li className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
-                    <input
-                      type="radio"
-                      id="treatment"
-                      name="treatment"
-                      value="treatment"
-                      className="hidden peer"
-                      checked={colorBy === 'treatment'}
-                      onChange={handleLocationChangeColorby}
-                    />
-                    <label
-                      htmlFor="treatment"
-                      className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} cursor-pointer hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                    >
-                      <div className="block">
-                        <div className="w-full">Treatment</div>
-                      </div>
-                    </label>
-                  </li>
-{/*       
-                  {columnOptions?.includes("samplelocation" as never) && (
-                    <li className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
-                      <input
-                        type="radio"
-                        id="samplelocation"
-                        name="samplelocation"
-                        value="samplelocation"
-                        className="hidden peer"
-                        checked={colorBy === 'samplelocation'}
-                        onChange={handleLocationChangeColorby}
-                      />
-                      <label
-                        htmlFor="samplelocation"
-                        className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} ${isColorByDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:text-gray-600 hover:bg-gray-100'} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                      >
-                        <div className="block">
-                          <div className="w-full">Sample Location</div>
-                        </div>
-                      </label>
-                    </li>
-                  )} */}
       
                   {colorByOptions.map((option, index) => (
                     <li key={index} className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">

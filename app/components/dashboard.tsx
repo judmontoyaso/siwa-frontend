@@ -6,21 +6,24 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/app/components/navbar";
 import Layout from "@/app/components/Layout";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import SkeletonCard from "./skeletoncard";
 import { Bounce, Slide, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
+import { BsArrowLeftShort, BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
 import { IoCloudOffline } from "react-icons/io5";
 import { FaSpinner } from "react-icons/fa";
 import { RoughNotation } from "react-rough-notation";
 import Spinner from "./pacmanLoader";
-import { GiChicken, GiPig, GiCow, GiCat, GiSpinalCoil } from "react-icons/gi"; // Importamos más íconos
+import { GiChicken, GiPig, GiCow, GiCat, GiSpinalCoil, GiTestTubes } from "react-icons/gi"; // Importamos más íconos
 import { FaDog } from "react-icons/fa"; // Perro
-
+import { AiOutlineClose } from "react-icons/ai";
+import { RiTestTubeFill } from "react-icons/ri";
+import { motion } from "framer-motion";
+import { BiMapPin } from "react-icons/bi";
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
-  const [projects, setProjects] = useState<any>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const { user, error, isLoading } = useUser();
   const [empresa, setEmpresa] = useState();
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -28,9 +31,10 @@ const Dashboard = () => {
   const [path, setPath] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [loadedProjects, setLoadedProjects] = useState<any>({});
-  const [projectErrors, setProjectErrors] = useState({});
-  const [loadingProject, setLoadingProject] = useState(null);
-
+  const [projectErrors, setProjectErrors] = useState<{ [key: string]: boolean }>({});
+    const [loadingProject, setLoadingProject] = useState(null);
+    const [selectedProject, setSelectedProject] = useState<any>(null);
+    const router = useRouter();
   const fetchToken = async () => {
     if (!user) {
       console.log("Usuario no autenticado");
@@ -66,6 +70,19 @@ const Dashboard = () => {
       console.error("Error fetching projects by email:", error);
     }
   };
+  const handleGoToProject = (id: SetStateAction<null>) => {
+    // Establece el proyecto en estado de carga
+    setLoadingProject(id);
+    // Inicia una redirección usando `useRouter` o cualquier método de navegación de Next.js
+    router.push(`/projects/${id}`);
+  };
+  
+  interface Project {
+    id: string;
+    name: string;
+    animalType: string;
+  }
+  
 
   useEffect(() => {
     setEmpresa(user?.Empresa as never);
@@ -75,10 +92,9 @@ const Dashboard = () => {
     }
     setProjectsLoading(false);
   }, [accessToken, user?.email]);
-
-  const fetchProjectData = async (projectId: string, animalType:string, token: string) => {
-    setLoadedProjects((prevStatus:any) => ({ ...prevStatus, [projectId]: false }));
-   console.log("animaltype", animalType)
+  const fetchProjectData = async (projectId: string, animalType: string, token: string) => {
+    setLoadedProjects((prevStatus: any) => ({ ...prevStatus, [projectId]: false }));
+    console.log("animaltype", animalType);
     let tostifyTimeout;
   
     try {
@@ -103,15 +119,14 @@ const Dashboard = () => {
         },
         body: JSON.stringify({
           "animaltype": animalType,
- 
-      })
+        }),
       });
   
       clearTimeout(tostifyTimeout);
   
       if (!response.ok) {
         if (response.status === 500) {
-            setProjectErrors((prevErrors) => ({ ...prevErrors, [projectId]: true }));
+          setProjectErrors((prevErrors) => ({ ...prevErrors, [projectId]: true }));
         }
         throw new Error(`Error al obtener datos del proyecto ${projectId}`);
       }
@@ -119,15 +134,37 @@ const Dashboard = () => {
       const projectData = await response.json();
       console.log(`Datos del proyecto ${projectId}:`, projectData);
   
-      setLoadedProjects((prevLoadedProjects:any) => ({
+      // Aquí consultamos el nuevo endpoint para obtener las estadísticas del proyecto
+      const statsResponse = await fetch(`api/project/modules/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!statsResponse.ok) {
+        throw new Error(`Error al obtener las estadísticas del proyecto ${projectId}`);
+      }
+  
+      const statsData = await statsResponse.json();
+      console.log(`Estadísticas del proyecto ${projectId}:`, statsData);
+  
+      setLoadedProjects((prevLoadedProjects: any) => ({
         ...prevLoadedProjects,
         [projectId]: true,
       }));
+  
+      // Retornamos los datos para establecerlos en `selectedProject`
+      return {
+        samples: statsData.sample_count, // Número de muestras obtenido del endpoint
+        panels: statsData.modules.length, // Número de módulos obtenidos del endpoint
+      };
     } catch (error) {
       console.error(error);
       clearTimeout(tostifyTimeout);
+      return null;
     }
   };
+  
   
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -137,21 +174,57 @@ const Dashboard = () => {
   }, [user, path]);
 
   useEffect(() => {
-    console.log("Projects:", projects);
-    projects?.forEach(({ id, animalType }: { id: string, animalType: string }) => { 
-      console.log("Fetching project data for:", id, animalType);
-      fetchProjectData(id, animalType, accessToken);
-    })},[accessToken, projects]);
+    const fetchProjectDataSequentially = async () => {
+      for (const project of projects) {
+        const { id, animalType } = project;
+        console.log("Fetching project data for:", id, animalType);
+        
+        // Llamada secuencial a cada proyecto
+        await fetchProjectData(id, animalType, accessToken);
+      }
+    };
+  
+    if (accessToken && projects.length > 0) {
+      fetchProjectDataSequentially();
+    }
+  }, [accessToken, projects]);
+  
 
-  const handleClick = (e:any, id: string | number | SetStateAction<any>) => {
-    if (loadedProjects[id]) {
-      setLoadingProject(id);
-      e.currentTarget.style.transform = "scale(0.95)";
-      e.currentTarget.style.opacity = "0.8";
-    } else {
-      e.preventDefault();
+  // const handleClick = (e:any, id: string | number | SetStateAction<any>) => {
+  //   if (loadedProjects[id]) {
+  //     setLoadingProject(id);
+  //     e.currentTarget.style.transform = "scale(0.95)";
+  //     e.currentTarget.style.opacity = "0.8";
+  //   } else {
+  //     e.preventDefault();
+  //   }
+  // };
+
+  const handleClick = async (e: any, id: string | number | SetStateAction<any>, animalType: string) => {
+    e.preventDefault();
+    if (!loadedProjects[id]) {
+      return;
+    }
+    
+    try {
+      // Esperamos la respuesta de fetchProjectData antes de continuar
+      const projectData = await fetchProjectData(id, animalType, accessToken);
+      if (projectData) {
+        // Actualizamos `selectedProject` con la información real de muestras y módulos
+        setSelectedProject({
+          title: id,
+          name: projects?.find((project: { id: string; }) => project?.id === id)?.name,
+          animalType: animalType,
+          samples: projectData.samples, // Valor real obtenido de `fetchProjectData`
+          panels: projectData.panels, // Valor real obtenido de `fetchProjectData`
+        });
+      }
+    } catch (error) {
+      console.error("Error al cargar el proyecto:", error);
     }
   };
+  
+  
 
   const handleTransitionEnd = (e: { currentTarget: { style: { transform: string; opacity: string; }; }; }) => {
     e.currentTarget.style.transform = "scale(1)";
@@ -183,15 +256,16 @@ const Dashboard = () => {
       case "cat":
         return <GiCat className={`${size} ${isLoaded ? "text-gray-800" : color}`} />;
       default:
-        return <GiSpinalCoil className={`${size} ${color} animate-spin`} />;
+        return <RiTestTubeFill className={`${size} text-blue-500`} />; // Tubo de ensayo por defecto
     }
   };
+  
   
 
   return (
     <>
-      <div className="min-h-screen flex flex-col justify-start w-full bg-siwa-green-50 p-8">
-        <div className="mx-auto w-full max-w-5xl text-center">
+<div className="min-h-screen table flex-col justify-start w-full bg-siwa-green-50 p-8 pb-24"> 
+<div className="mx-auto w-full max-w-5xl text-center">
           <h1 className="text-5xl font-semibold text-siwa-blue mb-4">Hello, {user?.name}!</h1>
           <h2 className="text-4xl font-semibold text-siwa-blue mb-10">
             Welcome to your 
@@ -211,79 +285,180 @@ const Dashboard = () => {
           </h2>
         </div>
 
-        <div className="mx-auto w-full max-w-7xl flex flex-col md:flex-row gap-8">
-  <div className="w-full md:w-2/3 flex flex-col">
-    <h3 className="text-2xl font-semibold text-siwa-blue mb-6">Your Projects</h3>
-    <p className="text-xl text-siwa-blue mb-6">
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <section className="lg:col-span-2">
+            <h3 className="text-2xl font-semibold text-siwa-blue mb-3">Your Projects</h3>
+            <p className="text-xl text-siwa-blue mb-6">
       Select any of the loaded projects below to explore detailed analysis results.
     </p>
-
-    {!projectsLoading ? (
-      // Agregamos el contenedor con overflow para scroll
-      <div className="flex flex-wrap gap-4 justify-center h-full overflow-y-auto max-h-96"> {/* max-h para limitar la altura del contenedor */}
-        {projects?.map(({ id, name, animalType }: { id: string, name: string, animalType: string }) => (
-          <Link
-            href={loadedProjects[id] ? `/projects/${id}` : ''}
-            passHref
-            key={id}
-          >
-            <div
-              className={`relative bg-white shadow-md rounded-lg p-6 flex flex-col justify-between h-72 w-64 ${
-                loadedProjects[id] ? "cursor-pointer hover:shadow-blue-500/50" : "opacity-50 cursor-not-allowed"
-              } transition duration-200 ease-in-out
-              transform hover:-translate-y-1 hover:shadow-lg`}
-              onClick={(e) => handleClick(e, id)}
-              onTransitionEnd={handleTransitionEnd}
-            >
-              {loadingProject === id && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                  <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-xl text-siwa-blue flex items-center">
-                  {id}
-                  {loadedProjects[id] ? (
-                    getAnimalIcon(animalType, true)
-                  ) : (
-                    getAnimalIcon(animalType, false)
-                  )}
-                </span>
-                {loadedProjects[id] ? (
-                  <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />
-                ) : (
-                  <GiSpinalCoil className="w-6 h-6 text-gray-500 animate-spin" />
-                )}
+            {projectsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white shadow-md rounded-lg p-6 h-64 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
               </div>
+            ) : (
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full pr-4 justify-center items-center" style={{ width: '90%', margin: '0 auto' }}>
+{projects
+                  ?.sort((a: { name: string; }, b: { name: any; }) => a.name.localeCompare(b.name))
+                  .map(({ id, name, animalType }) => (
+                    <Link href={loadedProjects[id] ? `/projects/${id}` : '#'} passHref key={id}>
+                     <div
+  className={`bg-white shadow-md rounded-lg p-6 flex flex-col justify-between h-64 
+    ${loadedProjects[id] ? "cursor-pointer hover:shadow-lg hover:shadow-blue-500/50" : "opacity-50 cursor-not-allowed"}
+    transition duration-200 ease-in-out transform hover:-translate-y-1 
+    ${selectedProject?.title === id ? "shadow-blue-500/50 border-2 border-blue-500" : ""}
+  `}
+  onClick={(e) => handleClick(e, id, animalType)}
+  onTransitionEnd={handleTransitionEnd}
+>
 
-              <p className="text-lg text-siwa-blue mt-4">{name}</p>
-              {loadedProjects[id] && (
-                <span className="mt-6 text-center text-siwa-blue font-semibold">
-                  View Project
-                </span>
-              )}
-            </div>
-          </Link>
-        ))}
-      </div>
-    ) : (
-      <SkeletonCard width={"100%"} height={"288px"} />
-    )}
-  </div>
+                        {loadingProject === id && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
+                            <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-xl font-semibold text-siwa-blue flex items-center">
+                              {id}
+                              {getAnimalIcon(animalType, loadedProjects[id])}
+                            </span>
+                            {loadedProjects[id] && <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />}
+                          </div>
+                          <p className="text-lg text-siwa-blue">{name}</p>
+                        </div>
+                        <div className="mt-4">
+                          {projectErrors[id] ? (
+                            <span className="text-red-500 font-semibold flex items-center justify-center">
+                              <AiOutlineClose className="w-5 h-5 mr-2" /> Error Loading
+                            </span>
+                          ) : loadedProjects[id] ? (
+                            <span className="text-siwa-blue font-semibold flex items-center justify-center">
+                              {loadingProject === id ? (
+                                <FaSpinner className="animate-spin text-siwa-blue text-xl mr-2" />
+                              ) : (
+                                "View Project"
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-gray-500 font-semibold flex items-center justify-center">
+                              <FaSpinner className="animate-spin text-gray-500 text-xl mr-2" /> Loading...
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+              </div>
+            )}
+          </section>
 
-  <div className="w-full md:w-1/3 flex justify-center items-center">
-    <div className="relative w-80 h-80">
-      <div className="perspective-container">
-        <div className="absolute w-full h-full transform backface-hidden">
-          <img src="/perrito.webp" alt="Decorative" className="w-full h-full object-cover rounded-lg shadow-lg" />
-        </div>
-        <div className="absolute w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 rounded-lg flex items-center justify-center">
-          <p className="text-siwa-blue text-center font-semibold text-xl">Decoding the Mysteries of the Gut</p>
+          <aside className="w-full h-full  mt-6"> {/* Eliminar sticky de aquí */}
+  <motion.div
+    className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between h-full lg:h-[650px] relative lg:sticky lg:top-24"
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    style={{ maxHeight: 'calc(100vh - 10rem)' }} // Ajustamos la altura máxima para evitar que tape el contenido
+  >
+    {/* <div className="absolute -top-10 left-1/2 transform -translate-x-1/2"> 
+      <BiMapPin className="text-siwa-blue text-3xl" /> 
+    </div> */}
+    <div>
+      <h3 className="text-2xl font-semibold text-siwa-blue mb-4">
+        {selectedProject ? "Project Details" : "Quick Stats"}
+      </h3>
+      {selectedProject && (
+        <button
+          className="absolute top-4 left-4 text-siwa-blue hover:text-siwa-blue-700"
+          onClick={() => setSelectedProject(null)}
+        >
+          <BsArrowLeftShort className="w-6 h-6" /> {/* Flecha hacia atrás */}
+        </button>
+      )}
+      {selectedProject ? (
+        <ul className="space-y-4">
+          <li className="flex justify-between items-center">
+            <span className="text-lg">Title:</span>
+            <span className="font-bold text-xl text-siwa-blue">{selectedProject.name}</span>
+          </li>
+          <li className="flex justify-between items-center">
+            <span className="text-lg">Animal Type:</span>
+            <span className="font-bold text-xl text-siwa-blue">{selectedProject.animalType}</span>
+          </li>
+          <li className="flex justify-between items-center">
+  <span className="text-lg">Number of Samples:</span>
+  <span className="font-bold text-xl text-siwa-blue">{selectedProject.samples}</span>
+</li>
+<li className="flex justify-between items-center">
+  <span className="text-lg">Panels:</span>
+  <span className="font-bold text-xl text-siwa-blue">{selectedProject.panels}</span>
+</li>
+
+          <li className="flex justify-center mt-4">
+            <Link href={`/projects/${selectedProject.title}`} passHref>
+            <button
+  onClick={() => handleGoToProject(selectedProject?.title)}
+  className="bg-siwa-blue text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center"
+  disabled={loadingProject === selectedProject?.title} // Evitar múltiples clics mientras carga
+>
+  {loadingProject === selectedProject?.title ? (
+    <FaSpinner className="animate-spin text-white text-xl mr-2" />
+  ) : null}
+  Go to Project
+</button>
+
+            </Link>
+          </li>
+        </ul>
+      ) : (
+        <ul className="space-y-4">
+          {/* Mostrar estadísticas generales cuando no hay proyecto seleccionado */}
+          <li className="flex justify-between items-center">
+            <span className="text-lg">Total Projects:</span>
+            <span className="font-bold text-xl text-siwa-blue">{projects.length}</span>
+          </li>
+          <li className="flex justify-between items-center">
+            <span className="text-lg">Loaded Projects:</span>
+            <span className="font-bold text-xl text-siwa-blue">
+              {Object.values(loadedProjects).filter(Boolean).length}
+            </span>
+          </li>
+          <li className="flex justify-between items-center">
+            <span className="text-lg">Projects with Errors:</span>
+            <span className="font-bold text-xl text-red-500">
+              {Object.values(projectErrors).filter(Boolean).length}
+            </span>
+          </li>
+        </ul>
+      )}
+    </div>
+    <div className="w-full flex justify-center items-center mt-6">
+      {/* Imagen o contenido decorativo */}
+      <div className="relative w-72 h-72">
+        <div className="perspective-container">
+          <div className="absolute w-full h-full transform backface-hidden">
+            <img src="/perrito.webp" alt="Decorative" className="w-full h-full object-cover rounded-lg shadow-lg" />
+          </div>
+          <div className="absolute w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 rounded-lg flex items-center justify-center">
+            <p className="text-siwa-blue text-center font-semibold text-xl">Decoding the Mysteries of the Gut</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
+  </motion.div>
+</aside>
+
+
+   
+
+
+        </main>
+
 
       </div>
       <ToastContainer />

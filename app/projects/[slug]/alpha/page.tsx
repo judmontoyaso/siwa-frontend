@@ -374,7 +374,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), columnIndex || 1);
             setShannonData(shannonData as never[]);
             setPlotData(
-                Object.keys(groupedData).map((location) => ({
+                Object.keys(groupedData)?.sort((a, b) => a.localeCompare(b))?.map((location) => ({
                     ...groupedData[location],
                     type: "box",
                     name: location,
@@ -447,7 +447,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             const shannonData: any[] = processData(filteredData.filter((data: { name: null; }) => data.name !== "null"), otus?.data?.columns.indexOf(colorByVariable) || 1);
             setShannonData(shannonData as never[]);
             setPlotData(
-                Object.keys(groupedData).map((location) => ({
+                Object.keys(groupedData).sort((a, b) => a.localeCompare(b))?.map((location) => ({
                     ...groupedData[location],
                     type: "box",
                     name: location,
@@ -512,7 +512,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-
+    
 
     const updatePlotWidth = () => {
 
@@ -1271,7 +1271,6 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
 
 
     useEffect(() => {
-
         const yAxisRange = [0, maxYValueForLocationShannon + 1.5];
         const newLayout = {
             width: plotWidth || undefined,
@@ -1303,7 +1302,14 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
                 b: 50
             }
         };
-        setLayout(newLayout);
+
+        if (layout && Object.keys(layout).length > 0) {
+            setLayout((prevLayout) => ({
+                ...prevLayout,
+                ...newLayout,
+            }));        } else {
+            setLayout({ width: 500, height: 500 }); // Un valor por defecto para evitar undefined
+        }
 
     }, [otus, annotations, window.innerWidth, document?.getElementById('plofather')?.offsetWidth, graphHeight, graphType, theRealColorByVariable]); // 'annotations' añadido aquí para re-renderizar cuando cambian
 
@@ -1374,8 +1380,13 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
                     b: 50,
                 },
             };
-            setLayout(newLayout);
-        };
+            if (layout && Object.keys(layout).length > 0) {
+                setLayout((prevLayout) => ({
+                    ...prevLayout,
+                    ...newLayout,
+                }));        } else {
+                setLayout({ width: 500, height: 500 }); // Un valor por defecto para evitar undefined
+            }     };
     
         // Usa un `setTimeout` para asegurarte de que el gráfico ya esté montado
         setTimeout(() => {
@@ -1390,9 +1401,31 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
         };
     }, [plotWidth, graphHeight, maxYValueForLocationShannon, graphType, annotations, window.innerWidth, otus]);
     
+    const safeLayout = layout || {};  // Asegura que layout nunca sea undefined
+
+    useEffect(() => {
+        // Verificamos si el layout es undefined o null
+        if (layout === undefined || layout === null) {         
+            setLayout({});  // Actualizamos el layout con un objeto vacío
+        }
+    }, [layout]);
+    
+    
+    useEffect(() => {
+        // Verifica si el layout y los datos existen
+        if (plotData && plotData.length > 0) {
+            const categories = plotData.map(data => data.name); // Asumiendo que cada entrada de plotData tiene un 'name' que representa la categoría
+            console.log("Categorías reales del gráfico:", categories);
+        } else {
+            console.log("No se encontraron categorías en los datos.");
+        }
+    }, [plotData]);
+    
+    
 
     const MyPlotComponent = ({ shannonData, scatterColors }: { shannonData: ShannonData[]; scatterColors: ScatterColors }) => (
-        <div className="flex flex-row w-full items-center">
+       
+       <div className="flex flex-row w-full items-center">
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <>
@@ -1409,12 +1442,13 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
 
 
                         <div id="plot">
+                            
                             <Plot
                                 className="alpha"
                                 config={config}
                                 data={
                                     shannonData
-                                        .filter(entry => entry.name !== "null")
+                                        .filter(entry => entry.name !== "null").sort((a, b) => a.name.localeCompare(b.name))
                                         .map((item, index) => {
                                             const color = scatterColors[item.name] || colorOrder[0]; // Usar color de scatterColors o un color por defecto
 

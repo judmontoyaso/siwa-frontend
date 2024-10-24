@@ -61,10 +61,10 @@ const Page = ({ params }: { params: { slug: string } }) => {
       const configfile = await response.json();
       console.log("Config file:", configfile);
       setConfigFile(configfile.configFile);
-      // setSummaryText(Object.values(configfile.configFile.Dashboard.Description || {}));
-      setSummaryText(Object.values(configfile.configFile.summary.text || {}));
-      const title = configfile.configFile.Summary.Title.replace(/project: /i, '').trim();
-      // const title = configfile.configFile.Dashboard.Title.replace(/project: /i, '').trim();
+      setSummaryText(Object.values(configfile.configFile.Dashboard.Description || {}));
+      // setSummaryText(Object.values(configfile.configFile.summary.text || {}));
+      // const title = configfile.configFile.Summary.Title.replace(/project: /i, '').trim();
+      const title = configfile.configFile.Dashboard.Title.replace(/project: /i, '').trim();
       setSummaryTitle(title.charAt(0).toUpperCase() + title.slice(1));
     } catch (error) {
       console.error("Error al cargar las opciones del dropdown:", error);
@@ -73,11 +73,11 @@ const Page = ({ params }: { params: { slug: string } }) => {
 
   useEffect(() => { setIsSidebarOpen(true); }, [params.slug]);
 
-  useEffect(() => {
-    fetchToken().then((token) => {
-      fetchConfigFile(token);
-    });
-  }, [params.slug]);
+  // useEffect(() => {
+  //   fetchToken().then((token) => {
+  //     fetchConfigFile(token);
+  //   });
+  // }, [params.slug]);
 
   const PlotPreview = ({ data, layout, style }: { data: any, layout: any, style: any }) => (
     <Plot
@@ -92,8 +92,37 @@ const Page = ({ params }: { params: { slug: string } }) => {
     />
   );
 
+  const fetchModules = async (projectId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_ENDPOINT_URL}/get-modules/${projectId}`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const modules = await response.json();
+      return modules;
+    } catch (error) {
+      console.error("Error fetching modules:", error);
+      return [];
+    }
+  };
+  
+  const [availableModules, setAvailableModules] = useState<string[]>([]);
+
+useEffect(() => {
+  const fetchData = async () => {
+    const token = await fetchToken();
+    await fetchConfigFile(token);
+    const modules = await fetchModules(params.slug);
+    setAvailableModules(modules);
+  };
+
+  fetchData();
+}, [params.slug]);
+
+
   const plotsData = [
     {
+      module: "Richness",
       title: 'Richness', // Mantiene el título, sin leyendas
       data: [
         {
@@ -121,6 +150,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       link: `/projects/${params.slug}/alpha`,
     },
     {
+      module: "Community_Makeup",
       title: 'Community make-up', // Mantiene el título, sin leyendas
       data: [{
         x: [1, 2, 3, 4, 5],
@@ -135,9 +165,11 @@ const Page = ({ params }: { params: { slug: string } }) => {
       link: `/projects/${params.slug}/beta`,
     },
     {
+      module: "Taxonomic_Abundance",
       title: 'Taxonomic abundance', // Título manteniendo las barras apiladas y dos columnas
       data: [
         {
+          
           x: ['Column 1', 'Column 2'],
           y: [20, 15],
           name: 'Lactobacillus',
@@ -193,6 +225,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       link: `/projects/${params.slug}/taxonomy/composition`,
     },
     {
+      module: "Differential_Abundance",
       title: 'Differential abundance', // Mantiene el título
       data: [{
         x: [20, 14, 23],
@@ -207,6 +240,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       link: `/projects/${params.slug}/abundancedif/datasetgeneration`,
     },
     {
+      module: "Histo",
       title: 'Histopathology', // Mantiene el título
       data: [
         {
@@ -265,6 +299,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       link: `/projects/${params.slug}/histopathology`,
     },
     {
+      module: "Gene_Expression",
       title: 'Gene Expression', // Cambiado de "Personalized analyses" a "Gene Expression"
       data: [
         {
@@ -291,7 +326,7 @@ const Page = ({ params }: { params: { slug: string } }) => {
       layout: { margin: { t: 0, r: 0, l: 0, b: 0 }, showlegend: false }, // Sin leyenda
       link: `/projects/${params.slug}/genexp`,
     }
-  ];
+  ].filter(plot => availableModules.includes(plot.module));  ;
   
 const [loadingPlot, setLoadingPlot] = useState("");
 const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {

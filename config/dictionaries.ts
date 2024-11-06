@@ -2,7 +2,7 @@
 export const labelReplacements: { [key: string]: string } = {
     'alphad3level': 'AlphaD3 Level',
     'sampletime': 'Sample Time',
-    // Otros reemplazos aquí
+    'calciumlevel': 'Calcium Level',
 };
 
 export const colorPalettes = {
@@ -11,6 +11,8 @@ export const colorPalettes = {
     alphad3level: ["#8cdbf4", "#f7927f", "#f7e76d", "#ba68c8", "#81c784"],
     sampletime: ["#7f7fff", "#f48fb1", "#ff8a65", "#ffb300", "#81c784"], 
     diet: ["#8d6e63", "#9575cd", "#ffb74d", "#f06292", "#4db6ac"],       
-    age: ["#9e9e9e", "#ff7043", "#26c6da", "#ab47bc", "#8bc34a"],      
+    age: ["#9e9e9e", "#ff7043", "#26c6da", "#ab47bc", "#8bc34a"], 
+    calciumlevel: ["#035060", "#f99b35", "#4e8e74", "#ffb74d", "#4caf50"],
+    
 };
 

@@ -7181,3 +7181,9 @@ input:checked + .slider:before {
 
   padding-top: 0;
 }
+
+.fixed-tooltip {
+  max-width: 350px; /* Ajusta el tamaño máximo que prefieras */
+  width: 350px; /* Ajusta el tamaño fijo del tooltip */
+  white-space: normal; /* Permite que el texto se ajuste dentro del ancho */
+}

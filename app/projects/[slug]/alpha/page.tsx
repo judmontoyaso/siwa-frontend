@@ -815,7 +815,8 @@ const dropdownOptionsColorby = [
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
-                    <PTooltip target="#sampleLocationTooltip" />
+                    <PTooltip target="#sampleLocationTooltip"   style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                    />
                   </span>
                 </h3>
                 <Dropdown
@@ -829,20 +830,26 @@ const dropdownOptionsColorby = [
               </div>
       
               <div className="flex flex-col items-start mt-2 m-2">
-                <div className="flex items-center mb-2">
-                  <h3 className="text-base font-medium text-gray-700 dark:text-white">
-                    Select a variable to group:
-                  </h3>
-                  <span className="ml-2">
-                    <i
-                      className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="This changes the way in which the samples are grouped together in the analysis: To use, please select a sample location above, then an available grouping variable."
-                      data-pr-position="top"
-                      id="groupByTooltip"
-                    />
-                    <PTooltip target="#groupByTooltip" />
-                  </span>
-                </div>
+              <div className="flex flex-col items-start mt-2 m-2">
+  <div className="flex items-center mb-2">
+    <h3 className="text-base font-medium text-gray-700 dark:text-white">
+      Select a variable to group:
+    </h3>
+    <span className="ml-2">
+      <i
+        className="pi pi-info-circle text-siwa-blue"
+        data-pr-tooltip="This changes the way in which the samples are grouped together in the analysis: To use, please select a sample location above, then an available grouping variable."
+        data-pr-position="top"
+        id="groupByTooltip"
+      />
+<PTooltip
+  target="#groupByTooltip"
+  style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+/>
+    </span>
+  </div>
+</div>
+
                 <Dropdown
                   value={selectedLocations.length > 1 ? "samplelocation" : theRealColorByVariable}
                   options={dropdownOptionsColorby}
@@ -865,7 +872,8 @@ const dropdownOptionsColorby = [
           className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
           id="filteringTip"
         />
-        <PTooltip target="#filteringTip" position="top">
+        <PTooltip target="#filteringTip" position="top"   style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+        >
         This changes the samples that are included in the analysis: You can focus on specific subsets of samples by selecting a variable and then the groups within that variable that you wish to include in the analysis.  You can only filter by one variable at a time.     </PTooltip>
       </h3>
     </div>
@@ -1119,136 +1127,165 @@ const dropdownOptionsColorby = [
     
 
 // Función para buscar el texto basado en la estructura anidada
-const findTextInRichness = (config: any, location: string, column: string): string | null => {
+const findTextInRichness = (config: { Richness: { Analysis: any; }; }, location: string, column: string) => {
+    console.log("Searching in Richness:", { location, column });
     const analysis = config?.Richness?.Analysis;
     if (!analysis) return null;
-
-    // Buscar en el objeto por la ubicación (SampleLocation_<location>) y luego la columna
+  
     const locationKey = `SampleLocation_${location}`;
-    
-    // Verificar si existe el padre (SampleLocation_<location>) en el análisis
     const locationData = analysis[locationKey];
+    console.log("Location data:", locationData);
+  
     if (locationData && typeof locationData[column] === "string") {
-        return locationData[column]; // Retornar el valor asociado a la columna
-    }
-
-    return null; // Retorna null si no encuentra el valor
-};
-
-
-// Función para obtener propiedades anidadas de forma insensible a mayúsculas/minúsculas
-const getNestedProperty = (obj: any, keys: any[]) => {
-    let currentObj = obj;
-  
-    for (const key of keys) {
-      if (currentObj && typeof currentObj === 'object') {
-        const foundKey = Object.keys(currentObj).find(k => k.toLowerCase() === key.toLowerCase());
-        if (foundKey) {
-          currentObj = currentObj[foundKey];
-        } else {
-          return null;
-        }
-      } else {
-        return null;
-      }
-    }
-  
-    return currentObj;
-  };
-
-  
-  // Función para buscar el texto basado en la estructura anidada y claves insensibles a mayúsculas/minúsculas
-const findTextInRichnessNested = (config: { Richness: { Analysis: any; }; }, location: string, formedKey: string, column: string) => {
-    const analysis = config?.Richness?.Analysis;
-    if (!analysis) return null;
-  
-    const keys = [
-      `SampleLocation_${location}`,
-      formedKey,
-      column
-    ];
-    const value = getNestedProperty(analysis, keys);
-  
-    if (typeof value === 'string') {
-      return value;
+      console.log("Text found:", locationData[column]);
+      return locationData[column];
     }
   
     return null;
   };
-
+// Función para buscar el texto basado en la estructura anidada y claves insensibles a mayúsculas/minúsculas
+// Función para buscar el texto basado en la estructura anidada y claves insensibles a mayúsculas/minúsculas
+// Función para buscar el texto basado en la estructura anidada y claves insensibles a mayúsculas/minúsculas
+const findTextInRichnessNested = (config: { Richness: { Analysis: any; }; }, location: string, formedKey: string, column: string) => {
+    const analysis = config?.Richness?.Analysis;
+    if (!analysis) {
+      console.log("Analysis not found in config.");
+      return null;
+    }
   
-
-  useEffect(() => {
-    if (selectedLocations.length === 1 && theRealColorByVariable) {
-      const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
-      const location = selectedLocations[0];
+    const locationKey = `SampleLocation_${location}`;
+    console.log("Searching in locationKey:", locationKey);
   
-    // Verificar si los selectedValues son iguales a los valueOptions
-// Verificar si los selectedValues son iguales a los valueOptions
-const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
-                        console.log(initialValueOptions)
-                        console.log(selectedColumn)
-                        console.log(theRealColorByVariable) 
-
-                    console.log(availableLocations)
-      console.log(selectedValues)
-      console.log(valueOptions)
-    console.log(allValuesSelected)
-    
-      if (allValuesSelected) {
-        console.log("The real color by", theRealColorByVariable, selectedColumn)
-        // Caso existente cuando todos los valores están seleccionados
-        const textForConfig = findTextInRichness(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
-        if (textForConfig) {
-          setTextForConfigKey(textForConfig);
+    const locationData = getNestedProperty(analysis, [locationKey]);
+    if (!locationData) {
+      console.log(`Location data for key "${locationKey}" not found.`);
+      return null;
+    }
+  
+    console.log("Location data found:", locationData);
+    console.log("Attempting to find formedKey:", formedKey);
+  
+    // Primero intenta obtener el valor directamente en `formedKey`
+    let value = getNestedProperty(locationData, [formedKey]);
+    console.log("Value found for formedKey:", value);
+  
+    // Si no se encuentra, intenta con el `normalizedFormedKey`
+    if (!value) {
+      // Generar una clave alternativa con los valores ordenados
+      const normalizedFormedKey = normalizeFormedKey(formedKey);
+      console.log("Attempting to find normalized formedKey:", normalizedFormedKey);
+  
+      value = getNestedProperty(locationData, [normalizedFormedKey]);
+      console.log("Value found for normalized formedKey:", value);
+    }
+  
+    // Si `formedKey` o `normalizedFormedKey` contienen un objeto, verifica si tienen el campo `column`
+    if (value && typeof value === 'object') {
+      console.log(`formedKey "${formedKey}" contains an object, checking for column "${column}"`);
+      value = value[column] || null; // Toma el campo `column` si existe
+      console.log("Value for column in formedKey object:", value);
+    }
+  
+    if (typeof value === 'string') {
+      console.log("Text found in nested:", value);
+      return value;
+    }
+  
+    console.log("No matching text found for the given keys.");
+    return null;
+  };
+  
+  // Función para normalizar `formedKey` ordenando los valores después del prefijo
+const normalizeFormedKey = (formedKey: string) => {
+    const [prefix, values] = formedKey.split('_');
+    const sortedValues = values.split('+').sort().join('+');
+    return `${prefix}_${sortedValues}`;
+  };
+  
+  // Función para obtener propiedades anidadas de forma insensible a mayúsculas/minúsculas
+  const getNestedProperty = (obj: any, keys: any[]) => {
+    let currentObj = obj;
+    console.log("Starting getNestedProperty with keys:", keys);
+  
+    for (const key of keys) {
+      if (currentObj && typeof currentObj === 'object') {
+        console.log("Current object for key:", key, currentObj);
+        const foundKey = Object.keys(currentObj).find(k => k.toLowerCase() === key.toLowerCase());
+        if (foundKey) {
+          console.log(`Key "${foundKey}" found for "${key}", proceeding to next level.`);
+          currentObj = currentObj[foundKey];
         } else {
-          setTextForConfigKey("");
-        }
-      } else if (selectedColumn !== 'SampleLocation' && selectedValues.size > 0) {
-        // Nuevo caso cuando hay filtros aplicados y selectedColumn no es 'SampleLocation'
-  
-       // Formar la clave con selectedColumn y los valores seleccionados sin espacios
-const valuesArray = Array.from(selectedValues)
-.map(value => String(value).replace(/\s+/g, '')) // Remover espacios dentro de los valores
-.sort(); // Ordenar para consistencia
-
-const formedKey = `${selectedColumn}_${valuesArray.join('+')}`;
-
-        // Buscar el texto en la estructura anidada
-        const textForConfig = findTextInRichnessNested(configFile, location, formedKey,(theRealColorByVariable === selectedColumn ? "Self" : formattedColumn) );
-        if (textForConfig) {
-          setTextForConfigKey(textForConfig);
-        } else {
-          setTextForConfigKey("");
+          console.log(`Key "${key}" not found in current level.`);
+          return null;
         }
       } else {
-        setTextForConfigKey("");
+        console.log("Current object is not valid for further key lookup:", currentObj);
+        return null;
       }
-    } else if (selectedLocations.length > 1 && theRealColorByVariable) {
+    }
+  
+    console.log("Final value found in getNestedProperty:", currentObj);
+    return currentObj;
+  };
+  
+  
+
+  
+  
+  
+  useEffect(() => {
+    const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
+    console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
+    console.log("selected locations:", selectedLocations);
+    if (location && theRealColorByVariable) {
       const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+      console.log("Formatted column and location:", { formattedColumn, location });
   
-      // Verificar si los selectedValues son iguales a los valueOptions
-      const allValuesSelected = valueOptions.every(option => selectedValues.has(option));
-  
+      const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
+
       if (allValuesSelected) {
-        // Cuando hay más de una location seleccionada, se usa el nodo `SampleLocation_All`
-        const textForConfig = findTextInRichness(configFile, 'All', (theRealColorByVariable === selectedColumn ? "Self" : formattedColumn));
-        if (textForConfig) {
-          setTextForConfigKey(textForConfig);
-        } else {
-          setTextForConfigKey("");
+        const textForConfig = findTextInRichness(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
+        console.log("Text for all values selected:", textForConfig);
+        setTextForConfigKey(textForConfig || "");
+      } else if (selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
+        // Limpia cada valor en valuesArray para eliminar caracteres especiales
+        const valuesArray = Array.from(selectedValues)
+          .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
+  
+        const formedKey = `${selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1)}_${valuesArray.join('+')}`;
+        const normalizedFormedKey = `${selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1)}_${valuesArray.sort().join('+')}`;
+  
+        console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+  
+        // Intentar buscar con formedKey primero y luego con normalizedFormedKey
+        let textForConfig = findTextInRichnessNested(
+          configFile,
+          location,
+          formedKey,
+          theRealColorByVariable === selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1) ? "Self" : formattedColumn
+        );
+        if (!textForConfig) {
+          textForConfig = findTextInRichnessNested(
+            configFile,
+            location,
+            normalizedFormedKey,
+            theRealColorByVariable === selectedColumn.charAt(0).toUpperCase() + selectedColumn.slice(1) ? "Self" : formattedColumn
+          );
         }
+  
+        console.log("Text for specific filter:", textForConfig);
+        setTextForConfigKey(textForConfig || "");
       } else {
         setTextForConfigKey("");
       }
     }
   }, [selectedLocations, selectedColumn, theRealColorByVariable, selectedValues, valueOptions, configFile]);
   
-
-// Estado para almacenar el texto correspondiente a la clave generada
-const [textForConfigKey, setTextForConfigKey] = useState("");
-
-
+  // Estado para almacenar el texto correspondiente a la clave generada  
+  
+  // Estado para almacenar el texto correspondiente a la clave generada
+  const [textForConfigKey, setTextForConfigKey] = useState("");
+  
 
     useEffect(() => {
         // 'fetchAnnova' debe ser una función que retorne una promesa y 'calculateAnnotations' debe ser capaz de calcular las anotaciones basadas en los datos obtenidos.
@@ -1477,8 +1514,7 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
                                 <div className="flex flex-row  p-3 mx-3 mb-5">
                                     <div className="mr-1 font-bold">* </div>
                                     <div className="text-gray text-sm flex text-justify">
-                                        Each letter indicates whether there are statistically significant differences between each group.
-                                    </div>
+                                    Groups with a different letter are significantly different from one another.                                    </div>
                                 </div>
                             )}
                         </div>
@@ -1513,13 +1549,13 @@ const [textForConfigKey, setTextForConfigKey] = useState("");
                                     </div>    <div className="px-6 py-8">
                                         <div className={`prose single-column`}>
                                             <p className="text-gray-700 text-justify text-xl">
-                                            Microbiome diversity can be assessed through multiple ecological indices One of these is Alpha diversity, which measures the richness, or number of species within a sample.  Our current understanding of GI microbiomes suggests that higher alpha diversity is better, with low diversity being associated with more instances of disease or dysbiosis.                </p>
+                                            Microbiome diversity can be assessed through multiple ecological indices. One of these is Alpha diversity, which measures the richness, or number of species within a sample.  Our current understanding of GI microbiomes suggests that higher alpha diversity is better, with low diversity being associated with more instances of disease or dysbiosis             </p>
                                         </div>
 
                                     </div>
                                     
                                     <div className="flex">
-                                        <GraphicCard filter={filter} legend={""} title={title} text = {"The Shannon index is a metric used to quantify both the complexity and evenness of the community."}>
+                                        <GraphicCard filter={filter} legend={""} title={title} text = {"The Shannon index is a metric used to quantify both the complexity and evenness of the community.  For this index, a higher value indicates that the community is more complex.  This value ranges depending on the subject’s species, age, and sample type."}>
                                             {shannonData.length > 0 ? (
                                                 <> <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
                                                     <div className="w-full flex flex-row ">

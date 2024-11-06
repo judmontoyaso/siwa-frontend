@@ -210,6 +210,8 @@ useEffect(() => {
     }
   };
 
+  
+
   const handleLocationChange = (event: any) => {
     console.log("Location Change Event:", event);
     console.log("Current colorBy:", colorBy);
@@ -646,10 +648,12 @@ const fetchProjectIdsFilter = async (result: any) => {
 
 
     const dropdownOptionsColorby = [
+      console.log("columnoptions",columnOptions),
+      console.log("colorbyoptions",colorByOptions),
       { label: 'Sample Location', value: 'samplelocation' },
       {label:'Treatment', value:'treatment'}, 
       ...colorByOptions
-        ?.filter(option => columnOptions?.includes(option)) 
+        ?.filter(option => String(columnOptions)?.toLowerCase().includes(option)) 
         .map(option => ({
             label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
             value: option

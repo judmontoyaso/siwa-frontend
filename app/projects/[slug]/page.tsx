@@ -48,28 +48,38 @@ const Page = ({ params }: { params: { slug: string } }) => {
     }
   };
 
-  const fetchConfigFile = async (token: any) => {
+  const fetchConfigFile = async (token:any) => {
     try {
       const response = await fetch(`/api/configfile/${params.slug}`, {
         headers: {
           Authorization: `Bearer ${token}`, // Enviar el token
         },
       });
+      
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+      
       const configfile = await response.json();
       console.log("Config file:", configfile);
       setConfigFile(configfile.configFile);
-      setSummaryText(Object.values(configfile.configFile.Dashboard.Description || {}));
-      // setSummaryText(Object.values(configfile.configFile.summary.text || {}));
-      // const title = configfile.configFile.Summary.Title.replace(/project: /i, '').trim();
-      const title = configfile.configFile.Dashboard.Title.replace(/project: /i, '').trim();
+  
+      // Lógica para el título
+      let title = configfile.configFile.Dashboard?.Title || configfile.configFile.Summary?.Title || "Título no disponible";
+      title = title.replace(/project: /i, '').trim();
       setSummaryTitle(title.charAt(0).toUpperCase() + title.slice(1));
+      console.log("Title:", title);
+      // Lógica para la descripción
+      let description = configfile.configFile.Dashboard?.Description || 
+                        `${configfile.configFile.Summary?.Goals || ''} ${configfile.configFile.Summary?.Design || ''}`.trim();
+      description = description ? description : "Descripción no disponible";
+      setSummaryText(description);
+      
     } catch (error) {
       console.error("Error al cargar las opciones del dropdown:", error);
     }
   };
+  
 
   useEffect(() => { setIsSidebarOpen(true); }, [params.slug]);
 
@@ -353,46 +363,52 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
         <div className="w-full py-8 flex justify-center">
           <div className="bg-white w-11/12 rounded-lg overflow-hidden pb-4">
             <div className="w-full flex justify-center text-center">
-            {configFile?.summary?.image ? (
-              // {configFile?.Dashboard?.Image ? (
-                <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-5xl text-siwa-blue leading-[70px]">
-                  {summaryTitle}
-                </h1>
-              ) : (
-                <h1 className="h-3.5 bg-gray-200 rounded-full w-80 mb-4"></h1>
-              )}
+            {summaryTitle ? (
+  <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-5xl text-siwa-blue leading-[70px]">
+    {summaryTitle}
+  </h1>
+) : (
+  <h1 className="h-3.5 bg-gray-200 rounded-full w-80 mb-4"></h1>
+)}
             </div>
 
             <div className="flex xl:flex-wrap flex-nowrap xl:flex-row flex-col-reverse">
               {/* Content Container */}
               <div className="px-6 xl:w-1/2 w-full flex flex-col justify-between">
-                {configFile?.summary?.image ? (
-                  <div className="prose lg:prose-lg max-w-none text-start w-full">
-                    <Card className="p-0 border-none shadow-none">
-                      <div className="flex items-center py-[12px] px-4 bg-siwa-blue mb-8">
-                        <h2 className="text-4xl font-medium  text-white mb-0">Know more about {params.slug}</h2>
-                      </div>
-                      {summaryText.map((text, index) => (
-                        <p key={index} className="text-gray-700 text-2xl font-light mb-4 p-2">{text}</p>
-                      ))}
-                      <div className="w-full flex justify-center items-center xl:justify-end p-4">
-                      <Image src={configFile?.Dashboard?.Image || imageload.src} alt="Summary Image" className="w-full" height="300" preview={!configFile?.Dashboard?.Image} />
+  {summaryText ? (
+    <div className="prose lg:prose-lg max-w-none text-start w-full">
+      <Card className="p-0 border-none shadow-none">
+        <div className="flex items-center py-[12px] px-4 bg-siwa-blue mb-8">
+          <h2 className="text-4xl font-medium text-white mb-0">
+            Know more about {params.slug}
+          </h2>
+        </div>
+        <p className="text-gray-700 text-2xl font-light mb-4 p-2">
+          {summaryText}
+        </p>
+        <div className="w-full flex justify-center items-center xl:justify-end p-4">
+          <Image
+            src={configFile?.Dashboard?.Image || imageload.src}
+            alt="Summary Image"
+            className="w-full"
+            height="300"
+            preview={!configFile?.Dashboard?.Image}
+          />
+        </div>
+      </Card>
+    </div>
+  ) : (
+    <div className="w-full">
+      <div className="h-2.5 bg-gray-200 rounded-full w-48 mb-4"></div>
+      <div className="h-2 bg-gray-200 rounded-full max-w-[480px] mb-2.5"></div>
+      <div className="h-2 bg-gray-200 rounded-full mb-2.5"></div>
+      <div className="h-2 bg-gray-200 rounded-full max-w-[440px] mb-2.5"></div>
+      <div className="h-2 bg-gray-200 rounded-full max-w-[460px] mb-2.5"></div>
+      <div className="h-2 bg-gray-200 rounded-full max-w-[360px]"></div>
+    </div>
+  )}
+</div>
 
-                        <Image src={configFile?.summary?.image || imageload.src} alt="Summary Image" className="w-full" height="300" preview={!configFile?.summary?.image} />
-                      </div>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="w-full">
-                    <div className="h-2.5 bg-gray-200 rounded-full w-48 mb-4"></div>
-                    <div className="h-2 bg-gray-200 rounded-full max-w-[480px] mb-2.5"></div>
-                    <div className="h-2 bg-gray-200 rounded-full mb-2.5"></div>
-                    <div className="h-2 bg-gray-200 rounded-full max-w-[440px] mb-2.5"></div>
-                    <div className="h-2 bg-gray-200 rounded-full max-w-[460px] mb-2.5"></div>
-                    <div className="h-2 bg-gray-200 rounded-full max-w-[360px]"></div>
-                  </div>
-                )}
-              </div>
 
               {/* Plots Container */}
 

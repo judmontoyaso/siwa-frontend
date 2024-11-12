@@ -59,7 +59,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const newScatterColors: { [key: string]: string } = {};
     const [configFile, setconfigFile] = useState({} as any);
     const [initialValueOptions, setInitialValueOptions] = useState<Set<string>>(new Set()); // Copia estática de valueOptions
-
+    const [isChartLoaded, setIsChartLoaded] = useState(false);
     const [columnOptions, setColumnOptions] = useState([]);
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
     const [valueOptions, setValueOptions] = useState<any[]>([]);
@@ -105,7 +105,6 @@ export default function Page({ params }: { params: { slug: string } }) {
             setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
         }
     }, [theRealColorByVariable, selectedLocations]);
-
 
 
 
@@ -179,7 +178,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             setColumnOptions(result.data.columns);
             setValueOptions(result.data.data);
 
-
+            setIsChartLoaded(false);
             setOtus(result);
             setAnnova(result.significance)
             setIsLoaded(true);
@@ -227,7 +226,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             // }
             const result = await response.json();
 
-
+            setIsChartLoaded(false);
             setOtus(result);
             setAnnova(result.significance)
             setIsLoaded(true);
@@ -251,58 +250,74 @@ export default function Page({ params }: { params: { slug: string } }) {
     }, [selectedLocations, selectedColumn]);
     
     
+    // useEffect para actualizar selectedValues si cambia theRealColorByVariable o selectedLocations
+// useEffect para actualizar selectedValues si cambia theRealColorByVariable o selectedLocations
+// useEffect(() => {
+//     const setAndListAreEqual = (set: Set<string>, list: string[]) => {
+//         if (set.size !== list.length) return false;
+//         for (const item of list) {
+//             if (!set.has(item)) return false;
+//         }
+//         return true;
+//     };
 
+//     if (theRealColorByVariable !== 'samplelocation' && setAndListAreEqual(selectedValues, selectedLocations)) {
+//         const columnIndex = otus?.data?.columns.indexOf(theRealColorByVariable);
+//         const newValues = new Set(
+//             otus?.data?.data.map((item: { [x: string]: any }) => item[columnIndex])
+//         );
 
+//         setSelectedValues(newValues);
+//     }
+// }, [theRealColorByVariable, selectedLocations, otus?.data]);
 
-    const fetchAnnova = async (token: any) => {
+// // useEffect para enviar los datos actualizados con fetchAnnova después de que selectedValues cambie
+// useEffect(() => {
+//     const fetchUpdatedAnnova = async () => {
+//         if (selectedValues.size > 0 && accessToken) {
+//             await fetchAnnova(accessToken);
+//         }
+//     };
+//     fetchUpdatedAnnova();
+// }, [selectedValues, accessToken]);
 
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/processanova/${params.slug}`, {
+const fetchAnnova = async (token: any) => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/project/processanova/${params.slug}`,
+            {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    "samplelocation": selectedLocations,
-                    "column": theRealColorByVariable,
-                    "columnValues": selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
-                    "nickname": user?.nickname,
+                    samplelocation: selectedLocations,
+                    column: theRealColorByVariable,
+                    columnValues: selectedColumn === 'samplelocation' ? selectedLocations : [...selectedValues],
+                    nickname: user?.nickname,
+                    colannova: theRealColorByVariable
                 }),
-
             }
-            );
-            // if (response.status === 500 && accessToken !== undefined) {
-            //     toast.warn('The data needs to be loaded again!', {
-            //         position: "top-center",
-            //         autoClose: 4000,
-            //         hideProgressBar: false,
-            //         closeOnClick: true,
-            //         pauseOnHover: true,
-            //         draggable: true,
-            //         progress: undefined,
-            //         theme: "light",
-            //         transition: Bounce,
-            //     });
-            //     setTimeout(() => { window.location.href = "/"; }, 5000);
-            //     throw new Error("Respuesta no válida desde el servidor");
-            // }
-            const result = await response.json();
-            if (!otus && otus !== undefined) {
-                setOtus((prevOtus: any) => ({
-                    ...prevOtus,
-                    significance: result.significance
-                }));
-            }
+        );
 
-            setAnnova(result.significance)
-            setIsLoaded(true);
-            return result;
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
+        const result = await response.json();
+        if (otus) {
+            setOtus((prevOtus: any) => ({
+                ...prevOtus,
+                significance: result.significance,
+            }));
         }
-    };
+        setIsChartLoaded(false);
+
+        setAnnova(result.significance);
+        setIsLoaded(true);
+        return result;
+    } catch (error) {
+        console.error("Error al obtener projectIds:", error);
+    }
+};
+
 
 
     useEffect(() => {
@@ -798,6 +813,12 @@ const dropdownOptionsColorby = [
 ];
 
 
+// useEffect(() => {
+//     if (colorByOptions.length > 0) {
+//         setSelectedColumn(colorByOptions[0]); // Configura `selectedColumn` con el primer valor de `columnOptions`
+//     }
+//     console.log(selectedColumn)
+// }, [colorByOptions]);
     
 
 
@@ -1116,6 +1137,7 @@ const dropdownOptionsColorby = [
     useEffect(() => {
         const newAnnotations = calculateAnnotations(); // Pasamos los datos directamente a la función.
         setAnnotations(newAnnotations as never[]);
+        setIsChartLoaded(true);
     }, [annova, graphType, theRealColorByVariable]);
 
 
@@ -1298,7 +1320,7 @@ const normalizeFormedKey = (formedKey: string) => {
                 console.error("Failed to fetch Annova data:", error);
             }
         };
-
+        setIsChartLoaded(false);
         // Invocamos la función asincrónica dentro de useEffect.
         fetchAndCalculateAnnotations();
     }, [theRealColorByVariable, accessToken, selectedLocations]);
@@ -1479,7 +1501,7 @@ const normalizeFormedKey = (formedKey: string) => {
 
 
                         <div id="plot">
-                            
+                        {isChartLoaded ? (
                             <Plot
                                 className="alpha"
                                 config={config}
@@ -1508,7 +1530,10 @@ const normalizeFormedKey = (formedKey: string) => {
                                 divId="plot"
                                 layout={layout}
                             />
-
+                        ):(
+                            <div className="absolute inset-0 flex items-center justify-center">
+                            <Spinner  />
+                        </div>)}
 
                             {shouldShowText && (
                                 <div className="flex flex-row  p-3 mx-3 mb-5">

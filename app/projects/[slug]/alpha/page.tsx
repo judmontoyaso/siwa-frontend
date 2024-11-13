@@ -130,7 +130,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         // Captura el texto de configuración
         if (configTextRef.current) {
             const configCanvas = await html2canvas(configTextRef.current, { scale: 1.5 });
-            const imgWidth = pdf.internal.pageSize.getWidth() - 40;
+            const imgWidth = pdf.internal.pageSize.getWidth() - 60;
             const aspectRatio = configCanvas.width / configCanvas.height;
             const imgHeight = imgWidth / aspectRatio;
             const configData = configCanvas.toDataURL('image/png');
@@ -1053,16 +1053,21 @@ const fixedAccordionTabChange = () => {
 
     useEffect(() => {
         if (Location[0] && Location.length > 0) {
+            const formattedColorByVariable = labelReplacements[String(theRealColorByVariable).toLowerCase()]
+                ? labelReplacements[String(theRealColorByVariable).toLowerCase()]
+                : String(theRealColorByVariable).charAt(0).toUpperCase() + String(theRealColorByVariable).replace('_', ' ').slice(1);
+    
             const newTitle = `Shannon Diversity ${Location.length === 3
-                    ? "in All Locations"
-                    : "in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) +
-                    (theRealColorByVariable !== "samplelocation"
-                        ? (" by " + theRealColorByVariable.charAt(0).toUpperCase() + (theRealColorByVariable as string).replace('_', ' ').slice(1))
-                        : "")
-                }`;
+                ? "in All Locations"
+                : "in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) +
+                (theRealColorByVariable !== "samplelocation"
+                    ? (" by " + formattedColorByVariable)
+                    : "")
+            }`;
             setTitle(newTitle);
         }
     }, [Location, theRealColorByVariable]);
+    
 
 
 

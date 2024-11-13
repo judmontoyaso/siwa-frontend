@@ -1,42 +1,48 @@
 import { UserProvider } from '@auth0/nextjs-auth0/client';
-import { Roboto } from 'next/font/google'
+import { Roboto } from 'next/font/google';
 import { AuthProvider } from './components/authContext';
-import { PrimeReactProvider } from "primereact/api";
+import { PrimeReactProvider } from 'primereact/api';
 import { PopupProvider } from './components/context/popupContext';
-// Usa un tema moderno de PrimeReact en lugar de primereact.min.css
-import './globals.css'; // Tus estilos de Tailwind y globales
-
-// theme
-
+import PrimeReact from 'primereact/api';
+import './globals.css'; // Tus estilos de Tailwind y otros estilos globales
 const roboto = Roboto({
   weight: '300',
   subsets: ['latin'],
   display: 'swap',
-})
+});
+
 export const metadata = {
   title: 'Siwa',
-  description: 'Siwa',
-}
+  description: 'Siwa Platform',
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+// Configurar ripple en PrimeReact
+PrimeReact.ripple = true;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-<link id="theme-link" rel="stylesheet" href="/themes/lara-light-blue/theme.css"/>
-</head>
-              <body className={`h-screen ${roboto.className}`}>
+        {/* Tema moderno de PrimeReact */}
+        <link
+          id="theme-link"
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/primereact/resources/themes/lara-light-indigo/theme.css"
+        />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primereact/resources/primereact.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+      </head>
+      <body className={`h-screen ${roboto.className}`}>
         <UserProvider>
-            <PrimeReactProvider>
-          <AuthProvider>
+          <PrimeReactProvider>
+            <AuthProvider>
+              <PopupProvider>
                 {children}
-          </AuthProvider>
-              </PrimeReactProvider>
+              </PopupProvider>
+            </AuthProvider>
+          </PrimeReactProvider>
         </UserProvider>
-                </body>   
+      </body>
     </html>
-  )
+  );
 }

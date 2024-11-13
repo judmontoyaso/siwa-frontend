@@ -36,15 +36,15 @@ const Navbar: React.FC<NavbarProps> = ({ slug, breadcrumbs }) => {
   return (
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">
       {/* Breadcrumbs con borde, sin fondo */}
-        <div className={`${breadcrumbs ? "border" : ""} flex-1 border-gray-300 rounded-md py-1 px-4 text-sm text-gray-600`}>
+        <div className={`${breadcrumbs ? "" : ""} flex- border-none  py-1 px-4 text-lg text-gray-600`}>
           {breadcrumbs}
         </div>
 
       <div className="flex items-center space-x-4">
         {/* Selector de Proyectos */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <ProjectSelector slug={slug} user={user} />
-        </div>
+        </div> */}
 
         {/* Avatar y Menú de Usuario */}
         <div className="relative">

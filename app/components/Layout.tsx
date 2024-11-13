@@ -25,7 +25,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:an
           <PopupProvider>
     <Suspense fallback={<p>Loading feed...</p>}><div className="flex flex-row h-full">
       {isLoading ? <><Spinner /></> : <>   <Sidebar slug={slug} filter={filter} />
-        <div className={`flex flex-col h-full ${isSidebarOpen ? "w-full" : "w-full"}`}>
+        <div className={`flex flex-col h-full ml-60  ${isSidebarOpen ? "w-full" : "w-full"}`}>
           <Navbar slug={slug} breadcrumbs={breadcrumbs}/>
 
 

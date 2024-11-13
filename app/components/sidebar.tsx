@@ -29,7 +29,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any, }) {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
   const [isProjectOpen, setIsProjectOpen] = useState(true);
   const [isMicrobiomeOpen, setIsMicrobiomeOpen] = useState(true);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const router = usePathname();
 
   useEffect(() => { setVisible(isSidebarOpen) }, [isSidebarOpen]);
@@ -39,7 +39,6 @@ export default function Home({ slug, filter }: { slug: string, filter: any, }) {
   if (isLoading) {
     return (
       <div className="flex items-center h-full justify-center">
-        {/* Aquí puedes poner un componente de carga o un simple texto */}
         <div><Spinner /></div>
       </div>
     );
@@ -50,7 +49,8 @@ export default function Home({ slug, filter }: { slug: string, filter: any, }) {
     <>
 
       <div className="card flex justify-content-center">
-        <Sidebar className="bg-siwa-blue" visible={visible} onHide={() => setVisible(false)} header={<span className="">
+        <Sidebar className="bg-siwa-blue fixed left-0 top-0 h-full shadow-lg z-10" modal={false} // Desactiva el fondo modal para que no bloquee el contenido
+        dismissable={false}  visible={visible} onHide={() => setVisible(true)} header={<span className="">
           <Image src={LogoSIWA}
             alt={""}
             width={150}
@@ -61,7 +61,7 @@ export default function Home({ slug, filter }: { slug: string, filter: any, }) {
 
 
           <ul className="space-y-2 font-medium">
-            <li>
+            <li> 
               <Link aria-disabled={true} href={`/`} className="block px-1 ">
 
                 <div className={`flex hover:bg-navy-500 hover:text-white  flex-row cursor-pointer my-4 p-4 ${router === "/" ? "bg-navy-500 text-white" : "bg-navy-800 text-white"}   rounded-lg shadow-md dark:bg-gray-800 text-center items-center w-full justify-center`} >

@@ -36,6 +36,10 @@ import { motion } from "framer-motion";
 import { FaQuestionCircle } from "react-icons/fa";
 import HelpText from "@/app/components/helpTextDropdown";
 import { labelReplacements, colorPalettes } from '@/config/dictionaries';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Toast as PToast} from 'primereact/toast';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 export default function Page({ params }: { params: { slug: string } }) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -82,23 +86,76 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [actualcolumn, setActualcolumn] = useState<string>('samplelocation');
     const [annova, setAnnova] = useState<any>();
     const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
-
+    const titleRef = useRef(null);
+    const plotRef = useRef(null);
+    const configTextRef = useRef(null);
 
     const router = useRouter();
 
     const items = [
-        { label: 'Projects', template: (item: any, option: any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link> },
         { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) => <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
         { label: 'Richness', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) => <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
     ];
 
     const home = { icon: 'pi pi-home', template: (item: any, option: any) => <Link href={`/`}><i className={home.icon}></i></Link> };
-
-
+    const [isLoadingPDF, setIsLoadingPDF] = useState(false);
+    const toast = useRef<PToast>(null);
     const [colorOrder, setColorOrder] = useState<string[]>([]);
-
+    const generatePDF = async () => {
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [210, 297], // tamaño A4 en mm
+        });
+    
+        pdf.setFontSize(18);
+        pdf.text(String(title), 20, 30);
+    
+        let currentYPosition = 50; // Posición Y inicial para la gráfica
+    
+        // Captura la gráfica
+        if (plotRef.current) {
+            const plotCanvas = await html2canvas(plotRef.current, { scale: 1.5 });
+            const imgWidth = pdf.internal.pageSize.getWidth() - 40;
+            const aspectRatio = plotCanvas.width / plotCanvas.height;
+            const imgHeight = imgWidth / aspectRatio;
+            const plotData = plotCanvas.toDataURL('image/png');
+            
+            pdf.addImage(plotData, 'JPEG', 20, currentYPosition, imgWidth, imgHeight, undefined, 'FAST');
+            
+            // Actualiza la posición Y para colocar el texto justo debajo de la gráfica
+            currentYPosition += imgHeight + 10;
+        }
+    
+        // Captura el texto de configuración
+        if (configTextRef.current) {
+            const configCanvas = await html2canvas(configTextRef.current, { scale: 1.5 });
+            const imgWidth = pdf.internal.pageSize.getWidth() - 40;
+            const aspectRatio = configCanvas.width / configCanvas.height;
+            const imgHeight = imgWidth / aspectRatio;
+            const configData = configCanvas.toDataURL('image/png');
+    
+            pdf.addImage(configData, 'JPEG', 20, currentYPosition, imgWidth, imgHeight, undefined, 'FAST');
+        }
+       
+        pdf.save('selected_elements.pdf');
 
     
+    };
+    
+    const downloadPDF = async () => {
+        setIsLoadingPDF(true); // Muestra el indicador de carga
+        await generatePDF(); 
+        setIsLoadingPDF(false); // Oculta el indicador de carga una vez finalizada
+
+            toast.current?.show({
+                severity: 'success', 
+                summary: 'PDF Downloaded', 
+                detail: 'The PDF file has been downloaded successfully.',
+                life: 3000 // Duración de la notificación en milisegundos
+            });
+       
+    };
 
     useEffect(() => {
         if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
@@ -772,11 +829,13 @@ const fetchAnnova = async (token: any) => {
     const config: Partial<Config> = {
         displaylogo: false,
         responsive: true,
+        staticPlot: false,
+        displayModeBar: true,
         modeBarButtonsToRemove: [
             'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d',
             'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d',
             'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie',
-            'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
+            'toggleHover', 'toggleSpikelines', 'resetViewMapbox', 'toImage', 'zoomIn2d', 'zoomOut2d', 'resetViews', 'resetScale2d'
         ],
         scrollZoom: false,
 
@@ -820,19 +879,20 @@ const dropdownOptionsColorby = [
 //     console.log(selectedColumn)
 // }, [colorByOptions]);
     
-
-
+const fixedAccordionTabChange = () => {
+  };
+  const fixedActiveIndexes = [0, 1];
     const filter = (
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
-          <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
-            <AccordionTab className="colorby-acordeon" header="Group by">
+          <Accordion multiple activeIndex={fixedActiveIndexes} onTabChange={fixedAccordionTabChange} className="filter">
+            <AccordionTab className="colorby-acordeon" header="Group by" headerStyle={{fontSize:'1.15rem'}}>
               <div className="flex flex-col items-start m-2">
-                <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
-                  Select a Sample Location: 
+                <h3 className="mb-2  font-medium text-gray-700 dark:text-white flex items-center" style={{ fontSize: '1.05rem' }}>
+                  Select a sample location: 
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="This allows you to view all samples locations together, or to focus on only 1: Some analysis options are only available when looking at individual locations."
+                      data-pr-tooltip="This allows you to view all samples locations together, or to focus on only 1: some analysis options are only available when looking at individual locations."
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
@@ -853,13 +913,13 @@ const dropdownOptionsColorby = [
               <div className="flex flex-col items-start mt-2 m-2">
               <div className="flex flex-col items-start mt-2 m-2">
   <div className="flex items-center mb-2">
-    <h3 className="text-base font-medium text-gray-700 dark:text-white">
+    <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.1rem' }}>
       Select a variable to group:
     </h3>
     <span className="ml-2">
       <i
         className="pi pi-info-circle text-siwa-blue"
-        data-pr-tooltip="This changes the way in which the samples are grouped together in the analysis: To use, please select a sample location above, then an available grouping variable."
+        data-pr-tooltip="This changes the way in which the samples are grouped together in the analysis: to use, please select a sample location above, then an available grouping variable."
         data-pr-position="top"
         id="groupByTooltip"
       />
@@ -884,19 +944,23 @@ const dropdownOptionsColorby = [
               </div>
             </AccordionTab>
       
-            <AccordionTab className="filter-acordeon" header="Filter by">
+            <AccordionTab className="filter-acordeon" header="Filter by" headerStyle={{fontSize:'1.15rem'}}>
   <div className="mt-2 ml-2 mb-4">
     <div className="flex items-center">
-      <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center">
+      <h3 className="font-medium text-gray-700 dark:text-white flex items-center" style={{fontSize:'1.1rem'}}>
         Filtering options:
-        <AiOutlineInfoCircle
-          className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
+        </h3>
+        <span className="ml-2">
+        <i
+        className="pi pi-info-circle text-siwa-blue"
+        data-pr-tooltip=" This changes the samples that are included in the analysis: you can focus on specific subsets of samples by selecting a variable and then the groups within that variable that you wish to include in the analysis.  You can only filter by one variable at a time. "
+        data-pr-position="top"
+       
           id="filteringTip"
-        />
+      />
         <PTooltip target="#filteringTip" position="top"   style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
-        >
-        This changes the samples that are included in the analysis: You can focus on specific subsets of samples by selecting a variable and then the groups within that variable that you wish to include in the analysis.  You can only filter by one variable at a time.     </PTooltip>
-      </h3>
+/>
+     </span>
     </div>
 
     <ul className="w-full flex flex-wrap items-center content-center justify-start mt-2">
@@ -1337,6 +1401,8 @@ const normalizeFormedKey = (formedKey: string) => {
             responsive: true,
             showlegend: true,
             legend: {
+                itemclick: false,  // Desactiva el comportamiento de clic en la leyenda
+        itemdoubleclick: false,
                 orientation: "h",
                 x: 0.5,
                 xanchor: "center",
@@ -1348,15 +1414,15 @@ const normalizeFormedKey = (formedKey: string) => {
             },
             annotations: annotations,
             yaxis: {title:{
-                text: `Shannon Index`,
+                text: `Shannon index`,
                 font: {
                   family: 'Roboto, sans-serif',
                   size: 18, // Aumenta el tamaño para mayor énfasis
                 },
-                standoff: 15,
+                standoff: 30,
               }, range: graphType === "boxplot" ? yAxisRange : [yAxisRange[0], yAxisRange[1] + 1.5]},
             margin: {
-                l: 50, r: 10,
+                l: 70, r: 10,
                 t: 60,
                 b: 50
             }
@@ -1407,6 +1473,8 @@ const normalizeFormedKey = (formedKey: string) => {
                 responsive: true,
                 showlegend: true,
                 legend: {
+                    itemclick: false,  // Desactiva el comportamiento de clic en la leyenda
+        itemdoubleclick: false,
                     orientation: "h",
                     x: 0.5,
                     xanchor: "center",
@@ -1425,6 +1493,7 @@ const normalizeFormedKey = (formedKey: string) => {
                         font: {
                             size: 14 * textScale, // Escala el título del eje y
                         },
+                        standoff: 30,
                     },
                     tickfont: {
                         size: 14 * textScale, // Escala el texto de los ticks del eje y
@@ -1433,7 +1502,7 @@ const normalizeFormedKey = (formedKey: string) => {
                 },
                 annotations: newAnnotations,
                 margin: {
-                    l: 50,
+                    l: 70,
                     r: 10,
                     t: 60,
                     b: 50,
@@ -1488,19 +1557,39 @@ const normalizeFormedKey = (formedKey: string) => {
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <>
-                        <div className="flex w-full justify-end mb-5">
-                            <div className="flex items-center">
-                                <Button
-                                    className=" p-button-rounded p-button-outlined p-button-sm"
-                                    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
-                                    data-tip data-for="botoninterpreteTip" id="botoninterpreteTip"
-                                ><RiExchangeFundsLine className="text-lg mr-1" /> Change to {graphType === "boxplot" ? "violin" : "boxplot"} view
-                                </Button>
-                            </div>
-                        </div>
+                      <div className="flex flex-col w-full items-end mb-5">
+            <div className="flex items-center mb-3">
+                <Button
+                    className="p-button-rounded p-button-outlined p-button-sm"
+                    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
+                    data-tip
+                    data-for="botoninterpreteTip"
+                    id="botoninterpreteTip"
+                >
+                    <RiExchangeFundsLine className="text-lg mr-1" />
+                    Change to {graphType === "boxplot" ? "violin" : "boxplot"} view
+                </Button>
+            </div>
+            
+                <PToast ref={toast} position="top-right" />
+            <div className="flex items-center">
+                <Button
+    className="p-button-rounded p-button-outlined p-button-sm"
+    onClick={downloadPDF}
+    tooltip="Download PDF"
+>
+    {isLoadingPDF ? (
+        <ProgressSpinner style={{ width: '20px', height: '20px' }} />
+    ) : (
+        <i className="pi pi-file-pdf"></i>
+    )}
+</Button>
+
+            </div>
+        </div>
 
 
-                        <div id="plot">
+                        <div id="plot"   ref={plotRef}>
                         {isChartLoaded ? (
                             <Plot
                                 className="alpha"
@@ -1536,11 +1625,14 @@ const normalizeFormedKey = (formedKey: string) => {
                         </div>)}
 
                             {shouldShowText && (
-                                <div className="flex flex-row  p-3 mx-3 mb-5">
-                                    <div className="mr-1 font-bold">* </div>
-                                    <div className="text-gray text-sm flex text-justify">
-                                    Groups with a different letter are significantly different from one another.                                    </div>
-                                </div>
+                            <div className="flex flex-row p-3 mx-3 mb-5">
+                            <div className="mr-1 font-bold">*</div>
+                            <div className="text-gray text-justify" style={{ fontSize: '1rem' }}>
+                              Groups with different letters are significantly different from one another, based on ANOVA and Tukey HSD post hoc test (p {'<'} 0.05).
+                            </div>
+                          </div>
+                          
+                           
                             )}
                         </div>
 
@@ -1563,7 +1655,7 @@ const normalizeFormedKey = (formedKey: string) => {
 
                 <Suspense fallback={<p>Loading feed...</p>}>
                     <SidebarProvider>
-                        <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} className="text-sm" />}>
+                        <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} className="text-bread" />}>
 
                             {isLoaded ? (
                                 <div className="flex flex-col w-11/12  mx-auto">
@@ -1573,8 +1665,8 @@ const normalizeFormedKey = (formedKey: string) => {
                                       
                                     </div>    <div className="px-6 py-8">
                                         <div className={`prose single-column`}>
-                                            <p className="text-gray-700 text-justify text-xl">
-                                            Microbiome diversity can be assessed through multiple ecological indices. One of these is Alpha diversity, which measures the richness, or number of species within a sample.  Our current understanding of GI microbiomes suggests that higher alpha diversity is better, with low diversity being associated with more instances of disease or dysbiosis             </p>
+                                        <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
+                                            Microbiome diversity can be assessed through multiple ecological indices. One of these is alpha diversity, which measures the richness, or number of species within a sample.  Our current understanding of GI microbiomes suggests that higher alpha diversity is better, with low diversity being associated with more instances of disease or dysbiosis.             </p>
                                         </div>
 
                                     </div>
@@ -1582,7 +1674,8 @@ const normalizeFormedKey = (formedKey: string) => {
                                     <div className="flex">
                                         <GraphicCard filter={filter} legend={""} title={title} text = {"The Shannon index is a metric used to quantify both the complexity and evenness of the community.  For this index, a higher value indicates that the community is more complex.  This value ranges depending on the subject’s species, age, and sample type."}>
                                             {shannonData.length > 0 ? (
-                                                <> <MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
+                                                <> 
+                                                <div><MyPlotComponent shannonData={shannonData as ShannonData[]} scatterColors={scatterColors} />
                                                     <div className="w-full flex flex-row ">
                                                     <div className="px-6 py-8">
     <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -1590,13 +1683,13 @@ const normalizeFormedKey = (formedKey: string) => {
 
         {/* Mostrar el texto correspondiente a la columna y location */}
         {textForConfigKey && (
-            <div className="col-span-2">
+            <div className="col-span-2" ref={configTextRef} >
                 <p className="text-gray-700 m-3 text-justify text-xl">{textForConfigKey}</p>
             </div>
         )}
     </div>
 </div>
-                                                    </div>
+                                                    </div></div>
                                                 </>
 
 

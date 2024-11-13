@@ -6958,7 +6958,7 @@ padding-bottom: 8px;
 .card-abundance .p-card-content {
   padding: 0 0;
 }
-
+/* 
 .js-plotly-plot .modebar-group, .modebar{
   display: flex!important;
   flex-direction: row!important;
@@ -6979,7 +6979,7 @@ border-color: var(--gray-600);  padding: 0.5rem!important;
 
 .js-plotly-plot .modebar-group{
   opacity: 1!important;
-}
+} */
 
 
 .colorby-acordeon .p-accordion-content, .filter-acordeon .p-accordion-content{
@@ -7186,4 +7186,14 @@ input:checked + .slider:before {
   max-width: 350px; /* Ajusta el tamaño máximo que prefieras */
   width: 350px; /* Ajusta el tamaño fijo del tooltip */
   white-space: normal; /* Permite que el texto se ajuste dentro del ancho */
+}
+
+
+.text-bread {
+  font-size: 0.95rem!important;
+}
+
+/* Añade este código a tu archivo CSS global o específico */
+.p-sidebar-close {
+  display: none !important;
 }

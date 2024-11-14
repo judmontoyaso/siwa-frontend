@@ -33,7 +33,7 @@ import RequireAuth from "@/app/components/requireAtuh";
 import { Skeleton } from "primereact/skeleton";
 import { Checkbox } from 'primereact/checkbox';
 import { motion } from "framer-motion";
-import { FaQuestionCircle } from "react-icons/fa";
+import { FaFilePdf, FaQuestionCircle } from "react-icons/fa";
 import HelpText from "@/app/components/helpTextDropdown";
 import { labelReplacements, colorPalettes } from '@/config/dictionaries';
 import html2canvas from 'html2canvas';
@@ -1178,7 +1178,7 @@ const fixedAccordionTabChange = () => {
     </div>)
     function calculateAnnotations() {
         const significanceEntries = Object.entries(annova || {});
-
+        const fixedYPosition = maxYValueForLocationShannon + (graphType === "boxplot" ? 0.8 : 1.2); 
         const annotations = significanceEntries
             .filter(([locationValue, significance]) => locationValue !== null && significance !== null && locationValue != 'null') // Filtrar nulos
             .map(([locationValue, significance]) => {
@@ -1189,7 +1189,8 @@ const fixedAccordionTabChange = () => {
                 console.log("locationValue", locationValue)
                 return {
                     x: locationValue,
-                    y: (graphType === "boxplot" ? 0.8 : 1.2) + maxY,  // Agrega un pequeño offset para que la anotación esté justo por encima del valor máximo
+                    // y: (graphType === "boxplot" ? 0.8 : 1.2) + maxY,  // Agrega un pequeño offset para que la anotación esté justo por encima del valor máximo
+                    y: fixedYPosition,
                     text: significance,
                     xref: 'x',
                     yref: 'y',
@@ -1562,31 +1563,29 @@ const normalizeFormedKey = (formedKey: string) => {
             <div className="w-full" ref={plotContainerRef}>
                 {loaded && (
                     <>
-                      <div className="flex flex-col w-full items-end mb-5">
-            <div className="flex items-center mb-3">
+                      <div className="flex flex-row w-full justify-end items-end mb-2">
+            <div className="flex items-center">
                 <Button
                     className="p-button-rounded p-button-outlined p-button-sm"
                     onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
-                    data-tip
-                    data-for="botoninterpreteTip"
-                    id="botoninterpreteTip"
+                    tooltip={`Change to ${graphType === "boxplot" ? "violin" : "boxplot"} view`}
                 >
-                    <RiExchangeFundsLine className="text-lg mr-1" />
-                    Change to {graphType === "boxplot" ? "violin" : "boxplot"} view
+                    <RiExchangeFundsLine className="text-lg" />
+          
                 </Button>
             </div>
             
                 <PToast ref={toast} position="top-right" />
-            <div className="flex items-center">
+            <div className="flex items-center mx-2">
                 <Button
     className="p-button-rounded p-button-outlined p-button-sm"
     onClick={downloadPDF}
     tooltip="Download PDF"
 >
     {isLoadingPDF ? (
-        <ProgressSpinner style={{ width: '20px', height: '20px' }} />
+        <ProgressSpinner style={{ width: '19px', height: '19px' }} />
     ) : (
-        <i className="pi pi-file-pdf"></i>
+        <FaFilePdf  className="text-lg" />
     )}
 </Button>
 
@@ -1671,7 +1670,7 @@ const normalizeFormedKey = (formedKey: string) => {
                                     </div>    <div className="px-6 py-8">
                                         <div className={`prose single-column`}>
                                         <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
-                                            Microbiome diversity can be assessed through multiple ecological indices. One of these is alpha diversity, which measures the richness, or number of species within a sample.  Our current understanding of GI microbiomes suggests that higher alpha diversity is better, with low diversity being associated with more instances of disease or dysbiosis.             </p>
+                                        Microbiome diversity can be assessed through various ecological indices, with alpha diversity as a key measure of the richness and evenness of species within a sample. Alpha diversity can be quantified using different metrics, one of the most widely used is the <span className="text-gray-900">Shannon index</span>, which considers both the abundance and even distribution of species, making it sensitive to both richness and species balance. Higher alpha diversity is generally seen as a marker of a healthier GI microbiome, while low diversity is often linked to dysbiosis or disease.                                                         </p>
                                         </div>
 
                                     </div>
@@ -1689,7 +1688,7 @@ const normalizeFormedKey = (formedKey: string) => {
         {/* Mostrar el texto correspondiente a la columna y location */}
         {textForConfigKey && (
             <div className="col-span-2" ref={configTextRef} >
-                <p className="text-gray-700 m-3 text-justify text-xl">{textForConfigKey}</p>
+                <p className="text-gray-700 m-3 text-justify font-light" style={{ fontSize: '1.3rem' }}>{textForConfigKey}</p>
             </div>
         )}
     </div>

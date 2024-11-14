@@ -34,7 +34,7 @@ const Navbar: React.FC<NavbarProps> = ({ slug, breadcrumbs }) => {
   const onMenuHide = () => setIsOpen(false);
 
   return (
-    <nav className="flex justify-between items-center p-4 bg-white shadow-md">
+    <nav className="flex justify-between items-center px-4 pt-4 pb-2 bg-white shadow-lg">
       {/* Breadcrumbs con borde, sin fondo */}
         <div className={`${breadcrumbs ? "" : ""} flex- border-none  py-1 px-4 text-lg text-gray-600`}>
           {breadcrumbs}

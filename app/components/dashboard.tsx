@@ -1,6 +1,6 @@
 "use client";
 import LoginButton from "@/app/components/Login";
-import { MouseEvent, SetStateAction, createContext, useEffect, useState } from "react";
+import { Key, MouseEvent, SetStateAction, createContext, useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { Bounce, Slide, ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { BsArrowLeftShort, BsArrowRightShort, BsFillCloudCheckFill } from "react-icons/bs";
 import { IoCloudOffline } from "react-icons/io5";
-import { FaSpinner } from "react-icons/fa";
+import { FaEye, FaSpinner } from "react-icons/fa";
 import { RoughNotation } from "react-rough-notation";
 import Spinner from "./pacmanLoader";
 import { GiChicken, GiPig, GiCow, GiCat, GiSpinalCoil, GiTestTubes } from "react-icons/gi"; // Importamos más íconos
@@ -21,6 +21,7 @@ import { AiOutlineClose } from "react-icons/ai";
 import { RiTestTubeFill } from "react-icons/ri";
 import { motion } from "framer-motion";
 import { BiMapPin } from "react-icons/bi";
+import { FaArrowRight } from "react-icons/fa6";
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -159,7 +160,7 @@ const Dashboard = () => {
       // Retornamos los datos para establecerlos en `selectedProject`
       return {
         samples: statsData.sample_count, // Número de muestras obtenido del endpoint
-        panels: statsData.modules.length, // Número de módulos obtenidos del endpoint
+        panels: statsData.modules.map((module: string) => module.replace(/_/g, ' ')).join(', '),
       };
     } catch (error) {
       console.error(error);
@@ -204,12 +205,12 @@ const Dashboard = () => {
   // };
 
   const speciesImageMap: { [key: string]: string } = {
-    "Layer": "/layer.webp",
+    "Layers": "/layer.webp",
     "Poultry": "/layer.webp",
     "Broiler": "/broiler.webp",
     "Pig": "/cerdito.webp",
     "Cow": "/vaquita.webp",
-    "Pet": "/perrito.webp",
+    "Canine": "/perrito.webp",
   };
   
 
@@ -281,10 +282,15 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen table flex-col justify-start w-full bg-siwa-green-50 p-8 pb-24">
-        <div className="mx-auto w-full max-w-5xl text-center">
-          <h1 className="text-5xl font-semibold text-siwa-blue mb-4">Hello, {user?.name}!</h1>
-          <h2 className="text-4xl font-semibold text-siwa-blue mb-10">
+      <div className="flex h-full flex-col justify-start w-full bg-siwa-green-50 pt-0 px-8 pb-24">
+
+
+        <main className="h-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <section className="lg:col-span-2  overflow-scroll">
+          <div className="mx-auto w-full max-w-5xl text-center">
+          {/* <h1 className="text-5xl font-semibold text-siwa-blue mb-4">Hello, {user?.name}!</h1> */}
+          <h1 className="text-3xl font-semibold text-siwa-blue mb-10">
             Welcome to your
             <div className="inline-block ml-2 relative">
               <RoughNotation
@@ -299,17 +305,14 @@ const Dashboard = () => {
                 SIWA Dashboard
               </RoughNotation>
             </div>
-          </h2>
+          </h1>
         </div>
-
-        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <section className="lg:col-span-2">
-            <h3 className="text-2xl font-semibold text-siwa-blue mb-3">Your Projects</h3>
+            <h2 className="text-2xl font-semibold text-siwa-blue mb-3">Your Projects</h2>
             <p className="text-xl text-siwa-blue mb-6">
               Select any of the loaded projects below to explore detailed analysis results.
             </p>
             {projectsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className=" flex  grid-cols-1 sm:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="bg-white shadow-md rounded-lg p-6 h-64 animate-pulse">
                     <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -333,37 +336,36 @@ const Dashboard = () => {
                         onTransitionEnd={handleTransitionEnd}
                       >
 
-                        {loadingProject === id && (
+                        {/* {loadingProject === id && (
                           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
                             <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
                           </div>
-                        )}
+                        )} */}
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-xl font-semibold text-siwa-blue flex items-center">
                               {id}
                               {getAnimalIcon(specie, loadedProjects[id])}
                             </span>
-                            {loadedProjects[id] && <BsArrowRightShort className="w-6 h-6 text-siwa-blue" />}
                           </div>
                           <p className="text-lg text-siwa-blue">{name}</p>
                         </div>
                         <div className="mt-4">
                           {projectErrors[id] ? (
                             <span className="text-red-500 font-semibold flex items-center justify-center">
-                              <AiOutlineClose className="w-5 h-5 mr-2" /> Error Loading
+                              <AiOutlineClose className="w-5 h-5 mr-2" /> Error loading
                             </span>
                           ) : loadedProjects[id] ? (
-                            <span className="text-siwa-blue font-semibold flex items-center justify-center">
+                            <span className="text-siwa-blue font-semibold flex items-center justify-center ">
                               {loadingProject === id ? (
-                                <FaSpinner className="animate-spin text-siwa-blue text-xl mr-2" />
+                             <span className="flex flex-row">  Loading... <FaSpinner className="animate-spin text-siwa-blue text-xl ml-2" /></span>  
                               ) : (
-                                "View Project"
+                              <span className="flex flex-row ">See details <FaEye className="text-xl ml-2"/></span>
                               )}
                             </span>
                           ) : (
                             <span className="text-gray-500 font-semibold flex items-center justify-center">
-                              <FaSpinner className="animate-spin text-gray-500 text-xl mr-2" /> Loading...
+                              Loading... <FaSpinner className="animate-spin text-gray-500 text-xl ml-2" /> 
                             </span>
                           )}
                         </div>
@@ -374,105 +376,175 @@ const Dashboard = () => {
             )}
           </section>
 
-          <aside className="w-full h-full  mt-6"> {/* Eliminar sticky de aquí */}
-            <motion.div
-              className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between h-full lg:h-[650px] relative lg:sticky lg:top-24"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              style={{ maxHeight: 'calc(100vh - 10rem)' }} // Ajustamos la altura máxima para evitar que tape el contenido
-            >
-              {/* <div className="absolute -top-10 left-1/2 transform -translate-x-1/2"> 
-      <BiMapPin className="text-siwa-blue text-3xl" /> 
-    </div> */}
-              <div>
-                <h3 className="text-2xl font-semibold text-siwa-blue mb-4">
-                  {selectedProject ? "Project Details" : "Quick Stats"}
-                </h3>
-                {selectedProject && (
-              <button
-              className="absolute top-4 left-4 text-siwa-blue hover:text-siwa-blue-700"
-              onClick={() => {
-                setSelectedProject(null);
-                setProjectImage("/LogoSIWA.png"); // Regresa la imagen a la genérica
-              }}
-            >
-              <BsArrowLeftShort className="w-6 h-6" />
-            </button>
-            
-                )}
-                {selectedProject ? (
-                  <ul className="space-y-4">
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Title:</span>
-                      <span className="font-bold text-xl text-siwa-blue">{selectedProject.name}</span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Animal Type:</span>
-                      <span className="font-bold text-xl text-siwa-blue">{selectedProject.animalType}</span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Number of Samples:</span>
-                      <span className="font-bold text-xl text-siwa-blue">{selectedProject.samples}</span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Panels:</span>
-                      <span className="font-bold text-xl text-siwa-blue">{selectedProject.panels}</span>
-                    </li>
+          <aside className="w-full h-full">
+  <motion.div
+    className="bg-white shadow-md  rounded-lg p-6 flex flex-col justify-between h-full relative lg:sticky lg:top-0"
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    style={{ maxHeight: 'calc(100vh - 10rem)' }}
+  >
+    <div className="overflow-scroll" style={{ maxHeight: '100%' }}>
+     <div  style={{ maxHeight: '100%' }}>
+      <h3 className="text-2xl font-semibold text-siwa-blue mb-4">
+        {selectedProject ? "Project Details" : "Quick Stats"}
+      </h3>
+      {selectedProject && (
+        <button
+          className="absolute top-4 left-4 text-siwa-blue hover:text-siwa-blue-700"
+          onClick={() => {
+            setSelectedProject(null);
+            setProjectImage("/LogoSIWA.png"); 
+          }}
+        >
+          <BsArrowLeftShort className="w-6 h-6" />
+        </button>
+      )}
+      {selectedProject ? (
+ <div className="space-y-6">
+ <div className="flex flex-col items-start mb-8">
+   <div className="w-full  rounded-md  p-4  mt-2 text-center">
+     <span className="text-lg italic text-siwa-blue">{selectedProject.name}</span>
+   </div>
 
-                    <li className="flex justify-center mt-4">
-                      <Link href={`/projects/${selectedProject.title}`} passHref>
-                        <button
-                          onClick={() => handleGoToProject(selectedProject?.title)}
-                          className="bg-siwa-blue text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center"
-                          disabled={loadingProject === selectedProject?.title} // Evitar múltiples clics mientras carga
-                        >
-                          {loadingProject === selectedProject?.title ? (
-                            <FaSpinner className="animate-spin text-white text-xl mr-2" />
-                          ) : null}
-                          Go to Project
-                        </button>
+   {/* Tabla para Animal Type, Animal Specie y Number of Animals */}
+   <div className="w-full border border-gray-100 rounded-md mt-2">
+  {/* Fila: Animal Type */}
+  <div className="flex items-center p-4 bg-gray-50">
+    <span className="text-base font-medium text-siwa-blue w-1/2">Animal type:</span>
+    <span className="text-base italic text-siwa-blue w-1/2">{selectedProject.animalType}</span>
+  </div>
 
-                      </Link>
-                    </li>
-                  </ul>
-                ) : (
-                  <ul className="space-y-4">
-                    {/* Mostrar estadísticas generales cuando no hay proyecto seleccionado */}
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Total Projects:</span>
-                      <span className="font-bold text-xl text-siwa-blue">{projects.length}</span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Loaded Projects:</span>
-                      <span className="font-bold text-xl text-siwa-blue">
-                        {Object.values(loadedProjects).filter(Boolean).length}
-                      </span>
-                    </li>
-                    <li className="flex justify-between items-center">
-                      <span className="text-lg">Projects with Errors:</span>
-                      <span className="font-bold text-xl text-red-500">
-                        {Object.values(projectErrors).filter(Boolean).length}
-                      </span>
-                    </li>
-                  </ul>
-                )}
-              </div>
-              <div className="w-full flex justify-center items-center mt-6">
-  <div className="relative w-72 h-72">
-    <div className="perspective-container">
-      <div className="absolute w-full h-full transform backface-hidden">
-        <img src={projectImage} alt="Decorative" className="w-full h-full object-contain rounded-lg " />
-      </div>
-      <div className="absolute w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 rounded-lg flex items-center justify-center">
-        <p className="text-siwa-blue text-center font-semibold text-xl">Decoding the Mysteries of the Gut</p>
-      </div>
-    </div>
+  {/* Fila: Animal Specie (color alternado) */}
+  <div className="flex items-center p-4 bg-white">
+    <span className="text-base font-medium text-siwa-blue w-1/2">Animal specie:</span>
+    <span className="text-base italic text-siwa-blue w-1/2">{selectedProject.specie}</span>
+  </div>
+
+  {/* Fila: Number of Animals */}
+  <div className="flex items-center p-4 bg-gray-50">
+    <span className="text-base font-medium text-siwa-blue w-1/2">Number of animals:</span>
+    <span className="text-base italic text-siwa-blue w-1/2">{selectedProject.samples}</span>
   </div>
 </div>
 
-            </motion.div>
-          </aside>
+
+   {/* Etiquetas de Panels */}
+   <div className="flex justify-center mt-4 text-center">
+   {/* <span className="text-lg font-medium text-siwa-blue mr-4">Panels:</span> */}
+   <div className="flex flex-wrap mt-4 justify-center text-center">
+  
+              {(Array.isArray(selectedProject.panels)
+                ? selectedProject.panels
+                : typeof selectedProject.panels === 'string'
+                ? selectedProject.panels.split(',').map((p: string) => p.trim())
+                : []
+              ).map((panel: Key | null | undefined) => {
+                let bgColor;
+                switch (panel) {
+                  case "Richness":
+                      bgColor = "bg-[#78A083] text-[#FFFFFF]"; // Verde claro con texto blanco
+                      break;
+                  case "Community Makeup":
+                      bgColor = "bg-[#40679E] text-[#FFFFFF]"; // Azul medio con texto blanco
+                      break;
+                  case "Taxonomic Abundance":
+                      bgColor = "bg-[#8E7AB5] text-[#FFFFFF]"; // Púrpura medio con texto blanco
+                      break;
+                  case "Differential Abundance":
+                      bgColor = "bg-[#FFE3CA] text-[#7A4E2A]"; // Amarillo claro con texto marrón oscuro
+                      break;
+                  case "Histo":
+                      bgColor = "bg-[#FFCF81] text-[#5D3B1E]"; // Amarillo-naranja con texto marrón oscuro
+                      break;
+                  case "Gene Expression":
+                      bgColor = "bg-[#FFF36E] text-[#4A4A1E]"; // Amarillo pálido con texto verde oscuro
+                      break;
+                  default:
+                      bgColor = "bg-[#B5C0D0] text-[#3A3A3A]"; // Gris claro con texto gris oscuro
+              }
+              
+              
+
+       return (
+        
+         <span
+           key={panel}
+           className={`px-3 py-1 mr-2 mb-2 rounded-full text-sm font-semibold ${bgColor}`}
+         >
+           {String(panel)?.replace(/_/g, " ")}
+         </span>
+       );
+     })}
+   </div>
+ </div>
+ </div>
+ {/* Botón para ir al proyecto */}
+ <div className="flex justify-center mt-6">
+   <Link href={`/projects/${selectedProject.title}`} passHref>
+     <button
+       onClick={() => handleGoToProject(selectedProject?.title)}
+       className="bg-green-700 shadow-sm shadow-green-900 text-white font-semibold py-2 px-4 min-w-60 rounded-lg flex items-center justify-center"
+       disabled={loadingProject === selectedProject?.title}
+       >
+       Go to project
+       {loadingProject === selectedProject?.title ? (
+         <FaSpinner className="animate-spin text-white text-lg ml-2" />
+       ) : <BsArrowRightShort className="w-6 h-6" />}
+     </button>
+   </Link>
+ </div>
+</div>
+
+      ) : (
+        <div className="w-full border border-gray-100 rounded-md mt-2">
+        {/* Fila: Total Projects */}
+        <div className="flex items-center p-4 bg-gray-50">
+          <span className="text-base font-medium text-siwa-blue w-1/2">Total Projects:</span>
+          <span className="text-base italic text-siwa-blue w-1/2">{projects.length}</span>
+        </div>
+      
+        {/* Fila: Loaded Projects (color alternado) */}
+        <div className="flex items-center p-4 bg-white">
+          <span className="text-base font-medium text-siwa-blue w-1/2">Loaded Projects:</span>
+          <span className="text-base italic text-siwa-blue w-1/2">
+            {Object.values(loadedProjects).filter(Boolean).length}
+          </span>
+        </div>
+      
+        {/* Fila: Projects with Errors */}
+        <div className="flex items-center p-4 bg-gray-50">
+          <span className="text-base font-medium text-red-500 w-1/2">Projects with Errors:</span>
+          <span className="text-base italic text-red-500 w-1/2">
+            {Object.values(projectErrors).filter(Boolean).length}
+          </span>
+        </div>
+      </div>
+      
+      )}
+    </div>
+    <div className="w-full flex justify-center items-center mt-8">
+      <div className="relative w-48 h-48">
+        <div className="perspective-container">
+          <div className="absolute w-full h-full transform backface-hidden">
+            <img
+              src={projectImage}
+              alt="Project Visual"
+              className={`w-full ${projectImage == '/LogoSIWA.png' ? 'rounded-none' : 'rounded-full'} h-full object-contain`}
+            />
+          </div>
+          <div className="absolute rounded-full w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 flex items-center justify-center">
+            <p className="text-siwa-blue text-center font-semibold text-sm p-4">
+              Decoding the mysteries of the gut
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </motion.div>
+</aside>
+
 
 
 

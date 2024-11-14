@@ -7197,3 +7197,15 @@ input:checked + .slider:before {
 .p-sidebar-close {
   display: none !important;
 }
+
+/* Oculta la flecha hacia abajo en los encabezados del AccordionTab */
+.p-accordion-header .pi.pi-chevron-down,
+.p-accordion-header .pi.pi-chevron-right {
+    display: none;
+}
+
+.colorby-acordeon .p-accordion-toggle-icon , .filter-acordeon .p-accordion-toggle-icon {
+  display: none!important;
+
+}
+

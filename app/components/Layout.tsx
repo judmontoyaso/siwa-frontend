@@ -22,6 +22,7 @@ const Layout: React.FC<LayoutProps & { slug: string, filter: any, breadcrumbs:an
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
   const { user, error, isLoading } = useUser();
   return (
+    
           <PopupProvider>
     <Suspense fallback={<p>Loading feed...</p>}><div className="flex flex-row h-full">
       {isLoading ? <><Spinner /></> : <>   <Sidebar slug={slug} filter={filter} />

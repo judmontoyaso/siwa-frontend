@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { Image } from 'primereact/image';
-import imageload from '@/public/imagewait.png';
+import imageload from '@/public/imagewait.jpg';
 
 import React from 'react';
 import Layout from "@/app/components/Layout";
@@ -360,11 +360,11 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
   return (
     <RequireAuth>
       <Layout slug={params.slug} filter={filterContent} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home} className="text-sm" />}>
-        <div className="w-full py-8 flex justify-center">
+        <div className="w-full pb-8 flex justify-center">
           <div className="bg-white w-11/12 rounded-lg overflow-hidden pb-4">
             <div className="w-full flex justify-center text-center">
             {summaryTitle ? (
-  <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-5xl text-siwa-blue leading-[70px]">
+  <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-3xl text-siwa-blue leading-[70px]">
     {summaryTitle}
   </h1>
 ) : (
@@ -374,23 +374,23 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
 
             <div className="flex xl:flex-wrap flex-nowrap xl:flex-row flex-col-reverse">
               {/* Content Container */}
-              <div className="px-6 xl:w-1/2 w-full flex flex-col justify-between">
+              <div className="xl:w-1/2 w-full flex flex-col justify-between">
   {summaryText ? (
     <div className="prose lg:prose-lg max-w-none text-start w-full">
       <Card className="p-0 border-none shadow-none">
-        <div className="flex items-center py-[12px] px-4 bg-siwa-blue mb-8">
-          <h2 className="text-4xl font-medium text-white mb-0">
+        <div className="flex items-center py-[12px] px-4 bg-custom-green-400 mb-2">
+          <h2 className="text-2xl font-medium text-white mb-0">
             Know more about {params.slug}
           </h2>
         </div>
-        <p className="text-gray-700 text-2xl font-light mb-4 p-2">
+        <p className="text-gray-700  font-light mb-4 p-2" style={{fontSize:'1.3rem'}}>
           {summaryText}
         </p>
-        <div className="w-full flex justify-center items-center xl:justify-end p-4">
+        <div className= {`${configFile?.Dashboard?.Image ?  "rounded-none" : "rounded-full"} w-full flex justify-center items-center p-4`}>
           <Image
             src={configFile?.Dashboard?.Image || imageload.src}
             alt="Summary Image"
-            className="w-full"
+            className={`${configFile?.Dashboard?.Image ?" w-full" : "w-1/2 rounded-full"}`}
             height="300"
             preview={!configFile?.Dashboard?.Image}
           />
@@ -415,17 +415,17 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
               <div className="flex flex-col xl:w-1/2 w-full items-center justify-between">
               <Card className="p-0 border-none shadow-none">
                 <div className="mb-4 w-full">
-                  <div className="flex items-start p-3 bg-blue-50 border border-siwa-blue rounded-md">
-                    <i className="pi pi-info-circle text-siwa-blue text-2xl mr-3"></i>
-                    <div className="text-xl text-siwa-blue text-left">
-                      <p className="mb-1">How to start?</p>
-                      <p>
+                  <div           className="w-full flex items-start p-4 mx-4 bg-custom-green-50 border border-custom-green-200 rounded-md text-left">
+                    <i className="pi pi-info-circle text-custom-green-500 text-2xl mr-3"></i>
+                    <div className="text-lg text-custom-green-500  text-left" style={{fontSize:'1.3rem'}}>
+                      <p className="mb-2 text-lg" style={{fontSize:'1.2rem'}} >How to start?</p>
+                      <p className="text-lg"style={{fontSize:'1.2rem'}}>
                         Use the sidebar on the left to navigate between different analyses available for this project, or begin your exploration now by selecting any of the available reports below.
                       </p>
                     </div>
                   </div>
                 </div>
-    
+      
 
                   <div className="flex w-full flex-row flex-wrap justify-evenly">
                     {plotsData.map(plot => (
@@ -438,17 +438,17 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
                         >
                           {loadingPlot === plot.title && (
                             <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                              <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
+                              <FaSpinner className="animate-spin text-siwa-blue text-lg" />
                             </div>
                           )}
                  <div className="flex-grow">
   {loadingPlot === plot.title ? (
     <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-      <FaSpinner className="animate-spin text-siwa-blue text-3xl" />
+      <FaSpinner className="animate-spin text-siwa-blue text-lg" />
     </div>
   ) : (
     <>
-      <h3 className="text-center text-2xl font-semibold text-siwa-blue mt-4 mb-6">{plot.title}</h3>
+      <h3 className="text-center font-semibold text-siwa-blue mt-4 mb-6" style={{fontSize:'1.3rem'}}>{plot.title}</h3>
       <PlotPreview data={plot.data} layout={plot.layout} style={{ width: 200, height: 120 }} />
     </>
   )}

@@ -5,6 +5,7 @@ import { PrimeReactProvider } from 'primereact/api';
 import { PopupProvider } from './components/context/popupContext';
 import PrimeReact from 'primereact/api';
 import './globals.css'; // Tus estilos de Tailwind y otros estilos globales
+import ErrorBoundary from './components/ErrorBoundary';
 const roboto = Roboto({
   weight: '300',
   subsets: ['latin'],
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
       </head>
       <body className={`h-screen ${roboto.className}`}>
+      <ErrorBoundary>
         <UserProvider>
           <PrimeReactProvider>
             <AuthProvider>
@@ -42,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </AuthProvider>
           </PrimeReactProvider>
         </UserProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -285,9 +285,8 @@ const Dashboard = () => {
       <div className="flex h-full flex-col justify-start w-full bg-siwa-green-50 pt-0 px-8 pb-24">
 
 
-        <main className="h-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          <section className="lg:col-span-2  overflow-scroll">
+      <main className="h-full flex flex-wrap flex-row">          
+          <section className="w-3/5 h-full overflow-scroll">
           <div className="mx-auto w-full max-w-5xl text-center">
           {/* <h1 className="text-5xl font-semibold text-siwa-blue mb-4">Hello, {user?.name}!</h1> */}
           <h1 className="text-3xl font-semibold text-siwa-blue mb-10">
@@ -327,7 +326,7 @@ const Dashboard = () => {
                   .map(({ id, name, animalType, specie }) => (
                     <Link href={loadedProjects[id] ? `/projects/${id}` : '#'} passHref key={id}>
                       <div
-                        className={`bg-white shadow-md rounded-lg p-6 flex flex-col justify-between h-64 
+                        className={`bg-white shadow-md m-3 rounded-lg p-6 flex flex-col justify-between h-64 
     ${loadedProjects[id] ? "cursor-pointer hover:shadow-lg hover:shadow-blue-500/50" : "opacity-50 cursor-not-allowed"}
     transition duration-200 ease-in-out transform hover:-translate-y-1 
     ${selectedProject?.title === id ? "shadow-blue-500/50 border-2 border-blue-500" : ""}
@@ -376,7 +375,7 @@ const Dashboard = () => {
             )}
           </section>
 
-          <aside className="w-full h-full">
+          <aside className="h-full w-2/5">
   <motion.div
     className="bg-white shadow-md  rounded-lg p-6 flex flex-col justify-between h-full relative lg:sticky lg:top-0"
     initial={{ opacity: 0, y: -10 }}
@@ -417,7 +416,7 @@ const Dashboard = () => {
 
   {/* Fila: Animal Specie (color alternado) */}
   <div className="flex items-center p-4 bg-white">
-    <span className="text-base font-medium text-siwa-blue w-1/2">Animal specie:</span>
+    <span className="text-base font-medium text-siwa-blue w-1/2">Animal species:</span>
     <span className="text-base italic text-siwa-blue w-1/2">{selectedProject.specie}</span>
   </div>
 
@@ -530,10 +529,10 @@ const Dashboard = () => {
             <img
               src={projectImage}
               alt="Project Visual"
-              className={`w-full ${projectImage == '/LogoSIWA.png' ? 'rounded-none' : 'rounded-full'} h-full object-contain`}
+              className={`w-full ${projectImage == '/LogoSIWA.png' ? 'rounded-none mt-10' : 'rounded-full'} h-full object-contain`}
             />
           </div>
-          <div className="absolute rounded-full w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 flex items-center justify-center">
+          <div className={`w-full ${projectImage == '/LogoSIWA.png' ? '' : ''} absolute rounded-full w-full h-full transform backface-hidden rotate-y-180 bg-gradient-to-r from-siwa-yellow to-siwa-green-3 flex items-center justify-center`}>
             <p className="text-siwa-blue text-center font-semibold text-sm p-4">
               Decoding the mysteries of the gut
             </p>

@@ -2097,6 +2097,11 @@ font-atlas@^2.1.0:
   dependencies:
     css-font "^1.0.0"
 
+font-family-papandreou@^0.2.0-patch1:
+  version "0.2.0-patch2"
+  resolved "https://registry.yarnpkg.com/font-family-papandreou/-/font-family-papandreou-0.2.0-patch2.tgz#c75b659e96ffbc7ab2af651cf7b4910b334e8dd2"
+  integrity sha512-l/YiRdBSH/eWv6OF3sLGkwErL+n0MqCICi9mppTZBOCL5vixWGDqCYvRcuxB2h7RGCTzaTKOHT2caHvCXQPRlw==
+
 font-measure@^1.2.2:
   version "1.2.2"
   resolved "https://registry.npmjs.org/font-measure/-/font-measure-1.2.2.tgz"
@@ -4164,6 +4169,11 @@ source-map@~0.6.1:
   resolved "https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz"
   integrity sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==
 
+specificity@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/specificity/-/specificity-0.4.1.tgz#aab5e645012db08ba182e151165738d00887b019"
+  integrity sha512-1klA3Gi5PD1Wv9Q0wUoOQN1IWAuPu0D1U03ThXTr0cJ20+/iq2tHSDnK7Kk/0LXJ1ztUB2/1Os0wKmfyNgUQfg==
+
 stack-trace@0.0.9:
   version "0.0.9"
   resolved "https://registry.npmjs.org/stack-trace/-/stack-trace-0.0.9.tgz"
@@ -4381,6 +4391,21 @@ svg-pathdata@^6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/svg-pathdata/-/svg-pathdata-6.0.3.tgz#80b0e0283b652ccbafb69ad4f8f73e8d3fbf2cac"
   integrity sha512-qsjeeq5YjBZ5eMdFuUa4ZosMLxgr5RZ+F+Y1OrDhuOCEInRMA3x74XdBtggJcj9kOeInz0WE+LgCPDkZFlBYJw==
+
+svg2pdf.js@^2.2.4:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/svg2pdf.js/-/svg2pdf.js-2.2.4.tgz#28f9c4c3f4e7ec1ca5d0961a0ac46d7785f308ca"
+  integrity sha512-ujf+KqVpwAk/MPpTQqv4psV5eVLX/SoIJVHqe2ZhcqZfLd4DF48TzJBC95dVyoZSLqGbXp+GnfwotvCsJwrXXQ==
+  dependencies:
+    cssesc "^3.0.0"
+    font-family-papandreou "^0.2.0-patch1"
+    specificity "^0.4.1"
+    svgpath "^2.3.0"
+
+svgpath@^2.3.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/svgpath/-/svgpath-2.6.0.tgz#5b160ef3d742b7dfd2d721bf90588d3450d7a90d"
+  integrity sha512-OIWR6bKzXvdXYyO4DK/UWa1VA1JeKq8E+0ug2DG98Y/vOmMpfZNj+TIG988HjfYSqtcy/hFOtZq/n/j5GSESNg==
 
 swr@^2.2.4:
   version "2.2.4"

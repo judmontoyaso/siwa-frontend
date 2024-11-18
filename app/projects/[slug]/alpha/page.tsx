@@ -1054,8 +1054,8 @@ export default function Page({ params }: { params: { slug: string } }) {
                                     data-pr-position="top"
                                     id="sampleLocationTooltip"
                                 />
-                                <PTooltip target="#sampleLocationTooltip" children={<span>View all sample locations together, or focus on a single one. <b>Note: </b>some analyses are only available for individual locations.</span>} style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
-                                />
+                                <PTooltip target="#sampleLocationTooltip"  style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                ><span>View all sample locations together, or focus on a single one. <b>Note: </b>some analyses are only available for individual locations.</span></PTooltip>
                             </span>
                         </h3>
                         <Dropdown
@@ -1116,8 +1116,8 @@ export default function Page({ params }: { params: { slug: string } }) {
 
                                     id="filteringTip"
                                 />
-                                <PTooltip target="#filteringTip" children={<span>Select specific subsets of samples for analysis. Choose a variable, then pick the groups within that variable to include. <b>Note: </b>Only one variable can be filtered at a time.</span>} position="top" style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
-                                />
+                                <PTooltip target="#filteringTip" position="top" style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                ><span>Select specific subsets of samples for analysis. Choose a variable, then pick the groups within that variable to include. <b>Note: </b>Only one variable can be filtered at a time.</span></PTooltip>
                             </span>
                         </div>
 

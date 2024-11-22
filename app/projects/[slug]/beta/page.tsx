@@ -27,6 +27,11 @@ import { Dropdown } from "primereact/dropdown";
 import { Config } from "plotly.js";
 import { Skeleton } from "primereact/skeleton";
 import { Checkbox } from 'primereact/checkbox';
+import { labelReplacements } from "@/config/dictionaries";
+import jsPDF from "jspdf";
+import { svg2pdf } from "svg2pdf.js";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { FaFilePdf } from "react-icons/fa";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
@@ -65,18 +70,21 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
   const [dataUnique, setDataUnique] = useState<any>();
   const [columnOptions, setColumnOptions] = useState<string[]>([]);
-  const[filterPeticion, setFilterPetition] = useState(false);
   const [theRealColorByVariable, setTheRealColorByVariable] = useState<string>('samplelocation');
   const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
   let colorIndex = 0;
   const newScatterColors: { [key: string]: string } = {};
+  const [filterPeticion, setFilterPeticion] = useState(false);
+  const [tempSelectedColorBy, setTempSelectedColorBy] = useState<string>(theRealColorByVariable);
+  const [textForConfigKey, setTextForConfigKey] = useState("");
+  const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set());
+  const [isLoadingPDF, setIsLoadingPDF] = useState(false);
 
   const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
-
+  const plotRef = useRef(null);
   const router = useRouter();
 
   const items = [
-    { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
       { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
     { label: 'Community make-up', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/beta`}>{item.label}</Link> },
   ];
@@ -110,6 +118,90 @@ useEffect(() => {
   }
 }, [theRealColorByVariable]);
 
+const downloadCombinedSVG = async () => {
+  const plotContainer = plotRef.current as unknown as HTMLElement; // Tu contenedor principal
+
+  if (!plotContainer) {
+      console.error("Contenedor del gráfico no encontrado");
+      return;
+  }
+
+  // Encuentra todos los SVGs dentro del contenedor
+  const svgElements = plotContainer ? Array.from(plotContainer.querySelectorAll('svg')) : [];
+  if (!svgElements.length) {
+      console.error("No se encontraron SVGs en el contenedor");
+      return;
+  }
+
+  // Crear un SVG maestro
+  const combinedSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+
+  // Ajustar el ancho y alto dinámicamente
+  let totalHeight = 0;
+  const maxWidth = Math.max(...svgElements.map(svg => parseInt(svg.getAttribute("width") || '0', 10)));
+  svgElements.forEach(svg => {
+      totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
+  });
+  combinedSVG.setAttribute("width", "700");
+  combinedSVG.setAttribute("height", "300");
+
+  // Combina los SVGs en orden inverso
+  let yOffset = 0; // Desplazamiento para evitar solapamiento
+  svgElements.reverse().forEach((svg) => {
+      const clonedSVG = svg.cloneNode(true);
+
+      // Mover el SVG en el eje Y
+      const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
+      yOffset =  15// Incrementa el desplazamiento
+
+      // Asegura que <defs> se copie al SVG maestro
+      const defs = (clonedSVG as Element).querySelector('defs');
+      if (defs) {
+          const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
+          masterDefs.innerHTML += defs.innerHTML;
+          combinedSVG.appendChild(masterDefs);
+      }
+
+      wrapper.appendChild(clonedSVG);
+      combinedSVG.appendChild(wrapper);
+  });
+  const svgWidth = 700;
+  const svgHeight = 300
+  const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
+  });
+  
+
+  // Ajustar el tamaño inicial
+  const pageWidth = pdf.internal.pageSize.getWidth();
+   // Convertir SVG a PDF
+   await svg2pdf(combinedSVG, pdf, {
+      x: 20,
+      y: yOffset,
+      width: svgWidth     ,
+      height: svgHeight 
+  });
+
+  // Incrementar el desplazamiento
+  yOffset += svgHeight  + 20;
+
+
+
+   // Descargar el PDF
+   pdf.save("Community-makeup-plot.pdf");
+   // Serializar el SVG combinado y descargarlo
+   const svgData = new XMLSerializer().serializeToString(combinedSVG);
+   const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+   const link = document.createElement("a");
+   link.href = URL.createObjectURL(blob);
+   link.download = "combined_plot.svg";
+   link.click();
+}
 
 
 
@@ -224,6 +316,8 @@ useEffect(() => {
       setIsColorByDisabled(false);
     }
   };
+
+  
   
   useEffect(() => {
     if (selectedLocations.length > 0) {
@@ -232,7 +326,7 @@ useEffect(() => {
   }, [selectedLocations]);
 
   const handleLocationChangeColorby = (event: any) => {
-      setColorBy(event.target.value);
+      setTempSelectedColorBy(event.target.value);
       // fetchProjectIdsFiltercolor(dataResult, event.target.value);
     
 
@@ -240,6 +334,8 @@ useEffect(() => {
 console.log(selectedLocations)
 console.log(colorBy)
   };
+
+
 
     // Definir una función genérica para realizar el fetch
     const fetchData = async (token: any) => {
@@ -278,7 +374,7 @@ console.log(colorBy)
         setDataResult(result);
         setColumnOptions(result?.data?.columns);
         setDataUnique(result);
-
+        
         setValueOptions(result?.data?.data);
         return result; // Devolver los datos obtenidos
   
@@ -300,7 +396,7 @@ console.log(colorBy)
         },
         body: JSON.stringify({
           "samplelocation": selectedLocations,
-          "column": colorBy,
+          "column": String(colorBy).toLocaleLowerCase(),
           "columnValues" : colorBy === 'samplelocation' ? selectedLocations : [...selectedValues],
 
       }),      }
@@ -340,29 +436,37 @@ console.log(colorBy)
         ? SetTittleVariable('location')
         : SetTittleVariable(colorBy.replace('_', ' '));
       setLocation(selectedLocations);
-      setSelectedColorBy(colorBy);
-      setFilterPetition(true);
+      setSelectedColorBy(tempSelectedColorBy);
+      setInitialValueOptions(new Set(valueOptions));
+      setColorBy(tempSelectedColorBy);  // Aplicar columna temporal al estado real
+      setSelectedValues(tempSelectedValues);  // Aplicar valores temporales al estado real
+      setFilterPeticion(true);  // Activar el estado de solicitud de filtro
     } catch (error) {
       console.error("Error applying filters:", error);
-      setFilterPetition(false);
+      setFilterPeticion(false);
     }
   };
+
+
+
 
   // useEffect(() => {fetchProjectIdsFiltercolor(dataResult, theRealColorByVariable)}, [theRealColorByVariable,  dataResult]);
 
   useEffect(() => {
-    if (otus && colorBy) {
+    if (otus && tempSelectedColorBy) {
         // Filtrar los valores únicos de la columna seleccionada
-        const columnIndex = columnOptions.indexOf(colorBy);
+        const columnIndex = columnOptions?.indexOf(String(tempSelectedColorBy).toLowerCase());
         const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
         const uniqueValuesCheck: Set<string> = new Set(dataResult?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+        console.log(uniqueValuesCheck)
+        console.log(uniqueValues)
 
         setValueOptions([...uniqueValues].filter(value => value !== 'null'));
 
         // Inicializa 'selectedValues' con todos los valores únicos
-        setSelectedValues(new Set<string>(uniqueValuesCheck));
+        setTempSelectedValues(new Set<string>(uniqueValuesCheck));
     }
-}, [colorBy, dataResult]);
+}, [tempSelectedColorBy, dataResult]);
 
 // Estado para manejar los valores seleccionados en los checks
 const handleValueChange = (value: string) => {
@@ -383,6 +487,28 @@ const handleValueChange = (value: string) => {
     });
 };
 
+const handleValueChangeTemp = (value: string) => {
+  setTempSelectedValues(prevTempSelectedValues => {
+    const newTempSelectedValues = new Set(prevTempSelectedValues);
+
+    // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
+    if (newTempSelectedValues.size === 1 && newTempSelectedValues.has(value)) {
+        return prevTempSelectedValues;
+    }
+
+    // Si el valor está presente, lo eliminamos
+    if (newTempSelectedValues.has(value)) {
+        newTempSelectedValues.delete(value);
+    } else if (value !== null && value !== 'null') { // Verifica que el valor no sea null antes de añadirlo
+        // Si el valor no está presente y no es null, lo añadimos
+        newTempSelectedValues.add(value);
+    }
+
+    return newTempSelectedValues;
+});
+};
+
+
 const config: Partial<Config> = {
   displaylogo: false,
   responsive: true,
@@ -402,31 +528,34 @@ fetchProjectIdsFiltercolor(dataResult, value);
   setTheRealColorByVariable(value);
 };
 
+const handleTempColorByChange = (value: string) => {
+  setTempSelectedColorBy(value);
+};
 
 
 const valueChecks = (
-  <div className="flex flex-col w-full mb-5 mt-5">
-    <div className="flex w-full flex-row flex-wrap items-start justify-start">
-      {valueOptions?.filter(value => value !== null && colorBy !== "samplelocation").map((value , index) => {
-        const stringValue = String(value);
-
-        return (
-          <div key={index} className="flex items-center mb-2 mr-2 ml-2">
-            <Checkbox
-              inputId={`value-${index}`}
-              value={value}
-              checked={selectedValues.has(value)}
-              onChange={() => handleValueChange(value)}
-              className=" text-blue-600"
-            />
-            <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-              {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
-            </label>
-          </div>
-        );
-      })}
-    </div>
+<div className="flex flex-col w-full mb-5 mt-5">
+  <div className="flex w-full flex-row flex-wrap items-start justify-start">
+    {valueOptions?.filter(value => value !== null && tempSelectedColorBy !== "samplelocation").map((value, index) => {
+      const stringValue = String(value);
+      return (
+        <div key={index} className="flex items-center mb-2 mr-2 ml-2">
+          <Checkbox
+            inputId={`value-${index}`}
+            value={value}
+            checked={tempSelectedValues.has(value)}
+            onChange={() => handleValueChangeTemp(value)}
+            className="text-blue-600"
+          />
+          <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+            {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
+          </label>
+        </div>
+      );
+    })}
   </div>
+</div>
+
 );
 
 // useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy]);
@@ -613,14 +742,179 @@ const fetchProjectIdsFilter = async (result: any) => {
 
       setScatterData(Object.values(scatterPlotData));
       setIsLoaded(true);
-      setFilterPetition(false);
+      setFilterPeticion(false);
   } catch (error) {
       console.error("Error al obtener projectIds:", error);
-      setFilterPetition(false);
+      setFilterPeticion(false);
   }
 };
 
 
+// Función para buscar texto en Community_Makeup
+const findTextInCommunityMakeup = (
+  config: { Community_Makeup: { Analysis: any } },
+  location: string,
+  column: string
+) => {
+  console.log("Searching in Community_Makeup:", { location, column });
+  const analysis = config?.Community_Makeup?.Analysis;
+  if (!analysis) return null;
+
+  const locationKey = `SampleLocation_${location}`;
+  const locationData = analysis[locationKey];
+  console.log("Location data:", locationData);
+
+  if (locationData && typeof locationData[column] === "string") {
+    console.log("Text found:", locationData[column]);
+    return locationData[column];
+  }
+
+  return null;
+};
+
+    // Función para normalizar `formedKey` ordenando los valores después del prefijo
+    const normalizeFormedKey = (formedKey: string) => {
+      const [prefix, values] = formedKey.split('_');
+      const sortedValues = values.split('+').sort().join('+');
+      return `${prefix}_${sortedValues}`;
+  };
+
+    // Función para obtener propiedades anidadas de forma insensible a mayúsculas/minúsculas
+    const getNestedProperty = (obj: any, keys: any[]) => {
+      let currentObj = obj;
+      console.log("Starting getNestedProperty with keys:", keys);
+
+      for (const key of keys) {
+          if (currentObj && typeof currentObj === 'object') {
+              console.log("Current object for key:", key, currentObj);
+              const foundKey = Object.keys(currentObj).find(k => k.toLowerCase() === key.toLowerCase());
+              if (foundKey) {
+                  console.log(`Key "${foundKey}" found for "${key}", proceeding to next level.`);
+                  currentObj = currentObj[foundKey];
+              } else {
+                  console.log(`Key "${key}" not found in current level.`);
+                  return null;
+              }
+          } else {
+              console.log("Current object is not valid for further key lookup:", currentObj);
+              return null;
+          }
+      }
+
+      console.log("Final value found in getNestedProperty:", currentObj);
+      return currentObj;
+  };
+// Función para buscar texto con claves insensibles a mayúsculas/minúsculas
+const findTextInCommunityMakeupNested = (
+  config: { Community_Makeup: { Analysis: any } },
+  location: string,
+  formedKey: string,
+  column: string
+) => {
+  const analysis = config?.Community_Makeup?.Analysis;
+  if (!analysis) {
+    console.log("Analysis not found in config.");
+    return null;
+  }
+
+  const locationKey = `SampleLocation_${location}`;
+  console.log("Searching in locationKey:", locationKey);
+
+  const locationData = getNestedProperty(analysis, [locationKey]);
+  if (!locationData) {
+    console.log(`Location data for key "${locationKey}" not found.`);
+    return null;
+  }
+
+  console.log("Location data found:", locationData);
+  console.log("Attempting to find formedKey:", formedKey);
+
+  // Busca el valor directamente
+  let value = getNestedProperty(locationData, [formedKey]);
+  console.log("Value found for formedKey:", value);
+
+  // Busca usando una clave normalizada si no se encuentra
+  if (!value) {
+    const normalizedFormedKey = normalizeFormedKey(formedKey);
+    console.log("Attempting to find normalized formedKey:", normalizedFormedKey);
+
+    value = getNestedProperty(locationData, [normalizedFormedKey]);
+    console.log("Value found for normalized formedKey:", value);
+  }
+
+  // Si el valor encontrado es un objeto, busca en la columna
+  if (value && typeof value === "object") {
+    console.log(`formedKey "${formedKey}" contains an object, checking for column "${column}"`);
+    value = value[column] || null;
+    console.log("Value for column in formedKey object:", value);
+  }
+
+  if (typeof value === "string") {
+    console.log("Text found in nested:", value);
+    return value;
+  }
+
+  console.log("No matching text found for the given keys.");
+  return null;
+};
+
+
+
+
+useEffect(() => {
+  const location = selectedLocations.length > 1 ? "All" : selectedLocations[0];
+  console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
+  console.log("Selected locations:", selectedLocations);
+  
+  if (location && theRealColorByVariable) {
+    const formattedColumn = String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1);
+    console.log("Formatted column and location:", { formattedColumn, location });
+
+    const allValuesSelected = Array.from(initialValueOptions)?.every(option => selectedValues.has(option));
+
+    if (allValuesSelected) {
+      const textForConfig = findTextInCommunityMakeup(
+        configFile,
+        location,
+        tempSelectedColorBy === "samplelocation" ? "Self" : formattedColumn
+      );
+      console.log("Text for all values selected:", textForConfig);
+      setTextForConfigKey(textForConfig || "");
+    } else if (
+      String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) !== "SampleLocation" &&
+      selectedValues.size > 0
+    ) {
+      const tempValuesArray = Array.from(tempSelectedValues)
+        .map(value => String(value).replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, ""));
+
+      const formedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.join("+")}`;
+      const normalizedFormedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.sort().join("+")}`;
+
+      console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+
+      let textForConfig = findTextInCommunityMakeupNested(
+        configFile,
+        location,
+        formedKey,
+        theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
+      );
+
+      if (!textForConfig) {
+        textForConfig = findTextInCommunityMakeupNested(
+          configFile,
+          location,
+          normalizedFormedKey,
+          theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
+        );
+      }
+
+      console.log("Text for specific filter:", textForConfig);
+      setTextForConfigKey(textForConfig || "");
+    } else {
+      setTextForConfigKey("");
+    }
+  }
+}, [selectedLocations, tempSelectedColorBy, theRealColorByVariable, tempSelectedValues, configFile]);
 
 
   useEffect(() => {
@@ -647,19 +941,93 @@ const fetchProjectIdsFilter = async (result: any) => {
     };
 
 
-    const dropdownOptionsColorby = [
-      console.log("columnoptions",columnOptions),
-      console.log("colorbyoptions",colorByOptions),
-      { label: 'Sample Location', value: 'samplelocation' },
-      {label:'Treatment', value:'treatment'}, 
-      ...colorByOptions
-        ?.filter(option => String(columnOptions)?.toLowerCase().includes(option)) 
-        .map(option => ({
-            label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
-            value: option
-        }))
-    ];
+    const dropdownOptionsColorby = (() => {
+      console.log("columnOptions", columnOptions);
+      console.log("colorByOptions", colorByOptions);
+  
+      if (!columnOptions || !colorByOptions) {
+          console.warn("columnOptions o colorByOptions están indefinidos.");
+          return []; // Devuelve un arreglo vacío si las listas no están definidas
+      }
+  
+      return colorByOptions
+          .filter(option => 
+              columnOptions.map(col => String(col).toLowerCase())
+              .includes(String(option).toLowerCase())
+          ) // Asegúrate de que ambas listas se tratan como cadenas
+          .map(option => {
+              if (!option) {
+                  console.warn("Se encontró un valor undefined o null en colorByOptions.");
+                  return null; // Filtrar después valores nulos
+              }
+  
+              const label = labelReplacements[String(option).toLowerCase()]
+                  ? labelReplacements[String(option).toLowerCase()]
+                  : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1);
+  
+              return {
+                  label,
+                  value: String(option).toLowerCase()
+              };
+          })
+          .filter(option => option !== null); // Filtrar cualquier entrada nula que haya pasado
+  })();
+  
+  const [initialValueOptions, setInitialValueOptions] = useState<Set<string>>(new Set()); // Copia estática de valueOptions
+  
+  useEffect(() => {
+    if (valueOptions?.length > 0) {
+        setInitialValueOptions(new Set(valueOptions)); // Solo actualizar cuando se carguen los datos o se aplique un filtro
+    }
+}, [selectedValues]);
 
+  useEffect(() => {
+    const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
+    console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
+    console.log("selected locations:", selectedLocations);
+    if (location && theRealColorByVariable) {
+        const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+        console.log("Formatted column and location:", { formattedColumn, location });
+
+        const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
+
+        if (allValuesSelected) {
+            const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
+            console.log("Text for all values selected:", textForConfig);
+            setTextForConfigKey(textForConfig || "");
+        } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
+            // Limpia cada valor en valuesArray para eliminar caracteres especiales
+            const valuesArray = Array.from(selectedValues)
+                .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
+
+            const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
+            const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
+
+            console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+
+            // Intentar buscar con formedKey primero y luego con normalizedFormedKey
+            let textForConfig = findTextInCommunityMakeupNested(
+                configFile,
+                location,
+                formedKey,
+                theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+            );
+            if (!textForConfig) {
+                textForConfig = findTextInCommunityMakeupNested(
+                    configFile,
+                    location,
+                    normalizedFormedKey,
+                    theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+                );
+            }
+
+            console.log("Text for specific filter:", textForConfig);
+            setTextForConfigKey(textForConfig || "");
+        } else {
+            setTextForConfigKey("");
+        }
+    }
+}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
 
 
     const dropdownOptions = [
@@ -668,7 +1036,9 @@ const fetchProjectIdsFilter = async (result: any) => {
       .map(option => ({
           label: (option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1),
           value: option
-      }))]
+      }))
+    ]
+      
       const filter = (
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
           <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
@@ -680,11 +1050,12 @@ const fetchProjectIdsFilter = async (result: any) => {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Please select a sample location prior to selected a grouping variable."
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
-                    <PTooltip target="#sampleLocationTooltip" />
+                  
+                    <PTooltip target="#sampleLocationTooltip"  style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                ><span>View all sample locations together, or focus on a single one. <b>Note: </b>some analyses are only available for individual locations.</span></PTooltip>
                   </span>
                 </h3>
                 <Dropdown
@@ -705,7 +1076,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Only available when a specific location is selected.  Select a grouping variable within a sample location."
+                      data-pr-tooltip="Adjusts how samples are grouped and colored in the analysis. To use, select a sample location above, then choose a grouping variable."
                       data-pr-position="top"
                       id="groupByTooltip"
                     />
@@ -734,14 +1105,15 @@ const fetchProjectIdsFilter = async (result: any) => {
                       className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
                       id="filteringTip"
                     />
-                    <PTooltip target="#filteringTip" position="top">
-                    Select a variable and specify the groups you want to include in the filtered dataset.                    </PTooltip>
+                    <PTooltip target="#filteringTip" position="top" style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                ><span>Select specific subsets of samples for analysis. Choose a variable, then pick the groups within that variable to include. <b>Note: </b>only one variable can be filtered at a time.</span></PTooltip>
                   </h3>
                 </div>
       
                 <ul className="w-full flex flex-wrap items-center content-center justify-start mt-2">
       
-                  {colorByOptions.map((option, index) => (
+                  {colorByOptions?.map((option:any, index) => (
+                    option = String(option).toLowerCase(),
                     <li key={index} className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
                       <input
                         type="radio"
@@ -749,7 +1121,7 @@ const fetchProjectIdsFilter = async (result: any) => {
                         name={option}
                         className="hidden peer"
                         value={option}
-                        checked={colorBy === option}
+                        checked={tempSelectedColorBy === option}
                         onChange={handleLocationChangeColorby}
                       />
                       <label
@@ -758,9 +1130,11 @@ const fetchProjectIdsFilter = async (result: any) => {
                           w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${colorBy === selectedColorBy ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                       >
                         <div className="block">
-                          <div className="w-full">
-                            {(option as string).charAt(0).toUpperCase() + (option as string).replace('_', ' ').slice(1)}
-                          </div>
+                        <div className="w-full text-base">
+                                                {labelReplacements[String(option).toLowerCase()]
+                                                    ? labelReplacements[String(option).toLowerCase()]
+                                                    : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1)}
+                                            </div>
                         </div>
                       </label>
                     </li>
@@ -835,6 +1209,36 @@ useEffect(() => {
     <div className="flex flex-row w-full items-center">
       <div className="w-full " ref={plotContainerRef}>
       {loaded && (
+        <>
+           <div className="flex flex-row w-full justify-end items-end mb-2">
+                            {/* <div className="flex items-center">
+                                <Button
+                                    className="p-button-rounded p-button-outlined p-button-sm"
+                                    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
+                                    tooltip={`Change to ${graphType === "boxplot" ? "violin" : "boxplot"} view`}
+                                >
+                                    <RiExchangeFundsLine className="text-lg" />
+
+                                </Button>
+                            </div> */}
+
+                            {/* <PToast ref={toast} position="top-right" /> */}
+                            <div className="flex items-center mx-2">
+                                <Button
+                                    className="p-button-rounded p-button-outlined p-button-sm"
+                                    onClick={downloadCombinedSVG}
+                                    tooltip="Download PDF"
+                                >
+                                    {isLoadingPDF ? (
+                                        <ProgressSpinner style={{ width: '19px', height: '19px' }} />
+                                    ) : (
+                                        <FaFilePdf className="text-lg" />
+                                    )}
+                                </Button>
+
+                            </div>
+                        </div>
+                          <div id="plot" ref={plotRef}>
       <Plot
         data={scatterData}
         config={config}
@@ -882,7 +1286,11 @@ useEffect(() => {
                     margin: { l: 60, r: 10, t: 0, b: 60 } 
 
         }}
-      />)}
+      />
+                            </div>
+        </>
+      
+      )}
       </div>
 
     </div>
@@ -909,7 +1317,7 @@ useEffect(() => {
 
       <div className={`prose single-column`}>
       <p className="text-gray-700 m-3 text-justify text-xl">
-  {`For exploring the composition of the microbiome in different groups, we use methods that evaluate Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
+  {`For exploring the composition of the microbiome in different groups, we use methods that evaluate an ecological diversity measure called Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
 </p>
 
 </div>
@@ -917,7 +1325,7 @@ useEffect(() => {
 
     </div>
   <div className="flex">
-    <GraphicCard legend={""} text={"Each axis represents a combination of features (OTUs) that account for high amounts of variation between samples. The proportion of the differences for which this combination of features accounts is shown on the axis (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability."} filter={filter} title={title}>
+    <GraphicCard legend={""} text={"Each axis represents a combination of features (the sequences in the samples) that account for high amounts of variation between samples. Each axis shows the proportion of variability that is accounted for by this combination of features (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability."} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <div className="w-full flex flex-col">
 
@@ -925,30 +1333,13 @@ useEffect(() => {
           <div className="w-full flex flex-row ">
                            
                            <div className="px-6 py-8 w-full" >
-                               <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                   {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
-                                   if (key === "samplelocation" && selectedColorBy==="samplelocation"  && typeof value === 'string') {
-                                   
-                                       return (
-                                         <div key={key} className="col-span-2">
-                                           <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                         </div>
-                                       );
-                                     }
-                                       return null;  // No renderizar nada si no se cumplen las condiciones
-                                   })}
-                               </div>
+                              
                                <div className="prose flex flex-row flex-wrap">
-                                   {Object.entries(configFile?.betadiversity?.graph || {}).map(([key, value]) => {
-                                       if (key === selectedColorBy && key !== "samplelocation") {
-                                           if (typeof value === 'string' && value !== null) {
-                                               return (  <div key={key} className="col-span-2">
-                                               <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                             </div>);
-                                           } 
-                                       }
-                                       return null;
-                                   })}
+                               {textForConfigKey && (
+                                                                        <div className="col-span-2" >
+                                                                            <p className="text-gray-700 m-3 text-justify font-light" style={{ fontSize: '1.3rem' }}>{textForConfigKey}</p>
+                                                                        </div>
+                                                                    )}
                                </div>
                            </div>
                        </div>

@@ -940,20 +940,19 @@ useEffect(() => {
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
-
     const dropdownOptionsColorby = (() => {
       console.log("columnOptions", columnOptions);
       console.log("colorByOptions", colorByOptions);
   
       if (!columnOptions || !colorByOptions) {
           console.warn("columnOptions o colorByOptions están indefinidos.");
-          return []; // Devuelve un arreglo vacío si las listas no están definidas
+          return [{ label: 'Sample Location', value: 'samplelocation' }]; // Agregar el predeterminado si las listas no están definidas
       }
   
-      return colorByOptions
-          .filter(option => 
+      const filteredOptions = colorByOptions
+          .filter(option =>
               columnOptions.map(col => String(col).toLowerCase())
-              .includes(String(option).toLowerCase())
+                  .includes(String(option).toLowerCase())
           ) // Asegúrate de que ambas listas se tratan como cadenas
           .map(option => {
               if (!option) {
@@ -971,7 +970,11 @@ useEffect(() => {
               };
           })
           .filter(option => option !== null); // Filtrar cualquier entrada nula que haya pasado
+  
+      // Agregar la opción predeterminada al inicio de la lista
+      return [{ label: 'Sample Location', value: 'samplelocation' }, ...filteredOptions];
   })();
+  
   
   const [initialValueOptions, setInitialValueOptions] = useState<Set<string>>(new Set()); // Copia estática de valueOptions
   

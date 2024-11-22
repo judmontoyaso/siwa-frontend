@@ -203,7 +203,10 @@ const downloadCombinedSVG = async () => {
    link.click();
 }
 
-
+const fontSize = plotWidth ? Math.max(plotWidth * 0.02, 12) : 13;
+const titleFontSize = fontSize + 8;
+const axisTitleFontSize = fontSize + 4;
+const legendFontSize = fontSize;
 
     const updatePlotWidth = () => {
 
@@ -227,6 +230,7 @@ const downloadCombinedSVG = async () => {
           }
         };
       
+
         const plofatherElement = document.getElementById('plofather');
         console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
       
@@ -1283,7 +1287,9 @@ useEffect(() => {
               xanchor: "center", // Ancla en el centro
               y: 1.1, // Posición en y un poco por encima del gráfico
               yanchor: "top", // Ancla la leyenda en la parte superior
-              
+              font: {
+                size: legendFontSize,
+              },
           },
           dragmode: false ,
                     margin: { l: 60, r: 10, t: 0, b: 60 } 

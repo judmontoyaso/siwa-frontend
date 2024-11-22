@@ -498,7 +498,20 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-
+    useEffect(() => {
+        if (otus && theRealColorByVariable) {
+            const columnIndex = otus?.data?.columns.indexOf(theRealColorByVariable);
+            const categories = Array.from(
+                new Set(
+                    otus?.data?.data.map((item: any[]) => item[columnIndex])
+                )
+            );
+    
+            const updatedColors = assignColors(categories as string[]);
+            setScatterColors(updatedColors); // Actualizar los colores del gráfico
+        }
+    }, [otus, theRealColorByVariable, selectedLocations]);
+    
 
 
     const fetchProjectIds = async (result: any, columnIndex: any | undefined) => {
@@ -1012,9 +1025,26 @@ export default function Page({ params }: { params: { slug: string } }) {
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
+    const [persistentColors, setPersistentColors] = useState<{ [key: string]: string }>({});
 
 
-
+    const assignColors = (categories: string[]) => {
+        const updatedColors = { ...persistentColors }; // Copia del mapa de colores actual
+        let colorIndex = Object.keys(updatedColors).length;
+    
+        categories.forEach((category) => {
+            if (!updatedColors[category]) {
+                // Asignar un color solo si la categoría no tiene uno
+                const newColor = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][colorIndex % (colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]?.length || 1)];
+                updatedColors[category] = newColor;
+                colorIndex++;
+            }
+        });
+    
+        setPersistentColors(updatedColors);
+        return updatedColors;
+    };
+    
 
     const dropdownOptionsColorby = [
         { label: 'Sample Location', value: 'samplelocation' },
@@ -1860,7 +1890,7 @@ export default function Page({ params }: { params: { slug: string } }) {
                                                     type: graphType === "boxplot" ? "box" : "violin",
 
                                                     marker: {
-                                                        color: color,
+                                                        color: persistentColors[item.name],
                                                         size: 4,
                                                     },
                                                     boxpoints: graphType === "boxplot" ? "all" : undefined,

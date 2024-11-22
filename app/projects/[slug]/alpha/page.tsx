@@ -1375,7 +1375,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     }, [selectedValues]);
 
-
+    
     // Función para buscar el texto basado en la estructura anidada
     const findTextInRichness = (config: { Richness: { Analysis: any; }; }, location: string, column: string) => {
         console.log("Searching in Richness:", { location, column });

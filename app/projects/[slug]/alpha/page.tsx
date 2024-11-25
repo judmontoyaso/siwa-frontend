@@ -85,7 +85,10 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [tempSelectedColumn, setTempSelectedColumn] = useState<string>(selectedColumn);
     const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set([...selectedValues]));
     const [columnsOrder, setColumnsOrder] = useState<{ [key: string]: { [key: string]: number } }>({});
-
+// En la parte superior de tu componente
+    const colorIndices = useRef<{ [key: string]: number }>({});
+    const [isDataReady, setIsDataReady] = useState(false);
+    const [annotations, setAnnotations] = useState<any[]>([]);
     const [Location, setLocation] = useState<string[]>([
 
     ]);
@@ -97,11 +100,22 @@ export default function Page({ params }: { params: { slug: string } }) {
     const configTextRef = useRef(null);
 
     const router = useRouter();
+    const [persistentColors, setPersistentColors] = useState<{ [column: string]: { [value: string]: string } }>({});
 
     const items = [
         { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) => <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
         { label: 'Richness', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) => <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
     ];
+
+
+    type ColorPaletteArray = string[];
+
+interface ColorPaletteMap {
+  [key: string]: string; // Index signature to allow any string key
+  colors: string;     // Optional 'colors' array for additional colors
+}
+
+type ColorPalette = ColorPaletteArray | ColorPaletteMap;
 
     const home = { icon: 'pi pi-home', template: (item: any, option: any) => <Link href={`/`}><i className={home.icon}></i></Link> };
     const [isLoadingPDF, setIsLoadingPDF] = useState(false);
@@ -148,32 +162,9 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
     };
-    console.log(svg2pdf);
-    const downloadPDF = async () => {
-        setIsLoadingPDF(true); // Muestra el indicador de carga
-        await generatePDF();
-        setIsLoadingPDF(false); // Oculta el indicador de carga una vez finalizada
-
-        toast.current?.show({
-            severity: 'success',
-            summary: 'PDF Downloaded',
-            detail: 'The PDF file has been downloaded successfully.',
-            life: 3000 // Duración de la notificación en milisegundos
-        });
-
-    };
-
-    useEffect(() => {
-        if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
-            setColorOrder(colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]);
-        }
-
-    }, [theRealColorByVariable, selectedLocations]);
 
 
-    useEffect(() => {
-        console.log("colororder", colorPalettes)
-    }, [colorPalettes])
+ 
 
     const fetchConfigFile = async (token: any) => {
         try {
@@ -282,6 +273,67 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
+    const fetchProjectIds = async (result: any, columnIndex: any | undefined) => {
+        console.log("fetchProjectIds", theRealColorByVariable)
+        try {
+            let colorIndex = 0;
+            const filteredData =
+                result?.data?.data?.filter((item: string[]) =>
+                    selectedLocations?.includes(item[1])
+                ) || [];
+            const groupedData = filteredData?.reduce(
+                (
+                    acc: {
+                        [x: string]: {
+                            y: any;
+                            text: string[];
+                            marker: { color: string };
+                        };
+                    },
+                    item: any[]
+                ) => {
+                    const location = item[1];
+                    const alphaShannon = item[2];
+                    const sampleId = item[0];
+                    const groupValue = item[columnIndex];
+
+                    if (!acc[groupValue]) {
+                        acc[groupValue] = {
+                            y: [],
+                            text: [],
+                            marker: {
+                                color: getColorForValue(
+                                    groupValue,
+                                    theRealColorByVariable,
+                                    scatterColors,
+                                    colorOrder
+                                ) || "#000000",
+                            },
+                        };
+                    }
+
+                    acc[groupValue].y.push(alphaShannon);
+                    acc[groupValue].text.push(`Sample ID: ${sampleId}`);
+
+                    return acc;
+                },
+                {}
+            );
+
+            setPlotData(
+                Object.keys(groupedData)
+                    .sort((a, b) => a.localeCompare(b))
+                    .map((group) => ({
+                        ...groupedData[group],
+                        type: "box",
+                        name: group,
+                    }))
+            );
+            setIsLoaded(true);
+        } catch (error) {
+            console.error("Error al obtener projectIds:", error);
+        }
+    };
 
     const fetchDataFilter = async (token: any, columnIndex: number | undefined) => {
         console.log("fetchDataFilter")
@@ -418,163 +470,225 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
 
-    useEffect(() => {
-        if (otus && theRealColorByVariable) {
-            console.log("Asignación de colores iniciada para:", theRealColorByVariable);
+    // useEffect(() => {
+    //     if (otus && theRealColorByVariable) {
+    //         console.log("Asignación de colores iniciada para:", theRealColorByVariable);
 
-            const colorPalette = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes];
-            if (!colorPalette) {
-                console.error(`No palette found for column: ${theRealColorByVariable}`);
-                return;
-            }
+    //         const colorPalette = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes];
+    //         if (!colorPalette) {
+    //             console.error(`No palette found for column: ${theRealColorByVariable}`);
+    //             return;
+    //         }
 
-            // Índice de la columna correspondiente
-            const columnIndex = otus?.data?.columns?.indexOf(theRealColorByVariable);
-            if (columnIndex === -1) {
-                console.error(`Column ${theRealColorByVariable} not found in data.columns.`);
-                return;
-            }
-            const categories = Array.from(
-                new Set(otus?.data?.data?.map((item: any[]) => item[columnIndex]))
-            );
-            const normalizeKey = (key: string) => key.toLowerCase(); // Función para normalizar claves
+    //         // Índice de la columna correspondiente
+    //         const columnIndex = otus?.data?.columns?.indexOf(theRealColorByVariable);
+    //         if (columnIndex === -1) {
+    //             console.error(`Column ${theRealColorByVariable} not found in data.columns.`);
+    //             return;
+    //         }
+    //         const categories = Array.from(
+    //             new Set(otus?.data?.data?.map((item: any[]) => item[columnIndex]))
+    //         );
+    //         const normalizeKey = (key: string) => key.toLowerCase(); // Función para normalizar claves
            
-            // Normaliza las claves del diccionario
+    //         // Normaliza las claves del diccionario
           
-            // Busca el diccionario normalizado para la columna, ignorando mayúsculas o minúsculas
-            let customOrderForColumn = {}
-            console.log("Orden personalizado1:", columnsOrder);
-            // if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
-            //     console.log("Orden personalizado2:", columnsOrder);
-            //     const normalizedColumnsOrder = Object.keys(columnsOrder)?.reduce((acc, key) => {
-            //         acc[normalizeKey(key)] = Object.keys(columnsOrder[key])?.reduce((innerAcc, innerKey) => {
-            //             innerAcc[normalizeKey(innerKey)] = columnsOrder[key][innerKey];
-            //             return innerAcc;
-            //         }, {} as { [key: string]: number });
-            //         return acc;
-            //     }, {} as { [key: string]: { [key: string]: number } });
-            // }
-            console.log("thereal", theRealColorByVariable);
-            if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
-                for (let key in columnsOrder) {
-                    if (key.toLowerCase() === theRealColorByVariable.toLowerCase()) {
-                        customOrderForColumn = columnsOrder[key];
-                    }
-                }
-              }
+    //         // Busca el diccionario normalizado para la columna, ignorando mayúsculas o minúsculas
+    //         let customOrderForColumn = {}
+    //         console.log("Orden personalizado1:", columnsOrder);
+    //         // if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
+    //         //     console.log("Orden personalizado2:", columnsOrder);
+    //         //     const normalizedColumnsOrder = Object.keys(columnsOrder)?.reduce((acc, key) => {
+    //         //         acc[normalizeKey(key)] = Object.keys(columnsOrder[key])?.reduce((innerAcc, innerKey) => {
+    //         //             innerAcc[normalizeKey(innerKey)] = columnsOrder[key][innerKey];
+    //         //             return innerAcc;
+    //         //         }, {} as { [key: string]: number });
+    //         //         return acc;
+    //         //     }, {} as { [key: string]: { [key: string]: number } });
+    //         // }
+    //         console.log("thereal", theRealColorByVariable);
+    //         if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
+    //             for (let key in columnsOrder) {
+    //                 if (key.toLowerCase() === theRealColorByVariable.toLowerCase()) {
+    //                     customOrderForColumn = columnsOrder[key];
+    //                 }
+    //             }
+    //           }
 
-            console.log("Categorías:", categories);
-            console.log("Orden personalizado:", customOrderForColumn);
-            const orderedCategories = categories?.sort((a, b) => {
-                console.log("Ordenando categorías:", a, b);
-                const orderA = (customOrderForColumn as { [key: string]: number })[a as string] ?? Infinity; // Poner categorías no definidas al final
-                console.log("Orden A:", orderA);
-                const orderB = (customOrderForColumn as { [key: string]: number })[b as string] ?? Infinity; // Poner categorías no definidas al final
-                console.log("Orden B:", orderB);
-                return orderA - orderB;
-            });
+    //         console.log("Categorías:", categories);
+    //         console.log("Orden personalizado:", customOrderForColumn);
+    //         // const orderedCategories = categories?.sort((a, b) => {
+    //         //     console.log("Ordenando categorías:", a, b);
+    //         //     const orderA = (customOrderForColumn as { [key: string]: number })[a as string] ?? Infinity; // Poner categorías no definidas al final
+    //         //     console.log("Orden A:", orderA);
+    //         //     const orderB = (customOrderForColumn as { [key: string]: number })[b as string] ?? Infinity; // Poner categorías no definidas al final
+    //         //     console.log("Orden B:", orderB);
+    //         //     return orderA - orderB;
+    //         // });
 
-            // Crear un nuevo mapa de colores
-            const newColors: { [key: string]: string } = {};
-            orderedCategories.forEach((category, index) => {
-                const color = colorPalette[index % colorPalette.length];
-                newColors[category as string] = color;
-                console.log(`Asignado color: ${color} para categoría: ${category}`);
-            });
+    //         const orderedCategories = categories.sort((a, b) => {
+    //             if (Object.keys(customOrderForColumn).length > 0) {
+    //                 // Ordenar según el orden predeterminado
+    //                 return customOrderForColumn[a] - customOrderForColumn[b];
+    //             } else {
+    //                 if (typeof a === 'number' && typeof b === 'number') {
+    //                     return a - b;
+    //                 } else {
+    //                     return String(a).localeCompare(String(b));
+    //                 }
+    //             }
+    //         });
+            
+            
 
-            console.log("Mapa final de colores:", newColors);
-            setScatterColors(newColors);
-            const newLayout = {
-                ...layout,
-                xaxis: {
-                    ...layout?.xaxis,
-                    categoryorder: "array",
-                    categoryarray: orderedCategories,
-                },
-            };
-            setLayout(newLayout);
+    //         // Crear un nuevo mapa de colores
+    //         const newColors: { [key: string]: string } = {};
+    //         orderedCategories.forEach((category, index) => {
+    //             const color = colorPalette[index % colorPalette.length];
+    //             newColors[category as string] = color;
+    //             console.log(`Asignado color: ${color} para categoría: ${category}`);
+    //         });
+
+    //         console.log("Mapa final de colores:", newColors);
+    //         setScatterColors(newColors);
+    //         const newLayout = {
+    //             ...layout,
+    //             xaxis: {
+    //                 ...layout?.xaxis,
+    //                 categoryorder: "array",
+    //                 categoryarray: orderedCategories,
+    //             },
+    //         };
+    //         setLayout(newLayout);
+    //     }
+    // }, [otus, theRealColorByVariable, colorPalettes, columnsOrder]);
+
+
+
+    // useEffect(() => {
+    //     if (otus && theRealColorByVariable) {
+    //         const columnIndex = otus?.data?.columns.indexOf(theRealColorByVariable);
+    //         const categories = Array.from(
+    //             new Set(
+    //                 otus?.data?.data.map((item: any[]) => item[columnIndex])
+    //             )
+    //         );
+    
+    //         const updatedColors = assignColors(categories as string[]);
+    //         setScatterColors(updatedColors); // Actualizar los colores del gráfico
+    //     }
+    // }, [otus, theRealColorByVariable, selectedLocations]);
+    
+    useEffect(() => {
+        if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+            const palette = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes];
+            if (Array.isArray(palette)) {
+                setColorOrder(palette);
+            } else if (palette && 'colors' in palette) {
+                setColorOrder(palette.colors);
+            }
         }
-    }, [otus, theRealColorByVariable, colorPalettes, columnsOrder]);
+
+    }, [theRealColorByVariable, selectedLocations]);
+
+    
+
+    useEffect(() => {console.log("colororder",colorOrder)}, [colorOrder])
+
+    useEffect(() => {
+        console.log("colorpalettes", colorPalettes)
+    }, [colorPalettes])
 
 
 
     useEffect(() => {
-        if (otus && theRealColorByVariable) {
-            const columnIndex = otus?.data?.columns.indexOf(theRealColorByVariable);
-            const categories = Array.from(
-                new Set(
-                    otus?.data?.data.map((item: any[]) => item[columnIndex])
-                )
-            );
-    
-            const updatedColors = assignColors(categories as string[]);
-            setScatterColors(updatedColors); // Actualizar los colores del gráfico
-        }
-    }, [otus, theRealColorByVariable, selectedLocations]);
-    
-
-
-    const fetchProjectIds = async (result: any, columnIndex: any | undefined) => {
-        try {
-            let colorIndex = 0;
-            const filteredData =
-                result?.data?.data?.filter((item: string[]) =>
-                    selectedLocations?.includes(item[1])
-                ) || [];
-            const groupedData = filteredData?.reduce(
-                (
-                    acc: {
-                        [x: string]: {
-                            y: any;
-                            text: string[];
-                            marker: { color: string };
-                        };
-                    },
-                    item: any[]
-                ) => {
-                    const location = item[1];
-                    const alphaShannon = item[2];
-                    const sampleId = item[0];
-                    const groupValue = item[columnIndex];
-
-                    if (!acc[groupValue]) {
-                        acc[groupValue] = {
-                            y: [],
-                            text: [],
-                            marker: {
-                                color: getColorForValue(
-                                    groupValue,
-                                    theRealColorByVariable,
-                                    scatterColors,
-                                    colorOrder
-                                ),
-                            },
-                        };
+        if (dataUnique) {
+          const columns = dataUnique?.data?.columns;
+          const data = dataUnique?.data?.data;
+      
+          const newPersistentColors: { [column: string]: { [value: string]: string } } = {};
+      
+          columns?.forEach((column: string) => {
+            const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)])));
+            const colorPalette = colorPalettes[column as keyof typeof colorPalettes];
+      
+            const colorsForColumn: { [value: string]: string } = {};
+      
+            if (colorPalette) {
+              if (Array.isArray(colorPalette)) {
+                // If the palette is an array, assign colors in order
+                let colorIndex = 0;
+                uniqueValues?.forEach((value:any) => {
+                  if (value !== null && value !== 'null') {
+                    colorsForColumn[value] = colorPalette[colorIndex % colorPalette.length];
+                    colorIndex++;
+                  }
+                });
+              } else if (typeof colorPalette === 'object') {
+                // If the palette is an object, assign colors based on mappings
+                let colorIndex = 0;
+                const additionalColors = colorPalette.colors || []; // For unmapped values
+                uniqueValues?.forEach((rawValue) => {
+                    // Convertimos el valor a string de manera segura
+                    const value = String(rawValue);
+                  
+                    if (value !== "null" && value !== "undefined") {
+                      // Verifica si el colorPalette es un objeto y si la clave existe
+                      if (
+                        typeof colorPalette === "object" &&
+                        !Array.isArray(colorPalette) &&
+                        value in colorPalette
+                      ) {
+                        const resolvedColor = colorPalette[value as keyof typeof colorPalette];
+                        // Verifica que el color no sea un array antes de asignarlo
+                        if (typeof resolvedColor === "string") {
+                          colorsForColumn[value] = resolvedColor;
+                        } else if (Array.isArray(resolvedColor) && resolvedColor.length > 0) {
+                          colorsForColumn[value] = resolvedColor[0]; // Asignar el primer color del array si es necesario
+                        } else {
+                          colorsForColumn[value] = "#000000"; // Color por defecto
+                        }
+                      } else if (
+                        Array.isArray(additionalColors) &&
+                        additionalColors.length > 0
+                      ) {
+                        colorsForColumn[value] =
+                          additionalColors[colorIndex % additionalColors.length];
+                        colorIndex++;
+                      } else {
+                        colorsForColumn[value] = "#000000"; // Color por defecto
+                      }
                     }
-
-                    acc[groupValue].y.push(alphaShannon);
-                    acc[groupValue].text.push(`Sample ID: ${sampleId}`);
-
-                    return acc;
-                },
-                {}
-            );
-
-            setPlotData(
-                Object.keys(groupedData)
-                    .sort((a, b) => a.localeCompare(b))
-                    .map((group) => ({
-                        ...groupedData[group],
-                        type: "box",
-                        name: group,
-                    }))
-            );
-            setIsLoaded(true);
-        } catch (error) {
-            console.error("Error al obtener projectIds:", error);
+                  });
+                  
+                  
+              }
+            } else {
+              // No color palette found for the column
+              uniqueValues?.forEach((value:any) => {
+                if (value !== null && value !== 'null') {
+                  colorsForColumn[value] = '#000000'; // Default color
+                }
+              });
+            }
+      
+            newPersistentColors[column] = colorsForColumn;
+          });
+      
+          setPersistentColors(newPersistentColors);
         }
-    };
+      }, [dataUnique]);
+      
+    
+    
 
+useEffect(() => {
+    // Reiniciar el contador de colores para la nueva variable
+    colorIndices.current[theRealColorByVariable] = 0;
+
+    // También puedes limpiar el colorMap si es necesario
+    setScatterColors({});
+}, [theRealColorByVariable]);
 
     const getColorForValue = (
         value: string,
@@ -583,27 +697,45 @@ export default function Page({ params }: { params: { slug: string } }) {
         colorOrder: string[]
     ) => {
         console.log(`Obteniendo color para valor: ${value}, columna: ${column}`);
-
-        // Si ya existe un color asignado, úsalo
-        if (colorMap[value]) {
-            console.log(`Color ya asignado para ${value}: ${colorMap[value]}`);
-            return colorMap[value];
+    
+        const colorsForVariable = persistentColors[column];
+        console.log("persistentColors", persistentColors);
+        console.log("colorsForVariable", colorsForVariable);
+        console.log("value",value)
+    if (colorsForVariable && colorsForVariable[value]) {
+        return colorsForVariable[value];
         }
-
-        // Obtener la paleta correspondiente a la columna seleccionada
-        const palette = colorPalettes[column as keyof typeof colorPalettes] || colorOrder;
-        console.log(`Paleta utilizada para ${column}:`, palette);
-
-        // Asignar el siguiente color disponible de la paleta
-        const nextColor = palette[Object.keys(colorMap).length % palette.length];
-        colorMap[value] = nextColor;
-
-        console.log(`Nuevo color asignado para ${value}: ${nextColor}`);
-        return nextColor;
+    
+        // // Inicializar el índice de color para la columna si no existe
+        // if (!(column in colorIndices.current)) {
+        //     colorIndices.current[column] = 0;
+        // }
+    
+        // // Obtener la paleta correspondiente a la columna seleccionada
+        // const palette = colorPalettes[column as keyof typeof colorPalettes] || colorOrder;
+        // console.log("column", column);
+        // console.log("tof?", colorPalettes[column as keyof typeof colorPalettes]);
+        // console.log("here colororder", colorOrder);
+        // console.log(`Paleta utilizada para ${column}:`, palette);
+    
+        // // Asignar el siguiente color disponible de la paleta
+        // const colorIndex = colorIndices.current[column];
+        // const nextColor = palette[colorIndex % palette.length];
+        // colorMap[value] = nextColor;
+    
+        // // Incrementar el índice de color para la columna
+        // colorIndices.current[column] += 1;
+    
+        // console.log(`Nuevo color asignado para ${value}: ${nextColor}`);
+        // return nextColor;
     };
+    
 
 
-
+    useEffect(() => {
+        // Reinicia scatterColors cuando cambia la variable de agrupación
+        setScatterColors({});
+    }, [theRealColorByVariable, dataUnique]);
 
 
 
@@ -642,10 +774,10 @@ export default function Page({ params }: { params: { slug: string } }) {
                             marker: {
                                 color: getColorForValue(
                                     colorByValue, // Valor de colorByVariable
-                                    theRealColorByVariable, // Variable actual
+                                    colorByVariable, // Variable actual
                                     scatterColors, // Mapa de colores existente
                                     colorOrder // Orden de colores
-                                )
+                                ) || '#000000' // Default color if undefined
                             }
                         };
                     }
@@ -675,9 +807,10 @@ export default function Page({ params }: { params: { slug: string } }) {
             if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
             shannonData = sortByCustomOrder(shannonData, colorByVariable, columnsOrder);
             console.log("Orden personalizado:", columnsOrder);
+            console.log("Datos de Shannon ordenados:", colorByVariable);
             }
             
-
+            
             // Actualizar estados
             setShannonData(shannonData as never[]);
             setPlotData(plotData);
@@ -689,26 +822,61 @@ export default function Page({ params }: { params: { slug: string } }) {
         }
     };
 
-
-
-    const sortByCustomOrder = (data: any[], column: string, orderDict: { [key: string]: { [key: string]: number } }) => {
-        let order = {};
-        if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
-            for (let key in columnsOrder) {
-                if (key.toLowerCase() === theRealColorByVariable.toLowerCase()) {
-                   order  = orderDict[key];
-                }
+    const sortByCustomOrder = (
+        data: any[],
+        column: string,
+        orderDict: { [key: string]: { [key: string]: number } }
+      ) => {
+        let order: { [key: string]: number } = {};
+        if (columnsOrder && Object.keys(columnsOrder).length > 0) {
+          for (let key in columnsOrder) {
+            if (key.toLowerCase() === column.toLowerCase()) {
+              order = orderDict[key];
+              break; // Found the matching column, no need to continue
             }
           }
-        return data.sort((a, b) => {
-            
-            const valueA = a.name || a[column];
-            const valueB = b.name || b[column];
-             // Obtener el diccionario para la columna específica
-            return (order[valueA as keyof typeof order] || Infinity) - (order[valueB as keyof typeof order] || Infinity);
-        });
-    };
-
+        }
+      
+        console.log("Custom order:", order);
+      
+        // Check if order is empty
+        if (Object.keys(order).length === 0) {
+          // No custom order, define default sorting
+          // Extract unique values from data
+          const uniqueValues = Array.from(
+            new Set(
+              data.map((item: { [x: string]: any; name: any }) => String(item.name || item[column]))
+            )
+          );
+      
+          // Determine if values are numeric
+          const areValuesNumeric = uniqueValues.every(value => !isNaN(Number(value)));
+      
+          // Sort uniqueValues accordingly
+          if (areValuesNumeric) {
+            uniqueValues.sort((a, b) => Number(a) - Number(b));
+          } else {
+            uniqueValues.sort(); // Lexicographical sort
+          }
+      
+          // Create default order mapping
+          uniqueValues.forEach((value, index) => {
+            order[value] = index;
+          });
+        }
+      
+        return data.sort(
+          (a: { [x: string]: any; name: any }, b: { [x: string]: any; name: any }) => {
+            const valueA = String(a.name || a[column]);
+            const valueB = String(b.name || b[column]);
+            const orderA = order[valueA];
+            const orderB = order[valueB];
+            return (orderA !== undefined ? orderA : Infinity) - (orderB !== undefined ? orderB : Infinity);
+          }
+        );
+      };
+      
+      
 
     useEffect(() => { fetchProjectIdsFiltercolor(theRealColorByVariable) }, [theRealColorByVariable, otus, selectedLocations, columnsOrder]);
 
@@ -738,7 +906,7 @@ export default function Page({ params }: { params: { slug: string } }) {
             if (!acc[key]) {
                 acc[key] = {
                     y: [], text: [], name: `${value === undefined ? location : value}`,
-                    marker: { color: scatterColors[key] || colorOrder[colorIndex % colorOrder.length] } // Usar color del estado
+                    marker: { color: getColorForValue(value, theRealColorByVariable, scatterColors, colorOrder) },
                 };
                 colorIndex++;
             }
@@ -872,7 +1040,13 @@ export default function Page({ params }: { params: { slug: string } }) {
 
     };
 
+    useEffect(() => {
 
+        if (plotData.length > 0 ) {
+          setIsDataReady(true);
+        }
+      }, [plotData]);
+      
     useEffect(() => {
         // Realizar el fetch de los datos después de actualizar la Location
         const columnIndex = otus?.data?.columns.indexOf(selectedColumn);
@@ -919,7 +1093,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
             fetchDataAndUpdate();  // Ejecutar la función asíncrona
         }
-    }, [selectedColumn, selectedValues, filterPeticion]);  // Se ejecuta cuando cambian selectedColumn, selectedValues o filterPeticion
+    }, [selectedColumn, selectedValues, filterPeticion, dataUnique]);  // Se ejecuta cuando cambian selectedColumn, selectedValues o filterPeticion
 
 
     useEffect(() => {
@@ -1025,25 +1199,24 @@ export default function Page({ params }: { params: { slug: string } }) {
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
-    const [persistentColors, setPersistentColors] = useState<{ [key: string]: string }>({});
 
 
-    const assignColors = (categories: string[]) => {
-        const updatedColors = { ...persistentColors }; // Copia del mapa de colores actual
-        let colorIndex = Object.keys(updatedColors).length;
+    // const assignColors = (categories: string[]) => {
+    //     const updatedColors = { ...persistentColors }; // Copia del mapa de colores actual
+    //     let colorIndex = Object.keys(updatedColors).length;
     
-        categories.forEach((category) => {
-            if (!updatedColors[category]) {
-                // Asignar un color solo si la categoría no tiene uno
-                const newColor = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][colorIndex % (colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]?.length || 1)];
-                updatedColors[category] = newColor;
-                colorIndex++;
-            }
-        });
+    //     categories.forEach((category) => {
+    //         if (!updatedColors[category]) {
+    //             // Asignar un color solo si la categoría no tiene uno
+    //             const newColor = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][colorIndex % (colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]?.length || 1)];
+    //             updatedColors[category] = newColor;
+    //             colorIndex++;
+    //         }
+    //     });
     
-        setPersistentColors(updatedColors);
-        return updatedColors;
-    };
+    //     setPersistentColors(updatedColors);
+    //     return updatedColors;
+    // };
     
 
     const dropdownOptionsColorby = [
@@ -1286,7 +1459,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     );
 
 
-    const [annotations, setAnnotations] = useState<any[]>([]);
+
 
     const maxYValueForLocation = (locationValue: string, data: any) => {
         // Asegurarse de que 'data' y 'data.columns' existan
@@ -1874,7 +2047,7 @@ export default function Page({ params }: { params: { slug: string } }) {
 
 
                         <div id="plot" ref={plotRef}>
-                            {isChartLoaded ? (
+                            {isDataReady ? (
                                 <Plot
                                     className="alpha"
                                     config={config}
@@ -1882,16 +2055,18 @@ export default function Page({ params }: { params: { slug: string } }) {
                                         shannonData
                                             .filter(entry => entry.name !== "null")
                                             .map((item, index) => {
-                                                const color = scatterColors[item.name]
-                                                console.log(`Asignando color ${color} para categoría ${item.name}`);
-
+                       
                                                 return {
                                                     ...(item as object),
                                                     type: graphType === "boxplot" ? "box" : "violin",
 
                                                     marker: {
-                                                        color: persistentColors[item.name],
-                                                        size: 4,
+                                                        color: getColorForValue(
+                                                            item.name,
+                                                            theRealColorByVariable,
+                                                            scatterColors,
+                                                            colorOrder
+                                                        ) || "#000000",
                                                     },
                                                     boxpoints: graphType === "boxplot" ? "all" : undefined,
                                                     points: graphType !== "boxplot" ? "all" : undefined,

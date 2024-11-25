@@ -1143,30 +1143,33 @@ useEffect(() => {
 
 
 
-
-    const valueChecks = (
-        <div className="flex flex-col w-full mb-5 mt-5">
-            <div className="flex w-full flex-wrap items-center justify-start overflow-x-auto">
-                {valueOptions?.filter(value => value !== null && tempSelectedColumn !== "samplelocation").map((value, index) => {
-                    const stringValue = String(value);
-                    return (
-                        <div key={index} className="flex items-center mr-5 mb-3">
-                            <Checkbox
-                                inputId={`value-${index}`}
-                                value={value}
-                                checked={tempSelectedValues.has(value)}  // Se usa el estado temporal aquí
-                                onChange={() => handleValueChange(value)}  // Se actualiza el estado temporal
-                                className="p-checkbox"
-                            />
-                            <label htmlFor={`value-${index}`} className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                                {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
-                            </label>
-                        </div>
-                    );
-                })}
+        const valueChecks = (
+            <div className="flex flex-col w-full mb-5 mt-5">
+                <div className="flex w-full flex-wrap items-center justify-start overflow-x-auto">
+                    {valueOptions
+                        ?.filter(value => value !== null && tempSelectedColumn !== "samplelocation")
+                        .sort((a, b) => String(a).localeCompare(String(b))) // Ordenar alfabéticamente
+                        .map((value, index) => {
+                            const stringValue = String(value);
+                            return (
+                                <div key={index} className="flex items-center mr-5 mb-3">
+                                    <Checkbox
+                                        inputId={`value-${index}`}
+                                        value={value}
+                                        checked={tempSelectedValues.has(value)}  // Se usa el estado temporal aquí
+                                        onChange={() => handleValueChange(value)}  // Se actualiza el estado temporal
+                                        className="p-checkbox"
+                                    />
+                                    <label htmlFor={`value-${index}`} className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                        {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
+                                    </label>
+                                </div>
+                            );
+                        })}
+                </div>
             </div>
-        </div>
-    );
+        );
+        
 
 
 

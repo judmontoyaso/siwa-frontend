@@ -27,7 +27,7 @@ import { Dropdown } from "primereact/dropdown";
 import { Config } from "plotly.js";
 import { Skeleton } from "primereact/skeleton";
 import { Checkbox } from 'primereact/checkbox';
-import { labelReplacements } from "@/config/dictionaries";
+import { labelReplacements, colorPalettes, order } from "@/config/dictionaries";
 import jsPDF from "jspdf";
 import { svg2pdf } from "svg2pdf.js";
 import { ProgressSpinner } from "primereact/progressspinner";
@@ -47,7 +47,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     { type: string; y: any; name: string }[]
   >([]);
   const [otus, setOtus] = useState<OtuType | null>(null);
-  const [scatterData, setScatterData] = useState([]);
+  const [scatterData, setScatterData] = useState<any[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([
     "Cecum",
     "Feces",
@@ -79,6 +79,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [textForConfigKey, setTextForConfigKey] = useState("");
   const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set());
   const [isLoadingPDF, setIsLoadingPDF] = useState(false);
+  const [columnsOrder, setColumnsOrder] = useState<{ [key: string]: { [key: string]: number } }>({});
 
   const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
   const plotRef = useRef(null);
@@ -104,6 +105,8 @@ export default function Page({ params }: { params: { slug: string } }) {
     alphad3level: ["#8cdbf4", "#f7927f", "#f7e76d", "#ba68c8", "#81c784"],
 };
 
+useEffect(() => {
+  console.log("columnsorder", columnsOrder)}, [columnsOrder]);
 
 
 useEffect(() => {
@@ -119,18 +122,18 @@ useEffect(() => {
 }, [theRealColorByVariable]);
 
 const downloadCombinedSVG = async () => {
-  const plotContainer = plotRef.current as unknown as HTMLElement; // Tu contenedor principal
+  const plotContainer = plotRef.current as any;
 
   if (!plotContainer) {
-      console.error("Contenedor del gráfico no encontrado");
-      return;
+    console.error("Contenedor del gráfico no encontrado");
+    return;
   }
 
   // Encuentra todos los SVGs dentro del contenedor
-  const svgElements = plotContainer ? Array.from(plotContainer.querySelectorAll('svg')) : [];
-  if (!svgElements.length) {
-      console.error("No se encontraron SVGs en el contenedor");
-      return;
+  const svgElements = Array.from(plotContainer.querySelectorAll('svg'));
+  if (svgElements.length === 0) {
+    console.error("No se encontraron SVGs en el contenedor");
+    return;
   }
 
   // Crear un SVG maestro
@@ -138,70 +141,105 @@ const downloadCombinedSVG = async () => {
   combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
 
-  // Ajustar el ancho y alto dinámicamente
   let totalHeight = 0;
-  const maxWidth = Math.max(...svgElements.map(svg => parseInt(svg.getAttribute("width") || '0', 10)));
-  svgElements.forEach(svg => {
-      totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
+  const maxWidth = Math.max(...svgElements.map((svg:any) => parseInt(svg.getAttribute("width") || '0', 10)));
+
+  svgElements.forEach((svg:any) => {
+    totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
   });
-  combinedSVG.setAttribute("width", "700");
-  combinedSVG.setAttribute("height", "300");
 
-  // Combina los SVGs en orden inverso
-  let yOffset = 0; // Desplazamiento para evitar solapamiento
-  svgElements.reverse().forEach((svg) => {
-      const clonedSVG = svg.cloneNode(true);
+  combinedSVG.setAttribute("width", String(maxWidth));
+  combinedSVG.setAttribute("height", String(totalHeight));
 
-      // Mover el SVG en el eje Y
-      const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
-      yOffset =  15// Incrementa el desplazamiento
-
-      // Asegura que <defs> se copie al SVG maestro
-      const defs = (clonedSVG as Element).querySelector('defs');
-      if (defs) {
-          const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
-          masterDefs.innerHTML += defs.innerHTML;
-          combinedSVG.appendChild(masterDefs);
+  // Combina los SVGs en orden correcto con un desplazamiento acumulado
+  let yOffset = 0;
+  svgElements.forEach((svg:any) => {
+    // Corrige los textos si es necesario
+    const textElements = svg.querySelectorAll('text');
+    textElements.forEach((text:any) => {
+      if (text.textContent) {
+        console.log("Texto encontrado:", text.textContent);
+        // Reemplazar guiones largos y otros caracteres especiales por un guion normal
+        text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-'); // Reemplazar guion largo y guion em dash
+        text.textContent = text.textContent.replace(/−/g, '-'); // Reemplazar guion en lugar del símbolo de menos
+        text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
       }
+    });
 
-      wrapper.appendChild(clonedSVG);
-      combinedSVG.appendChild(wrapper);
-  });
-  const svgWidth = 700;
-  const svgHeight = 300
-  const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
-  });
+    const clonedSVG = svg.cloneNode(true);
+
+    // Ajustar el eje Y para evitar superposiciones
+    const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
+    yOffset += parseInt(svg.getAttribute("height") || '0', 10);
+    if (clonedSVG instanceof Element) {
+      const defs = clonedSVG.querySelector('defs');
+      if (defs) {
+        // Copiar <defs> para garantizar estilos y gradientes
+        const clonedDefs = defs.cloneNode(true);
+        const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        masterDefs.innerHTML += defs.innerHTML;
+        if (!combinedSVG.querySelector('defs')) {
+          combinedSVG.appendChild(masterDefs);
+        }
+      }
+    }
   
 
-  // Ajustar el tamaño inicial
-  const pageWidth = pdf.internal.pageSize.getWidth();
-   // Convertir SVG a PDF
-   await svg2pdf(combinedSVG, pdf, {
-      x: 20,
-      y: yOffset,
-      width: svgWidth     ,
-      height: svgHeight 
+    wrapper.appendChild(clonedSVG);
+    combinedSVG.appendChild(wrapper);
   });
 
-  // Incrementar el desplazamiento
-  yOffset += svgHeight  + 20;
+  // Serializar y verificar el SVG combinado
+  const svgData = new XMLSerializer().serializeToString(combinedSVG);
+  console.log("SVG combinado:", svgData); // Depuración para verificar los valores negativos en el SVG
 
+  // Convertir SVG a PDF
+  // const svgWidth = parseInt(combinedSVG.getAttribute("width") || "0", 10);
+  // const svgHeight = parseInt(combinedSVG.getAttribute("height") || "0", 10);
+  const svgWidth = 1000;
+  const svgHeight = 700;
+  const textElements = combinedSVG.querySelectorAll('text');
+  textElements.forEach(text => {
+    if (text.textContent) {
+      console.log("Texto encontrado:", text.textContent);
+      // Reemplazar guiones largos y otros caracteres especiales por un guion normal
+      text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
+      text.textContent = text.textContent.replace(/−/g, '-'); // Asegurarse de que el símbolo de menos sea reemplazado
+      text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
+    }
+  });
 
+  console.log("svgData", svgData);
 
-   // Descargar el PDF
-   pdf.save("Community-makeup-plot.pdf");
-   // Serializar el SVG combinado y descargarlo
-   const svgData = new XMLSerializer().serializeToString(combinedSVG);
-   const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-   const link = document.createElement("a");
-   link.href = URL.createObjectURL(blob);
-   link.download = "combined_plot.svg";
-   link.click();
-}
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "pt",
+    format: [svgWidth, svgHeight],
+  });
+
+  try {
+    await svg2pdf(combinedSVG, pdf, {
+      x: 0,
+      y: 0,
+      width: svgWidth,
+      height: svgHeight,
+    });
+
+    // Descargar el PDF
+    pdf.save("Community-makeup-plot.pdf");
+
+    // Descargar el SVG combinado
+    const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "combined_plot.svg";
+    link.click();
+  } catch (error) {
+    console.error("Error al convertir SVG a PDF:", error);
+  }
+};
+
 
 const fontSize = plotWidth ? Math.max(plotWidth * 0.02, 12) : 13;
 const titleFontSize = fontSize + 8;
@@ -339,7 +377,31 @@ console.log(selectedLocations)
 console.log(colorBy)
   };
 
+  const mergeOrders = (
+    defaultOrder: { [key: string]: { [key: string]: number } },
+    resultOrder: { [key: string]: { [key: string]: number } } | undefined
+) => {
+    const mergedOrder: { [key: string]: { [key: string]: number } } = {};
 
+    // Combina las claves de defaultOrder y resultOrder
+    const allKeys = new Set([
+        ...Object.keys(defaultOrder),
+        ...(resultOrder ? Object.keys(resultOrder) : []),
+    ]);
+
+    // Itera por todas las claves
+    allKeys.forEach((key) => {
+        if (resultOrder?.[key]) {
+            // Si resultOrder tiene una clave, usa el valor completo de resultOrder para esa clave
+            mergedOrder[key] = resultOrder[key];
+        } else {
+            // Si no, usa el valor de defaultOrder
+            mergedOrder[key] = defaultOrder[key];
+        }
+    });
+
+    return mergedOrder;
+};
 
     // Definir una función genérica para realizar el fetch
     const fetchData = async (token: any) => {
@@ -380,6 +442,8 @@ console.log(colorBy)
         setDataUnique(result);
         
         setValueOptions(result?.data?.data);
+        const mergedColumnsOrder = mergeOrders(order, result?.order);
+        setColumnsOrder(mergedColumnsOrder);
         return result; // Devolver los datos obtenidos
   
       } catch (error) {
@@ -564,6 +628,62 @@ const valueChecks = (
 
 // useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy]);
 
+
+const sortByCustomOrder = (
+  data: any[],
+  column: string,
+  orderDict: { [key: string]: { [key: string]: number } }
+) => {
+  let order: { [key: string]: number } = {};
+  if (columnsOrder && Object.keys(columnsOrder).length > 0) {
+    for (let key in columnsOrder) {
+      if (key.toLowerCase() === column.toLowerCase()) {
+        order = orderDict[key];
+        break; // Found the matching column, no need to continue
+      }
+    }
+  }
+
+  console.log("Custom order:", order);
+
+  // Check if order is empty
+  if (Object.keys(order).length === 0) {
+    // No custom order, define default sorting
+    // Extract unique values from data
+    const uniqueValues = Array.from(
+      new Set(
+        data.map((item: { [x: string]: any; name: any }) => String(item.name || item[column]))
+      )
+    );
+
+    // Determine if values are numeric
+    const areValuesNumeric = uniqueValues.every(value => !isNaN(Number(value)));
+
+    // Sort uniqueValues accordingly
+    if (areValuesNumeric) {
+      uniqueValues.sort((a, b) => Number(a) - Number(b));
+    } else {
+      uniqueValues.sort(); // Lexicographical sort
+    }
+
+    // Create default order mapping
+    uniqueValues.forEach((value, index) => {
+      order[value] = index;
+    });
+  }
+
+  return data.sort(
+    (a: { [x: string]: any; name: any }, b: { [x: string]: any; name: any }) => {
+      const valueA = String(a.name || a[column]);
+      const valueB = String(b.name || b[column]);
+      const orderA = order[valueA];
+      const orderB = order[valueB];
+      return (orderA !== undefined ? orderA : Infinity) - (orderB !== undefined ? orderB : Infinity);
+    }
+  );
+};
+
+
   const fetchProjectIds = async (result: any) => {
     console.log(newScatterColors)
     console.log(scatterColors)
@@ -605,7 +725,7 @@ const valueChecks = (
       {}
     );
 
-    const scatterPlotData = filteredData?.reduce(
+    let scatterPlotData = filteredData?.reduce(
       (
         acc: {
           [x: string]: {
@@ -649,6 +769,15 @@ const valueChecks = (
       {} // Asegura que el valor inicial del acumulador es un objeto
     );
     setScatterColors(newScatterColors);
+
+      const mergedColumnsOrder = mergeOrders(order, result?.order);
+      scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData || {}), theRealColorByVariable, mergedColumnsOrder);
+      
+      console.log("scatterPlotData", scatterPlotData);
+      console.log("Orden personalizado:", mergedColumnsOrder);
+      console.log("Datos de Shannon ordenados:", theRealColorByVariable);
+      
+
     setScatterData(Object.values(scatterPlotData || {}));
     const plotData = Object.keys(groupedData || {})
       .filter((location: string) => selectedLocation.includes(location))
@@ -673,7 +802,7 @@ const valueChecks = (
   }
   const fetchProjectIdsFiltercolor = async (result: any, color: any) => {
     try {
-        const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+        let scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
             const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
             const colorValue = color !== 'samplelocation' ? item[result.data.columns.indexOf(color)] : sampleLocation;
 
@@ -704,6 +833,13 @@ const valueChecks = (
             return acc;
         }, {});
 
+        if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
+          scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData), color, columnsOrder);
+          console.log("scatterPlotData", scatterPlotData);
+          console.log("Orden personalizado:", columnsOrder);
+          console.log("Datos de Shannon ordenados:", theRealColorByVariable);
+          }
+
         setScatterData(Object.values(scatterPlotData));
         setIsLoaded(true);
     } catch (error) {
@@ -713,7 +849,7 @@ const valueChecks = (
 
 const fetchProjectIdsFilter = async (result: any) => {
   try {
-      const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+      let scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
           const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
           const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
 
@@ -743,6 +879,13 @@ const fetchProjectIdsFilter = async (result: any) => {
           acc[key].text.push(`Sample ID: ${sampleId}, ${theRealColorByVariable === "samplelocation" ? "location" : theRealColorByVariable}: ${colorValue}`);
           return acc;
       }, {});
+
+      if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
+        scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData), theRealColorByVariable, columnsOrder);
+        console.log("scatterPlotData", scatterPlotData);
+        console.log("Orden personalizado:", columnsOrder);
+        console.log("Datos de Shannon ordenados:", theRealColorByVariable);
+        }
 
       setScatterData(Object.values(scatterPlotData));
       setIsLoaded(true);
@@ -863,7 +1006,10 @@ const findTextInCommunityMakeupNested = (
 };
 
 
-
+useEffect(() => {
+  const scatter = sortByCustomOrder(Object.values(scatterData), theRealColorByVariable, columnsOrder);
+  setScatterData(scatter as any[]);
+}, [columnsOrder]);
 
 useEffect(() => {
   const location = selectedLocations.length > 1 ? "All" : selectedLocations[0];

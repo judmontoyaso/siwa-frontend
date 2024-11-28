@@ -32,13 +32,15 @@ import jsPDF from "jspdf";
 import { svg2pdf } from "svg2pdf.js";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { FaFilePdf } from "react-icons/fa";
+import { usePopup } from "@/app/components/context/popupContext";
+import { motion } from "framer-motion";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
   type OtuType = {
     index: string[];
     columns: string[];
-    data: number[][];
+    data: any
   };
   const { accessToken } = useAuth();
   const { user, error, isLoading } = useUser(); 
@@ -80,11 +82,12 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set());
   const [isLoadingPDF, setIsLoadingPDF] = useState(false);
   const [columnsOrder, setColumnsOrder] = useState<{ [key: string]: { [key: string]: number } }>({});
-
+  const [persistentColors, setPersistentColors] = useState<{ [column: string]: { [value: string]: string } }>({});
+  const [layout, setLayout] = useState<any>({});
   const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
   const plotRef = useRef(null);
   const router = useRouter();
-
+  const { isWindowVisible } = usePopup();
   const items = [
       { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
     { label: 'Community make-up', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/beta`}>{item.label}</Link> },
@@ -99,27 +102,21 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
 
-  const colorPalettes = {
-    samplelocation: ["#074b44", "#017fb1", "#f99b35", "#e57373", "#64b5f6"],
-    treatment: ["#035060", "#f99b35", "#4e8e74", "#ffb74d", "#4caf50"],
-    alphad3level: ["#8cdbf4", "#f7927f", "#f7e76d", "#ba68c8", "#81c784"],
-};
-
 useEffect(() => {
   console.log("columnsorder", columnsOrder)}, [columnsOrder]);
 
 
-useEffect(() => {
-  if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
-      setColorOrder(prevOrder => {
-          // Solo actualiza si el colorOrder no está ya asignado correctamente
-          if (prevOrder.length === 0 || prevOrder[0] !== colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][0]) {
-              return [...colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]];
-          }
-          return prevOrder;
-      });
-  }
-}, [theRealColorByVariable]);
+// useEffect(() => {
+//   if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+//       setColorOrder(prevOrder => {
+//           // Solo actualiza si el colorOrder no está ya asignado correctamente
+//           if (prevOrder.length === 0 || prevOrder[0] !== colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][0]) {
+//               return [...colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]];
+//           }
+//           return prevOrder;
+//       });
+//   }
+// }, [theRealColorByVariable]);
 
 const downloadCombinedSVG = async () => {
   const plotContainer = plotRef.current as any;
@@ -240,87 +237,347 @@ const downloadCombinedSVG = async () => {
   }
 };
 
-
+let screenWidth = window.innerWidth;
 const fontSize = plotWidth ? Math.max(plotWidth * 0.02, 12) : 13;
 const titleFontSize = fontSize + 8;
 const axisTitleFontSize = fontSize + 4;
 const legendFontSize = fontSize;
 
     const updatePlotWidth = () => {
-
-        if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-            console.log(plotWidth)
-            console.log(plotContainerRef.current)
-            setLoaded(true)
-
-        };
+      
+      
+      
+      if (plotContainerRef.current) {
+        setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+        console.log(plotWidth)
+        console.log(plotContainerRef.current)
+        
+      };
     };
     const observedElementId = 'plofather';
-    useEffect(() => {
-        // Función para actualizar el ancho de la ventana
-        const updatePlotWidth = () => {
-          if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-            console.log(plotWidth);
-            console.log(plotContainerRef.current);
-            setLoaded(true);
-          }
-        };
-      
-
-        const plofatherElement = document.getElementById('plofather');
-        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
-      
-        // Añade el event listener cuando el componente se monta
-        window.addEventListener('resize', updatePlotWidth);
-        console.log('plotWidth:', plotWidth);
-        updatePlotWidth();
-      
-        // Limpieza del event listener cuando el componente se desmonte
-        return () => {
-          window.removeEventListener('resize', updatePlotWidth);
-        };
-      }, [window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
 
 
       useEffect(() => {
-        const interval = setInterval(() => {
-          const element = document.getElementById(observedElementId);
-          if (element) {
-            // Función para actualizar el ancho del elemento observado
-            const updatePlotWidth = () => {
-              const newWidth = element.offsetWidth - 75;
-              setPlotWidth(newWidth);
-              console.log('Actualizado plotWidth:', newWidth);
-              setLoaded(true);
-            };
+        // Esto asegura que el cambio de tamaño se ejecute solo al final de la animación
+          updatePlotWidth();
+          setLoaded(true);
     
-            // Configura el ResizeObserver una vez que el elemento está disponible
-            const resizeObserver = new ResizeObserver(entries => {
-              for (let entry of entries) {
-                updatePlotWidth();
+       
+      }, [dataResult]); // Solo ejecuta cuando la visibilidad cambie
+    
+      useEffect(() => {
+        const plofatherElement = document.getElementById('plofather');
+        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
+    
+        // Realiza la actualización inicial al montar el componente
+        updatePlotWidth();
+    
+        // Limpia el event listener de resize
+        const handleResize = () => {
+          updatePlotWidth();
+        };
+        window.addEventListener('resize', handleResize);
+    
+        return () => {
+          window.removeEventListener('resize', handleResize);
+        };
+      }, [isWindowVisible, window.innerWidth, document?.getElementById('plofather')?.offsetWidth, isWindowVisible]);
+
+      const getColorForValue = (
+        value: string,
+        column: string,
+        colorMap: { [key: string]: string },
+        colorOrder: string[]
+    ) => {
+        console.log(`Obteniendo color para valor: ${value}, columna: ${column}`);
+    
+        const colorsForVariable = persistentColors[column];
+        console.log("persistentColors", persistentColors);
+        console.log("colorsForVariable", colorsForVariable);
+        console.log("value",value)
+    if (colorsForVariable && colorsForVariable[value]) {
+        return colorsForVariable[value];
+        }
+    
+        // // Inicializar el índice de color para la columna si no existe
+        // if (!(column in colorIndices.current)) {
+        //     colorIndices.current[column] = 0;
+        // }
+    
+        // // Obtener la paleta correspondiente a la columna seleccionada
+        // const palette = colorPalettes[column as keyof typeof colorPalettes] || colorOrder;
+        // console.log("column", column);
+        // console.log("tof?", colorPalettes[column as keyof typeof colorPalettes]);
+        // console.log("here colororder", colorOrder);
+        // console.log(`Paleta utilizada para ${column}:`, palette);
+    
+        // // Asignar el siguiente color disponible de la paleta
+        // const colorIndex = colorIndices.current[column];
+        // const nextColor = palette[colorIndex % palette.length];
+        // colorMap[value] = nextColor;
+    
+        // // Incrementar el índice de color para la columna
+        // colorIndices.current[column] += 1;
+    
+        // console.log(`Nuevo color asignado para ${value}: ${nextColor}`);
+        // return nextColor;
+    };
+
+      useEffect(() => {
+        if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+            const   palette = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes];
+            console.log("palette",palette)
+            if (Array.isArray(palette)) {
+                setColorOrder(palette);
+            } else if (palette && 'colors' in palette) {
+                setColorOrder(palette.colors);
+            }
+        }
+
+        console.log("colororder",colorOrder)
+
+    }, [theRealColorByVariable, selectedLocations, dataUnique]);
+
+
+
+    useEffect(() => {console.log("colororder",colorOrder)}, [colorOrder])
+
+    useEffect(() => {
+        console.log("colorpalettes", colorPalettes)
+    }, [colorPalettes])
+
+
+   
+      // Usar requestAnimationFrame para mejorar el rendimiento de la animación
+      const updateLayoutWithScale = () => {
+        const screenWidth = window.innerWidth;
+    
+        // Escala dinámica del tamaño del texto basado en el ancho de la pantalla
+        const textScale = screenWidth < 600
+          ? 0.6
+          : screenWidth < 1024
+            ? 0.8
+            : screenWidth < 1440
+              ? 1
+              : screenWidth < 1920
+                ? 1.2
+                : 1.4;
+    
+        const newLayout = {
+          width: plotWidth || undefined,
+          height: 600,
+          font: { family: 'Roboto, sans-serif' },
+          title: {
+            font: { 
+              family: 'Roboto, sans-serif',
+              size: 26,
+            }
+          },
+          responsive: true,
+          showlegend: true,
+          legend: {
+            itemclick: false,
+            itemdoubleclick: false,
+            orientation: "h",
+            x: 0.5,
+            xanchor: "center",
+            y: 1.1,
+            yanchor: "top",
+            font: {
+              size: 14 * textScale,
+            }
+          },
+          xaxis: {
+            title: {
+              text: `PCoA 1 (${dataResult?.proportions_explained?.PC1}%)`,
+              font: { 
+                family: 'Roboto, sans-serif',
+                size: 14 * textScale,
+              },
+              standoff: 30,
+            },
+            tickfont: {
+              size: 14 * textScale,
+            }
+          },
+          yaxis: {
+            title: {
+              text: `PCoA 2 (${dataResult?.proportions_explained?.PC2}%)`,
+              font: {
+                family: 'Roboto, sans-serif',
+                size: 14 * textScale,
+              },
+              standoff: 30,
+            },
+            annotations: {
+              font: {
+                size: 12 * textScale,
+              }
+            },
+            tickfont: {
+              size: 14 * textScale,
+            },
+          },
+          dragmode: false,
+          margin: { l: 70, r: 10, t: 0, b: 60 }
+        };
+    
+        if (layout && Object.keys(layout).length > 0) {
+          setLayout((prevLayout: any) => ({
+            ...prevLayout,
+            ...newLayout,
+          }));
+        } else {
+          setLayout({ width: 500, height: 500 }); // Valor por defecto
+        }
+      };
+    
+      // Este useEffect gestiona el redimensionamiento con animación
+      useEffect(() => {
+        const handleResize = () => {
+          // Usamos requestAnimationFrame para mejorar el rendimiento
+          requestAnimationFrame(() => {
+            updateLayoutWithScale();
+          });
+        };
+    
+        // Inicializa el ancho y el layout cuando el componente se monta
+        updateLayoutWithScale();
+        window.addEventListener('resize', handleResize);
+    
+        return () => {
+          window.removeEventListener('resize', handleResize);
+        };
+      }, [plotWidth, dataResult]); // Dependiendo de plotWidth y dataResult
+    
+      useEffect(() => {
+        const timeoutId = setTimeout(() => {
+          // Aquí manejamos la animación del cambio de tamaño
+          setLoaded(true);
+        }, 500); // Asegura que el cambio se ejecute después de la animación
+    
+        return () => {
+          clearTimeout(timeoutId);
+        };
+      }, [isWindowVisible]); // Ejecuta el timeout solo cuando cambia la visibilidad
+    
+    
+
+    
+    useEffect(() => {
+      if (dataUnique) {
+        const columns = dataUnique?.data?.columns;
+        const data = dataUnique?.data?.data;
+        console.log("data", data);
+        const newPersistentColors: { [column: string]: { [value: string]: string } } = {};
+    
+        columns?.forEach((column: string) => {
+          const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)])));
+          const colorPalette = colorPalettes[column as keyof typeof colorPalettes];
+          console.log("colorPalette", colorPalette);
+          console.log("uniqueValues", uniqueValues);
+          const colorsForColumn: { [value: string]: string } = {};
+    
+          if (colorPalette) {
+            if (Array.isArray(colorPalette)) {
+              // If the palette is an array, assign colors in order
+              let colorIndex = 0;
+              uniqueValues?.forEach((value:any) => {
+                if (value !== null && value !== 'null') {
+                  colorsForColumn[value] = colorPalette[colorIndex % colorPalette.length];
+                  colorIndex++;
+                }
+              });
+            } else if (typeof colorPalette === 'object') {
+              // If the palette is an object, assign colors based on mappings
+              let colorIndex = 0;
+              const additionalColors = colorPalette.colors || []; // For unmapped values
+              uniqueValues?.forEach((rawValue) => {
+                  // Convertimos el valor a string de manera segura
+                  const value = String(rawValue);
+                
+                  if (value !== "null" && value !== "undefined") {
+                    // Verifica si el colorPalette es un objeto y si la clave existe
+                    if (
+                      typeof colorPalette === "object" &&
+                      !Array.isArray(colorPalette) &&
+                      value in colorPalette
+                    ) {
+                      const resolvedColor = colorPalette[value as keyof typeof colorPalette];
+                      // Verifica que el color no sea un array antes de asignarlo
+                      if (typeof resolvedColor === "string") {
+                        colorsForColumn[value] = resolvedColor;
+                      } else if (Array.isArray(resolvedColor) && resolvedColor.length > 0) {
+                        colorsForColumn[value] = resolvedColor[0]; // Asignar el primer color del array si es necesario
+                      } else {
+                        colorsForColumn[value] = "#000000"; // Color por defecto
+                      }
+                    } else if (
+                      Array.isArray(additionalColors) &&
+                      additionalColors.length > 0
+                    ) {
+                      colorsForColumn[value] =
+                        additionalColors[colorIndex % additionalColors.length];
+                      colorIndex++;
+                    } else {
+                      colorsForColumn[value] = "#000000"; // Color por defecto
+                    }
+                  }
+                });
+                
+                
+            }
+          } else {
+            // No color palette found for the column
+            uniqueValues?.forEach((value:any) => {
+              if (value !== null && value !== 'null') {
+                colorsForColumn[value] = '#000000'; // Default color
               }
             });
-    
-            resizeObserver.observe(element);
-    
-            // Limpieza del intervalo y del observer
-            clearInterval(interval);
-            return () => {
-              resizeObserver.disconnect();
-            };
           }
-        }, 100); // Intervalo de verificación cada 100 ms
     
-        return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
-      }, [observedElementId]); 
+          newPersistentColors[column] = colorsForColumn;
+        });
+        console.log("newPersistentColors", newPersistentColors);
+        setPersistentColors(newPersistentColors);
+      }
+    }, [dataUnique]);
+    
+  
 
+    // useEffect(() => {
+    //   const element = document.getElementById(observedElementId);
+    //   if (element) {
+    //     // Función para actualizar el ancho del elemento observado
+    //     const updatePlotWidth = () => {
+    //       const newWidth = element.offsetWidth;
+    //       setPlotWidth(newWidth);
+    //       console.log('Actualizado plotWidth:', newWidth);
+    //       setLoaded(true);
+    //     };
+    
+    //     // Configura el ResizeObserver solo una vez
+    //     const resizeObserver = new ResizeObserver(entries => {
+    //       for (let entry of entries) {
+    //         updatePlotWidth();
+    //       }
+    //     });
+    
+    //     resizeObserver.observe(element);
+    
+    //     // Limpieza cuando el componente se desmonte o cambien las dependencias
+    //     return () => {
+    //       resizeObserver.disconnect(); // Desconecta el observer
+    //     };
+    //   }
+    // }, [observedElementId]); // Solo dependemos de observedElementId ahora
+    
+    
     useEffect(() => {
         updatePlotWidth(); // Establece el ancho inicial
         console.log('plotWidth:', plotWidth);
 
-    }, [otus]);
+    }, [dataResult]);
 
 
   const fetchConfigFile = async (token: any) => {
@@ -577,18 +834,23 @@ const handleValueChangeTemp = (value: string) => {
 };
 
 
+
 const config: Partial<Config> = {
   displaylogo: false,
   responsive: true,
+  staticPlot: false,
+  displayModeBar: true,
   modeBarButtonsToRemove: [
-    'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d', 
-    'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d', 
-    'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
-    'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
+      'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d',
+      'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d',
+      'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie',
+      'toggleHover', 'toggleSpikelines', 'resetViewMapbox', 'toImage', 'zoomIn2d', 'zoomOut2d', 'resetViews', 'resetScale2d'
   ],
   scrollZoom: false,
+
   modeBarButtonsToAdd: [],
 };
+
   
 const handleGroupChange = (value: string) => {
 fetchProjectIdsFiltercolor(dataResult, value);
@@ -604,7 +866,8 @@ const handleTempColorByChange = (value: string) => {
 const valueChecks = (
 <div className="flex flex-col w-full mb-5 mt-5">
   <div className="flex w-full flex-row flex-wrap items-start justify-start">
-    {valueOptions?.filter(value => value !== null && tempSelectedColorBy !== "samplelocation").map((value, index) => {
+    {valueOptions?.filter(value => value !== null && tempSelectedColorBy !== "samplelocation").sort((a, b) => String(a).localeCompare(String(b))) // Ordenar alfabéticamente
+.map((value, index) => {
       const stringValue = String(value);
       return (
         <div key={index} className="flex items-center mb-2 mr-2 ml-2">
@@ -693,7 +956,7 @@ const sortByCustomOrder = (
     );
     const uniqueLocations = Array.from(locations) as string[];
     setAvailableLocations(uniqueLocations);
-    setOtus(result.data); // Actualiza el estado con los datos obtenidos
+    setOtus(result?.data); // Actualiza el estado con los datos obtenidos
     // Filtrado y mapeo de datos para los gráficos...
     const filteredData = result?.data?.data?.filter((item: any[]) =>
       selectedLocations.includes(item[3])
@@ -720,6 +983,8 @@ const sortByCustomOrder = (
           acc[location].text.push(`Sample ID: ${sampleId}`);
         }
 
+        
+
         return acc;
       },
       {}
@@ -736,13 +1001,19 @@ const sortByCustomOrder = (
             type: any;
             name: any;
             marker: { size: number, color: string };
+            
           };
         },
         item: [any, any, any, any]
       ) => {
         const [PC1, PC2, sampleId, sampleLocation] = item;
-
+        const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result?.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
+        console.log("colorValue", colorValue);  
+        console.log("theRealColorByVariable", theRealColorByVariable);
+        console.log("scatterColors", scatterColors);
+        console.log("colorOrder", colorOrder);
         // Inicializa el objeto para esta locación si aún no existe
+        
         if (!acc[sampleLocation]) {
           acc[sampleLocation] = {
               x: [],
@@ -751,11 +1022,16 @@ const sortByCustomOrder = (
               type: "scatter",
               name: sampleLocation,
               text: [],
-              marker: { size: 11, color: colorOrder[colorIndex % colorOrder.length] }
+              marker: { size: 11, color: getColorForValue(
+                colorValue,
+                theRealColorByVariable,
+                scatterColors,
+                colorOrder
+            ) || "#000000", }
           };
           const key = sampleLocation;
-          newScatterColors[key] = colorOrder[colorIndex % colorOrder.length];
-          colorIndex++;
+          // newScatterColors[key] = colorOrder[colorIndex % colorOrder.length];
+          // colorIndex++;
       }
       
 
@@ -768,7 +1044,7 @@ const sortByCustomOrder = (
       },
       {} // Asegura que el valor inicial del acumulador es un objeto
     );
-    setScatterColors(newScatterColors);
+    // setScatterColors(newScatterColors);
 
       const mergedColumnsOrder = mergeOrders(order, result?.order);
       scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData || {}), theRealColorByVariable, mergedColumnsOrder);
@@ -800,11 +1076,12 @@ const sortByCustomOrder = (
     setIsLoaded(true);
 
   }
+
   const fetchProjectIdsFiltercolor = async (result: any, color: any) => {
     try {
-        let scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+        let scatterPlotData = result?.data.data.reduce((acc: { [x: string]: any }, item: any) => {
             const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-            const colorValue = color !== 'samplelocation' ? item[result.data.columns.indexOf(color)] : sampleLocation;
+            const colorValue = color !== 'samplelocation' ? item[result?.data.columns.indexOf(color)] : sampleLocation;
 
             let key = colorValue; // Ahora se usa colorValue como clave
             let name = `${colorValue}`; // Nombre para la leyenda
@@ -823,8 +1100,13 @@ const sortByCustomOrder = (
                     type: "scatter",
                     name: name,
                     text: [],
-                    marker: { size: 11, color: scatterColors[key] } // Usa el color asignado
-                };
+                    marker: { size: 11, color: getColorForValue(
+                      colorValue, // Valor de colorByVariable
+                      color, // Variable actual
+                      scatterColors, // Mapa de colores existente
+                      colorOrder // Orden de colores
+                  ) || '#000000' // Default color if undefined} // Usa el color asignado
+                }}
             }
 
             acc[key].x.push(PC1);
@@ -849,9 +1131,9 @@ const sortByCustomOrder = (
 
 const fetchProjectIdsFilter = async (result: any) => {
   try {
-      let scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+      let scatterPlotData = result?.data.data.reduce((acc: { [x: string]: any }, item: any) => {
           const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-          const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
+          const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result?.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
 
           let key = colorValue; 
           let name = `${colorValue}`;
@@ -870,8 +1152,13 @@ const fetchProjectIdsFilter = async (result: any) => {
                   type: "scatter",
                   name: name,
                   text: [],
-                  marker: { size: 11, color: scatterColors[key] } // Usa el color asignado
-              };
+                  marker: { size: 11, color:  getColorForValue(
+                    colorValue, // Valor de colorByVariable
+                    theRealColorByVariable, // Variable actual
+                    scatterColors, // Mapa de colores existente
+                    colorOrder // Orden de colores
+                ) || '#000000' // Default color if undefined} // Usa el color asignado } // Usa el color asignado
+              }};
           }
 
           acc[key].x.push(PC1);
@@ -1006,6 +1293,7 @@ const findTextInCommunityMakeupNested = (
 };
 
 
+
 useEffect(() => {
   const scatter = sortByCustomOrder(Object.values(scatterData), theRealColorByVariable, columnsOrder);
   setScatterData(scatter as any[]);
@@ -1084,6 +1372,36 @@ useEffect(() => {
     
   }
     , [params.slug, accessToken]);
+
+    useEffect(() => {
+      fetchProjectIds(dataResult);}, [persistentColors]);
+
+
+    useEffect(() => {
+      if (colorBy && selectedValues.size > 0) {
+          const fetchDataAndUpdate = async () => {
+              const columnIndex = otus?.data?.columns?.indexOf(colorBy);
+              const filteredData = dataResult?.data?.data.filter((item: any[]) => selectedLocations.includes(item[1]));
+              console.log("fetchDataAndUpdate")
+              // Mantener colores ya asignados
+              
+              const updatedScatterColors = { ...scatterColors };
+              filteredData.forEach((item: any[]) => {
+                  const value = item[columnIndex];
+                  if (value && !updatedScatterColors[value]) {
+                      updatedScatterColors[value] = colorOrder[Object.keys(updatedScatterColors).length % colorOrder.length];
+                  }
+              });
+              console.log("Updated scatter colors:", updatedScatterColors);
+
+              setScatterColors(updatedScatterColors);
+           
+          };
+
+          fetchDataAndUpdate();  // Ejecutar la función asíncrona
+      }
+  }, [colorBy, selectedValues, filterPeticion, dataUnique]);  // Se ejecuta cuando cambian selectedColumn, selectedValues o filterPeticion
+
     const [activeIndexes, setActiveIndexes] = useState([0,1]);
 
     const onTabChange = (e : any) => {
@@ -1196,10 +1514,10 @@ useEffect(() => {
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
           <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
             
-            <AccordionTab className="colorby-acordeon" header="Group by">
+            <AccordionTab className="colorby-acordeon" header="Group by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="flex flex-col items-start m-2">
-                <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
-                  Select a Sample Location:
+                <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center"  style={{ fontSize: '1.05rem' }}>
+                  Select a sample location:
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
@@ -1223,7 +1541,7 @@ useEffect(() => {
       
               <div className="flex flex-col items-start mt-2 m-2">
                 <div className="flex items-center mb-2">
-                  <h3 className="text-base font-medium text-gray-700 dark:text-white">
+                  <h3 className="text-base font-medium text-gray-700 dark:text-white" style={{ fontSize: '1.05rem' }}>
                     Select a variable to color:
                   </h3>
                   <span className="ml-2">
@@ -1249,10 +1567,10 @@ useEffect(() => {
               </div>
             </AccordionTab>
       
-            <AccordionTab className="filter-acordeon" header="Filter by">
+            <AccordionTab className="filter-acordeon" header="Filter by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="mt-2 ml-2 mb-4">
                 <div className="flex items-center">
-                  <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center">
+                  <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center" style={{ fontSize: '1.1rem' }}>
                     Filtering options:
                     <AiOutlineInfoCircle
                       className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
@@ -1350,7 +1668,6 @@ useEffect(() => {
 }, [params.slug, scatterData]);
 
 
-
 useEffect(() => {
   if (Location[0] && Location.length > 0) {
       const newTitle = `Compositional differences (bray curtis) ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (selectedColorBy === "samplelocation" ? "" : " by " + selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1))}`;
@@ -1395,52 +1712,10 @@ useEffect(() => {
       <Plot
         data={scatterData}
         config={config}
-        layout={{
-          width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-          height: 600,
-          font: { family: 'Roboto, sans-serif' },
-          title: {
-            font: { 
-              family: 'Roboto, sans-serif',
-              size: 26,
-            }
-          },          
-          xaxis: {
-            title: {
-              text: `PCoA 1 (${dataResult.proportions_explained.PC1}%)`,
-              font: { 
-                family: 'Roboto, sans-serif',
-                size: 18,
-              },
-              standoff: 15,
-             
-            }
-          },
-          yaxis: {
-            title: {
-              text: `PCoA 2 (${dataResult.proportions_explained.PC2}%)`,
-              font: {
-                family: 'Roboto, sans-serif',
-                size: 18, // Aumenta el tamaño para mayor énfasis
-              },
-              standoff: 15,
-            }
-          },
-          showlegend: true,  // Activa la visualización de la leyenda
-          legend: {
-              orientation: "h", // Horizontal
-              x: 0.5, // Centrado respecto al ancho del gráfico
-              xanchor: "center", // Ancla en el centro
-              y: 1.1, // Posición en y un poco por encima del gráfico
-              yanchor: "top", // Ancla la leyenda en la parte superior
-              font: {
-                size: legendFontSize,
-              },
-          },
-          dragmode: false ,
-                    margin: { l: 60, r: 10, t: 0, b: 60 } 
-
-        }}
+        divId="plot"
+        layout={layout}
+      
+        
       />
                             </div>
         </>
@@ -1461,7 +1736,7 @@ useEffect(() => {
   return (
     <div className="w-full h-full">
       <SidebarProvider>
-      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
+      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-bread"/>}>
         {isLoaded ? (
 <div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">
@@ -1471,15 +1746,21 @@ useEffect(() => {
       <div className="px-6 py-8">
 
       <div className={`prose single-column`}>
-      <p className="text-gray-700 m-3 text-justify text-xl">
-  {`For exploring the composition of the microbiome in different groups, we use methods that evaluate an ecological diversity measure called Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
+      <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
+      {`For exploring the composition of the microbiome in different groups, we use methods that evaluate an ecological diversity measure called Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
 </p>
 
 </div>
 
 
     </div>
-  <div className="flex">
+ 
+  <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: loaded ? 1 : 0 }} 
+          transition={{ duration: 0.5 }}
+          className="flex"
+        >
     <GraphicCard legend={""} text={"Each axis represents a combination of features (the sequences in the samples) that account for high amounts of variation between samples. Each axis shows the proportion of variability that is accounted for by this combination of features (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability."} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <div className="w-full flex flex-col">
@@ -1503,7 +1784,7 @@ useEffect(() => {
         <SkeletonCard width={"500px"} height={"270px"} />
       )}
     </GraphicCard>
-  </div>
+  </motion.div>
 
 
 </div>
@@ -1517,3 +1798,5 @@ useEffect(() => {
     </div>
   );
 }
+
+

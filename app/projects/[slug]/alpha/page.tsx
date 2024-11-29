@@ -1,4 +1,5 @@
 "use client";
+import { usePopup } from "@/app/components/context/popupContext";
 import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, Suspense, use, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
@@ -20,7 +21,6 @@ import { Button } from "primereact/button";
 import { FiActivity, FiBarChart } from "react-icons/fi";
 import { RiExchangeFundsLine } from "react-icons/ri";
 import { Divider } from "primereact/divider";
-import { PopupProvider, usePopup } from "@/app/components/context/popupContext";
 import { Card } from "primereact/card";
 import Plotly, { Config } from "plotly.js";
 import { Accordion, AccordionTab } from "primereact/accordion";
@@ -47,6 +47,7 @@ import { svg2pdf } from 'svg2pdf.js';
 
 
 export default function Page({ params }: { params: { slug: string } }) {
+    const { isWindowVisible, setIsWindowVisible } = usePopup(); 
     const [isLoaded, setIsLoaded] = useState(false);
     const [plotData, setPlotData] = useState<
         { type: string; y: any; name: string }[]
@@ -78,8 +79,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [graphType, setGraphType] = useState<any>("boxplot");
     const [filterPeticion, setFilterPeticion] = useState(false);
     const { accessToken, isLoading, error } = useAuth();
-    const { isWindowVisible } = usePopup();
-    const [layout, setLayout] = useState<any>({});
+       const [layout, setLayout] = useState<any>({});
     const [activeIndexes, setActiveIndexes] = useState([0, 1]);
     const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
     const [tempSelectedColumn, setTempSelectedColumn] = useState<string>(selectedColumn);
@@ -121,47 +121,6 @@ type ColorPalette = ColorPaletteArray | ColorPaletteMap;
     const [isLoadingPDF, setIsLoadingPDF] = useState(false);
     const toast = useRef<PToast>(null);
     const [colorOrder, setColorOrder] = useState<string[]>([]);
-    const generatePDF = async () => {
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: [210, 297], // tamaño A4 en mm
-        });
-
-        pdf.setFontSize(18);
-        pdf.text(String(title), 20, 30);
-
-        let currentYPosition = 50; // Posición Y inicial para la gráfica
-
-        // Captura la gráfica
-        if (plotRef.current) {
-            const plotCanvas = await html2canvas(plotRef.current, { scale: 1.5 });
-            const imgWidth = pdf.internal.pageSize.getWidth() - 40;
-            const aspectRatio = plotCanvas.width / plotCanvas.height;
-            const imgHeight = imgWidth / aspectRatio;
-            const plotData = plotCanvas.toDataURL('image/png');
-
-            pdf.addImage(plotData, 'JPEG', 20, currentYPosition, imgWidth, imgHeight, undefined, 'FAST');
-
-            // Actualiza la posición Y para colocar el texto justo debajo de la gráfica
-            currentYPosition += imgHeight + 10;
-        }
-
-        // Captura el texto de configuración
-        if (configTextRef.current) {
-            const configCanvas = await html2canvas(configTextRef.current, { scale: 1.5 });
-            const imgWidth = pdf.internal.pageSize.getWidth() - 60;
-            const aspectRatio = configCanvas.width / configCanvas.height;
-            const imgHeight = imgWidth / aspectRatio;
-            const configData = configCanvas.toDataURL('image/png');
-
-            pdf.addImage(configData, 'JPEG', 20, currentYPosition, imgWidth, imgHeight, undefined, 'FAST');
-        }
-
-        pdf.save('selected_elements.pdf');
-
-
-    };
 
 
  
@@ -956,7 +915,9 @@ useEffect(() => {
             window.removeEventListener('resize', updatePlotWidth);
         };
     }, [window.innerWidth, isWindowVisible, document?.getElementById('plofather')?.offsetWidth]);
-
+    useEffect(() => {
+        console.log("plotWidth", plotWidth);
+        console.log("isWindowVisible", isWindowVisible);},[plotWidth, isWindowVisible]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -1275,9 +1236,9 @@ useEffect(() => {
                     </div>
 
                     <div className="flex flex-col items-start mt-2 m-2">
-                        <div className="flex flex-col items-start mt-2 m-2">
+                        <div className="">
                             <div className="flex items-center mb-2">
-                                <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.1rem' }}>
+                                <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.05rem' }}>
                                     Select a variable to group:
                                 </h3>
                                 <span className="ml-2">
@@ -1311,7 +1272,7 @@ useEffect(() => {
                 <AccordionTab className="filter-acordeon" header="Filter by" headerStyle={{ fontSize: '1.15rem' }}>
                     <div className="mt-2 ml-2 mb-4">
                         <div className="flex items-center">
-                            <h3 className="font-medium text-gray-700 dark:text-white flex items-center" style={{ fontSize: '1.1rem' }}>
+                            <h3 className="font-medium text-gray-700 dark:text-white flex items-center" style={{ fontSize: '1.05rem' }}>
                                 Filtering options:
                             </h3>
                             <span className="ml-2">

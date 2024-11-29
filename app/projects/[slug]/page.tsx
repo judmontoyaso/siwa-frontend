@@ -28,7 +28,6 @@ const Page = ({ params }: { params: { slug: string } }) => {
   const router = useRouter();
 
   const items = [
-    { label: 'Projects', template: () => <Link href={`/`} className="pointer-events-none text-gray-500">Projects</Link> },
     { label: params.slug, template: () => <Link href={`/projects/${params.slug}`}>{params.slug}</Link> },
   ];
 

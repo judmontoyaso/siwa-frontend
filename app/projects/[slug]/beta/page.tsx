@@ -27,18 +27,20 @@ import { Dropdown } from "primereact/dropdown";
 import { Config } from "plotly.js";
 import { Skeleton } from "primereact/skeleton";
 import { Checkbox } from 'primereact/checkbox';
-import { labelReplacements } from "@/config/dictionaries";
+import { labelReplacements, colorPalettes, order } from "@/config/dictionaries";
 import jsPDF from "jspdf";
 import { svg2pdf } from "svg2pdf.js";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { FaFilePdf } from "react-icons/fa";
+import { usePopup } from "@/app/components/context/popupContext";
+import { motion } from "framer-motion";
 
 
 export default function Page({ params }: { params: { slug: string } }) {
   type OtuType = {
     index: string[];
     columns: string[];
-    data: number[][];
+    data: any
   };
   const { accessToken } = useAuth();
   const { user, error, isLoading } = useUser(); 
@@ -47,7 +49,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     { type: string; y: any; name: string }[]
   >([]);
   const [otus, setOtus] = useState<OtuType | null>(null);
-  const [scatterData, setScatterData] = useState([]);
+  const [scatterData, setScatterData] = useState<any[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([
     "Cecum",
     "Feces",
@@ -79,11 +81,13 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [textForConfigKey, setTextForConfigKey] = useState("");
   const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set());
   const [isLoadingPDF, setIsLoadingPDF] = useState(false);
-
+  const [columnsOrder, setColumnsOrder] = useState<{ [key: string]: { [key: string]: number } }>({});
+  const [persistentColors, setPersistentColors] = useState<{ [column: string]: { [value: string]: string } }>({});
+  const [layout, setLayout] = useState<any>({});
   const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
   const plotRef = useRef(null);
   const router = useRouter();
-
+  const { isWindowVisible } = usePopup();
   const items = [
       { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
     { label: 'Community make-up', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/beta`}>{item.label}</Link> },
@@ -98,191 +102,427 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
 
-  const colorPalettes = {
-    samplelocation: ["#074b44", "#017fb1", "#f99b35", "#e57373", "#64b5f6"],
-    treatment: ["#035060", "#f99b35", "#4e8e74", "#ffb74d", "#4caf50"],
-    alphad3level: ["#8cdbf4", "#f7927f", "#f7e76d", "#ba68c8", "#81c784"],
-};
-
-
-
-useEffect(() => {
-  if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
-      setColorOrder(prevOrder => {
-          // Solo actualiza si el colorOrder no está ya asignado correctamente
-          if (prevOrder.length === 0 || prevOrder[0] !== colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][0]) {
-              return [...colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]];
-          }
-          return prevOrder;
-      });
-  }
-}, [theRealColorByVariable]);
-
-const downloadCombinedSVG = async () => {
-  const plotContainer = plotRef.current as unknown as HTMLElement; // Tu contenedor principal
-
-  if (!plotContainer) {
+  const downloadCombinedSVG = async () => {
+    const plotContainer = plotRef.current as any;
+  
+    if (!plotContainer) {
       console.error("Contenedor del gráfico no encontrado");
       return;
-  }
-
-  // Encuentra todos los SVGs dentro del contenedor
-  const svgElements = plotContainer ? Array.from(plotContainer.querySelectorAll('svg')) : [];
-  if (!svgElements.length) {
+    }
+  
+    // Encuentra todos los SVGs dentro del contenedor
+    const svgElements = Array.from(plotContainer.querySelectorAll('svg'));
+    console.log(`Se encontraron ${svgElements.length} SVGs en el contenedor`);
+  
+    if (svgElements.length === 0) {
       console.error("No se encontraron SVGs en el contenedor");
       return;
-  }
-
-  // Crear un SVG maestro
-  const combinedSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-
-  // Ajustar el ancho y alto dinámicamente
-  let totalHeight = 0;
-  const maxWidth = Math.max(...svgElements.map(svg => parseInt(svg.getAttribute("width") || '0', 10)));
-  svgElements.forEach(svg => {
+    }
+  
+    // Crear un SVG maestro
+    const combinedSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  
+    let totalHeight = 0;
+    const maxWidth = Math.max(...svgElements.map((svg: any) => parseInt(svg.getAttribute("width") || '0', 10)));
+  
+    svgElements.forEach((svg: any) => {
       totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
-  });
-  combinedSVG.setAttribute("width", "700");
-  combinedSVG.setAttribute("height", "300");
-
-  // Combina los SVGs en orden inverso
-  let yOffset = 0; // Desplazamiento para evitar solapamiento
-  svgElements.reverse().forEach((svg) => {
+    });
+  
+    combinedSVG.setAttribute("width", String(maxWidth));
+    combinedSVG.setAttribute("height", String(totalHeight));
+  
+    console.log(`Tamaño combinado del SVG: ${maxWidth} x ${totalHeight}`);
+  
+    // Combina los SVGs en orden correcto con un desplazamiento acumulado
+    let yOffset = 0;
+    svgElements.forEach((svg: any, index: number) => {
+      console.log(`Procesando SVG ${index + 1}...`);
+  
+      // Corrige los textos si es necesario
+      const textElements = svg.querySelectorAll('text');
+      console.log(`Se encontraron ${textElements.length} elementos de texto en el SVG ${index + 1}`);
+  
+      textElements.forEach((text: any) => {
+        if (text.textContent) {
+          console.log("Texto encontrado en el SVG:", text.textContent);
+          // Reemplazar guiones largos y otros caracteres especiales por un guion normal
+          text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
+          text.textContent = text.textContent.replace(/−/g, '-');
+          text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
+          text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+          console.log("Texto corregido:", text.textContent);
+        }
+      });
+  
       const clonedSVG = svg.cloneNode(true);
-
-      // Mover el SVG en el eje Y
+  
+      // Ajustar el eje Y para evitar superposiciones
       const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
       wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
-      yOffset =  15// Incrementa el desplazamiento
-
-      // Asegura que <defs> se copie al SVG maestro
-      const defs = (clonedSVG as Element).querySelector('defs');
-      if (defs) {
+      yOffset += parseInt(svg.getAttribute("height") || '0', 10);
+  
+      if (clonedSVG instanceof Element) {
+        const defs = clonedSVG.querySelector('defs');
+        if (defs) {
+          console.log("Copiando <defs>...");
+          // Copiar <defs> para garantizar estilos y gradientes
+          const clonedDefs = defs.cloneNode(true);
           const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
           masterDefs.innerHTML += defs.innerHTML;
-          combinedSVG.appendChild(masterDefs);
+          if (!combinedSVG.querySelector('defs')) {
+            combinedSVG.appendChild(masterDefs);
+          }
+        }
       }
-
+  
+      // Mantener la misma transformación en los textos de los SVGs clonados
+      const textElementsCloned = clonedSVG.querySelectorAll('text');
+      console.log(`Se encontraron ${textElementsCloned.length} elementos de texto en el SVG clonado`);
+      textElementsCloned.forEach((text: any) => {
+        text.setAttribute("font-family", "Arial, sans-serif");
+        text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+        console.log("Texto clonado:", text.textContent);
+      });
+  
       wrapper.appendChild(clonedSVG);
       combinedSVG.appendChild(wrapper);
-  });
-  const svgWidth = 700;
-  const svgHeight = 300
-  const pdf = new jsPDF({
+    });
+  
+    // Serializar y verificar el SVG combinado
+    const svgData = new XMLSerializer().serializeToString(combinedSVG);
+    console.log("SVG combinado serializado:", svgData);
+  
+    const svgWidth = 1000;
+    const svgHeight = 700;
+  
+    // Ajustar el texto en el SVG combinado
+    const textElements = combinedSVG.querySelectorAll('text');
+    console.log(`Ajustando texto en el SVG combinado. Se encontraron ${textElements.length} elementos de texto.`);
+    textElements.forEach(text => {
+      if (text.textContent) {
+        console.log("Texto encontrado en el SVG combinado:", text.textContent);
+        // Reemplazar guiones largos y otros caracteres especiales por un guion normal
+        text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
+        text.textContent = text.textContent.replace(/−/g, '-'); // Asegurarse de que el símbolo de menos sea reemplazado
+        text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
+        text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+        console.log("Texto ajustado:", text.textContent);
+      }
+    });
+  
+    const pdf = new jsPDF({
       orientation: "landscape",
       unit: "pt",
-      format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
-  });
+      format: [svgWidth, svgHeight],
+    });
   
-
-  // Ajustar el tamaño inicial
-  const pageWidth = pdf.internal.pageSize.getWidth();
-   // Convertir SVG a PDF
-   await svg2pdf(combinedSVG, pdf, {
-      x: 20,
-      y: yOffset,
-      width: svgWidth     ,
-      height: svgHeight 
-  });
-
-  // Incrementar el desplazamiento
-  yOffset += svgHeight  + 20;
-
-
-
-   // Descargar el PDF
-   pdf.save("Community-makeup-plot.pdf");
-   // Serializar el SVG combinado y descargarlo
-   const svgData = new XMLSerializer().serializeToString(combinedSVG);
-   const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-   const link = document.createElement("a");
-   link.href = URL.createObjectURL(blob);
-   link.download = "combined_plot.svg";
-   link.click();
-}
-
+    try {
+      console.log("Convirtiendo SVG a PDF...");
+      await svg2pdf(combinedSVG, pdf, {
+        x: 0,
+        y: 0,
+        width: svgWidth,
+        height: svgHeight,
+      });
+  
+      console.log("PDF generado correctamente.");
+      
+      // Descargar el PDF
+      pdf.save("Community-makeup-plot.pdf");
+  
+      // Descargar el SVG combinado
+      const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "combined_plot.svg";
+      link.click();
+    } catch (error) {
+      console.error("Error al convertir SVG a PDF:", error);
+    }
+  };
+  
+  
+let screenWidth = window.innerWidth;
 const fontSize = plotWidth ? Math.max(plotWidth * 0.02, 12) : 13;
 const titleFontSize = fontSize + 8;
 const axisTitleFontSize = fontSize + 4;
 const legendFontSize = fontSize;
 
     const updatePlotWidth = () => {
-
-        if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-            console.log(plotWidth)
-            console.log(plotContainerRef.current)
-            setLoaded(true)
-
-        };
+      
+      
+      
+      if (plotContainerRef.current) {
+        setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
+    
+        
+      };
     };
     const observedElementId = 'plofather';
-    useEffect(() => {
-        // Función para actualizar el ancho de la ventana
-        const updatePlotWidth = () => {
-          if (plotContainerRef.current) {
-            setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-            console.log(plotWidth);
-            console.log(plotContainerRef.current);
-            setLoaded(true);
-          }
-        };
-      
-
-        const plofatherElement = document.getElementById('plofather');
-        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
-      
-        // Añade el event listener cuando el componente se monta
-        window.addEventListener('resize', updatePlotWidth);
-        console.log('plotWidth:', plotWidth);
-        updatePlotWidth();
-      
-        // Limpieza del event listener cuando el componente se desmonte
-        return () => {
-          window.removeEventListener('resize', updatePlotWidth);
-        };
-      }, [window.innerWidth, document?.getElementById('plofather')?.offsetWidth]);
 
 
       useEffect(() => {
-        const interval = setInterval(() => {
-          const element = document.getElementById(observedElementId);
-          if (element) {
-            // Función para actualizar el ancho del elemento observado
-            const updatePlotWidth = () => {
-              const newWidth = element.offsetWidth - 75;
-              setPlotWidth(newWidth);
-              console.log('Actualizado plotWidth:', newWidth);
-              setLoaded(true);
-            };
+        // Esto asegura que el cambio de tamaño se ejecute solo al final de la animación
+          updatePlotWidth();
+          setLoaded(true);
     
-            // Configura el ResizeObserver una vez que el elemento está disponible
-            const resizeObserver = new ResizeObserver(entries => {
-              for (let entry of entries) {
-                updatePlotWidth();
+       
+      }, [dataResult]); // Solo ejecuta cuando la visibilidad cambie
+    
+      useEffect(() => {
+        const plofatherElement = document.getElementById('plofather');
+    
+        // Realiza la actualización inicial al montar el componente
+        updatePlotWidth();
+    
+        // Limpia el event listener de resize
+        const handleResize = () => {
+          updatePlotWidth();
+        };
+        window.addEventListener('resize', handleResize);
+    
+        return () => {
+          window.removeEventListener('resize', handleResize);
+        };
+      }, [isWindowVisible, window.innerWidth, document?.getElementById('plofather')?.offsetWidth, isWindowVisible]);
+
+      const getColorForValue = (
+        value: string,
+        column: string,
+        colorMap: { [key: string]: string },
+        colorOrder: string[]
+    ) => {
+    
+        const colorsForVariable = persistentColors[column];
+     
+    if (colorsForVariable && colorsForVariable[value]) {
+        return colorsForVariable[value];
+        }
+    
+      
+    };
+
+      useEffect(() => {
+        if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
+            const   palette = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes];
+            if (Array.isArray(palette)) {
+                setColorOrder(palette);
+            } else if (palette && 'colors' in palette) {
+                setColorOrder(palette.colors);
+            }
+        }
+
+
+    }, [theRealColorByVariable, selectedLocations, dataUnique]);
+
+
+
+   
+      // Usar requestAnimationFrame para mejorar el rendimiento de la animación
+      const updateLayoutWithScale = () => {
+        const screenWidth = window.innerWidth;
+    
+        // Escala dinámica del tamaño del texto basado en el ancho de la pantalla
+        const textScale = screenWidth < 600
+          ? 0.6
+          : screenWidth < 1024
+            ? 0.8
+            : screenWidth < 1440
+              ? 1
+              : screenWidth < 1920
+                ? 1.2
+                : 1.4;
+    
+        const newLayout = {
+          width: plotWidth || undefined,
+          height: 600,
+          font: { family: 'Roboto, sans-serif' },
+          title: {
+            font: { 
+              family: 'Roboto, sans-serif',
+              size: 26,
+            }
+          },
+          responsive: true,
+          showlegend: true,
+          legend: {
+            itemclick: false,
+            itemdoubleclick: false,
+            orientation: "h",
+            x: 0.5,
+            xanchor: "center",
+            y: 1.1,
+            yanchor: "top",
+            font: {
+              size: 14 * textScale,
+            }
+          },
+          xaxis: {
+            title: {
+              text: `PCoA 1 (${dataResult?.proportions_explained?.PC1}%)`,
+              font: { 
+                family: 'Roboto, sans-serif',
+                size: 14 * textScale,
+              },
+              standoff: 30,
+            },
+            tickfont: {
+              size: 14 * textScale,
+            }
+          },
+          yaxis: {
+            title: {
+              text: `PCoA 2 (${dataResult?.proportions_explained?.PC2}%)`,
+              font: {
+                family: 'Roboto, sans-serif',
+                size: 14 * textScale,
+              },
+              standoff: 30,
+            },
+            annotations: {
+              font: {
+                size: 12 * textScale,
+              }
+            },
+            tickfont: {
+              size: 14 * textScale,
+            },
+          },
+          dragmode: false,
+          margin: { l: 70, r: 10, t: 0, b: 60 }
+        };
+    
+        if (layout && Object.keys(layout).length > 0) {
+          setLayout((prevLayout: any) => ({
+            ...prevLayout,
+            ...newLayout,
+          }));
+        } else {
+          setLayout({ width: 500, height: 500 }); // Valor por defecto
+        }
+      };
+    
+      // Este useEffect gestiona el redimensionamiento con animación
+      useEffect(() => {
+        const handleResize = () => {
+          // Usamos requestAnimationFrame para mejorar el rendimiento
+          requestAnimationFrame(() => {
+            updateLayoutWithScale();
+          });
+        };
+    
+        // Inicializa el ancho y el layout cuando el componente se monta
+        updateLayoutWithScale();
+        window.addEventListener('resize', handleResize);
+    
+        return () => {
+          window.removeEventListener('resize', handleResize);
+        };
+      }, [plotWidth, dataResult]); // Dependiendo de plotWidth y dataResult
+    
+      useEffect(() => {
+        const timeoutId = setTimeout(() => {
+          // Aquí manejamos la animación del cambio de tamaño
+          setLoaded(true);
+        }, 500); // Asegura que el cambio se ejecute después de la animación
+    
+        return () => {
+          clearTimeout(timeoutId);
+        };
+      }, [isWindowVisible]); // Ejecuta el timeout solo cuando cambia la visibilidad
+    
+    
+
+    
+    useEffect(() => {
+      if (dataUnique) {
+        const columns = dataUnique?.data?.columns;
+        const data = dataUnique?.data?.data;
+        const newPersistentColors: { [column: string]: { [value: string]: string } } = {};
+    
+        columns?.forEach((column: string) => {
+          const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)])));
+          const colorPalette = colorPalettes[column as keyof typeof colorPalettes];
+         
+          const colorsForColumn: { [value: string]: string } = {};
+    
+          if (colorPalette) {
+            if (Array.isArray(colorPalette)) {
+              // If the palette is an array, assign colors in order
+              let colorIndex = 0;
+              uniqueValues?.forEach((value:any) => {
+                if (value !== null && value !== 'null') {
+                  colorsForColumn[value] = colorPalette[colorIndex % colorPalette.length];
+                  colorIndex++;
+                }
+              });
+            } else if (typeof colorPalette === 'object') {
+              // If the palette is an object, assign colors based on mappings
+              let colorIndex = 0;
+              const additionalColors = colorPalette.colors || []; // For unmapped values
+              uniqueValues?.forEach((rawValue) => {
+                  // Convertimos el valor a string de manera segura
+                  const value = String(rawValue);
+                
+                  if (value !== "null" && value !== "undefined") {
+                    // Verifica si el colorPalette es un objeto y si la clave existe
+                    if (
+                      typeof colorPalette === "object" &&
+                      !Array.isArray(colorPalette) &&
+                      value in colorPalette
+                    ) {
+                      const resolvedColor = colorPalette[value as keyof typeof colorPalette];
+                      // Verifica que el color no sea un array antes de asignarlo
+                      if (typeof resolvedColor === "string") {
+                        colorsForColumn[value] = resolvedColor;
+                      } else if (Array.isArray(resolvedColor) && resolvedColor.length > 0) {
+                        colorsForColumn[value] = resolvedColor[0]; // Asignar el primer color del array si es necesario
+                      } else {
+                        colorsForColumn[value] = "#000000"; // Color por defecto
+                      }
+                    } else if (
+                      Array.isArray(additionalColors) &&
+                      additionalColors.length > 0
+                    ) {
+                      colorsForColumn[value] =
+                        additionalColors[colorIndex % additionalColors.length];
+                      colorIndex++;
+                    } else {
+                      colorsForColumn[value] = "#000000"; // Color por defecto
+                    }
+                  }
+                });
+                
+                
+            }
+          } else {
+            // No color palette found for the column
+            uniqueValues?.forEach((value:any) => {
+              if (value !== null && value !== 'null') {
+                colorsForColumn[value] = '#000000'; // Default color
               }
             });
-    
-            resizeObserver.observe(element);
-    
-            // Limpieza del intervalo y del observer
-            clearInterval(interval);
-            return () => {
-              resizeObserver.disconnect();
-            };
           }
-        }, 100); // Intervalo de verificación cada 100 ms
     
-        return () => clearInterval(interval); // Limpieza en caso de que el componente se desmonte antes de encontrar el elemento
-      }, [observedElementId]); 
+          newPersistentColors[column] = colorsForColumn;
+        });
 
+        setPersistentColors(newPersistentColors);
+      }
+    }, [dataUnique]);
+    
+  
+
+    
+    
+    
     useEffect(() => {
         updatePlotWidth(); // Establece el ancho inicial
-        console.log('plotWidth:', plotWidth);
 
-    }, [otus]);
+    }, [dataResult]);
 
 
   const fetchConfigFile = async (token: any) => {
@@ -297,7 +537,7 @@ const legendFontSize = fontSize;
         throw new Error("Network response was not ok");
       }
       const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
-      console.log(configfile);
+  
       setconfigFile(configfile?.configFile);
       setBetaText(configfile?.configFile?.betadiversity);
       setColorByOptions(configfile?.configFile?.columns); // Actualiza el estado con las nuevas opciones
@@ -309,12 +549,12 @@ const legendFontSize = fontSize;
   
 
   const handleLocationChange = (event: any) => {
-    console.log("Location Change Event:", event);
-    console.log("Current colorBy:", colorBy);
+  
   
     if (event === 'all') {
       setSelectedLocations(["Cecum", "Feces", "Ileum"]);
       setIsColorByDisabled(true);
+      setTheRealColorByVariable("samplelocation");
     } else {
       setSelectedLocations([event]);
       setIsColorByDisabled(false);
@@ -334,12 +574,34 @@ const legendFontSize = fontSize;
       // fetchProjectIdsFiltercolor(dataResult, event.target.value);
     
 
-    console.log(event.target.value)
-console.log(selectedLocations)
-console.log(colorBy)
+
   };
 
+  const mergeOrders = (
+    defaultOrder: { [key: string]: { [key: string]: number } },
+    resultOrder: { [key: string]: { [key: string]: number } } | undefined
+) => {
+    const mergedOrder: { [key: string]: { [key: string]: number } } = {};
 
+    // Combina las claves de defaultOrder y resultOrder
+    const allKeys = new Set([
+        ...Object.keys(defaultOrder),
+        ...(resultOrder ? Object.keys(resultOrder) : []),
+    ]);
+
+    // Itera por todas las claves
+    allKeys.forEach((key) => {
+        if (resultOrder?.[key]) {
+            // Si resultOrder tiene una clave, usa el valor completo de resultOrder para esa clave
+            mergedOrder[key] = resultOrder[key];
+        } else {
+            // Si no, usa el valor de defaultOrder
+            mergedOrder[key] = defaultOrder[key];
+        }
+    });
+
+    return mergedOrder;
+};
 
     // Definir una función genérica para realizar el fetch
     const fetchData = async (token: any) => {
@@ -374,12 +636,13 @@ console.log(colorBy)
         }
   
         const result = await response.json();
-        console.log(result);
         setDataResult(result);
         setColumnOptions(result?.data?.columns);
         setDataUnique(result);
         
         setValueOptions(result?.data?.data);
+        const mergedColumnsOrder = mergeOrders(order, result?.order);
+        setColumnsOrder(mergedColumnsOrder);
         return result; // Devolver los datos obtenidos
   
       } catch (error) {
@@ -422,7 +685,6 @@ console.log(colorBy)
       }
 
       const result = await response.json();
-      console.log(result);
       setDataResult(result);
       return result; // Devolver los datos obtenidos
 
@@ -434,8 +696,7 @@ console.log(colorBy)
 
   const applyFilters = async () => {
     try {
-      const result = await fetchBetaDiversityData(accessToken);
-      fetchProjectIdsFilter(result);
+
       isColorByDisabled || colorBy === "samplelocation"
         ? SetTittleVariable('location')
         : SetTittleVariable(colorBy.replace('_', ' '));
@@ -451,6 +712,8 @@ console.log(colorBy)
     }
   };
 
+  
+
 
 
 
@@ -461,7 +724,7 @@ console.log(colorBy)
         // Filtrar los valores únicos de la columna seleccionada
         const columnIndex = columnOptions?.indexOf(String(tempSelectedColorBy).toLowerCase());
         const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
-        const uniqueValuesCheck: Set<string> = new Set(dataResult?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+        const uniqueValuesCheck: Set<string> = new Set(otus?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
         console.log(uniqueValuesCheck)
         console.log(uniqueValues)
 
@@ -470,7 +733,7 @@ console.log(colorBy)
         // Inicializa 'selectedValues' con todos los valores únicos
         setTempSelectedValues(new Set<string>(uniqueValuesCheck));
     }
-}, [tempSelectedColorBy, dataResult]);
+}, [tempSelectedColorBy, otus]);
 
 // Estado para manejar los valores seleccionados en los checks
 const handleValueChange = (value: string) => {
@@ -513,18 +776,23 @@ const handleValueChangeTemp = (value: string) => {
 };
 
 
+
 const config: Partial<Config> = {
   displaylogo: false,
   responsive: true,
+  staticPlot: false,
+  displayModeBar: true,
   modeBarButtonsToRemove: [
-    'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d', 
-    'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d', 
-    'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
-    'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
+      'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d',
+      'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d',
+      'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie',
+      'toggleHover', 'toggleSpikelines', 'resetViewMapbox', 'toImage', 'zoomIn2d', 'zoomOut2d', 'resetViews', 'resetScale2d'
   ],
   scrollZoom: false,
+
   modeBarButtonsToAdd: [],
 };
+
   
 const handleGroupChange = (value: string) => {
 fetchProjectIdsFiltercolor(dataResult, value);
@@ -540,7 +808,8 @@ const handleTempColorByChange = (value: string) => {
 const valueChecks = (
 <div className="flex flex-col w-full mb-5 mt-5">
   <div className="flex w-full flex-row flex-wrap items-start justify-start">
-    {valueOptions?.filter(value => value !== null && tempSelectedColorBy !== "samplelocation").map((value, index) => {
+    {valueOptions?.filter(value => value !== null && tempSelectedColorBy !== "samplelocation").sort((a, b) => String(a).localeCompare(String(b))) // Ordenar alfabéticamente
+.map((value, index) => {
       const stringValue = String(value);
       return (
         <div key={index} className="flex items-center mb-2 mr-2 ml-2">
@@ -564,16 +833,69 @@ const valueChecks = (
 
 // useEffect(() => {setTheRealColorByVariable(selectedColorBy)}, [selectedColorBy]);
 
+
+const sortByCustomOrder = (
+  data: any[],
+  column: string,
+  orderDict: { [key: string]: { [key: string]: number } }
+) => {
+  let order: { [key: string]: number } = {};
+  if (columnsOrder && Object.keys(columnsOrder).length > 0) {
+    for (let key in columnsOrder) {
+      if (key.toLowerCase() === column.toLowerCase()) {
+        order = orderDict[key];
+        break; // Found the matching column, no need to continue
+      }
+    }
+  }
+
+
+  // Check if order is empty
+  if (Object.keys(order).length === 0) {
+    // No custom order, define default sorting
+    // Extract unique values from data
+    const uniqueValues = Array.from(
+      new Set(
+        data.map((item: { [x: string]: any; name: any }) => String(item.name || item[column]))
+      )
+    );
+
+    // Determine if values are numeric
+    const areValuesNumeric = uniqueValues.every(value => !isNaN(Number(value)));
+
+    // Sort uniqueValues accordingly
+    if (areValuesNumeric) {
+      uniqueValues.sort((a, b) => Number(a) - Number(b));
+    } else {
+      uniqueValues.sort(); // Lexicographical sort
+    }
+
+    // Create default order mapping
+    uniqueValues.forEach((value, index) => {
+      order[value] = index;
+    });
+  }
+
+  return data.sort(
+    (a: { [x: string]: any; name: any }, b: { [x: string]: any; name: any }) => {
+      const valueA = String(a.name || a[column]);
+      const valueB = String(b.name || b[column]);
+      const orderA = order[valueA];
+      const orderB = order[valueB];
+      return (orderA !== undefined ? orderA : Infinity) - (orderB !== undefined ? orderB : Infinity);
+    }
+  );
+};
+
+
   const fetchProjectIds = async (result: any) => {
-    console.log(newScatterColors)
-    console.log(scatterColors)
 
     const locations = new Set(
       result?.data?.data?.map((item: any[]) => item[3])
     );
     const uniqueLocations = Array.from(locations) as string[];
     setAvailableLocations(uniqueLocations);
-    setOtus(result.data); // Actualiza el estado con los datos obtenidos
+    setOtus(result?.data); // Actualiza el estado con los datos obtenidos
     // Filtrado y mapeo de datos para los gráficos...
     const filteredData = result?.data?.data?.filter((item: any[]) =>
       selectedLocations.includes(item[3])
@@ -600,12 +922,14 @@ const valueChecks = (
           acc[location].text.push(`Sample ID: ${sampleId}`);
         }
 
+        
+
         return acc;
       },
       {}
     );
 
-    const scatterPlotData = filteredData?.reduce(
+    let scatterPlotData = filteredData?.reduce(
       (
         acc: {
           [x: string]: {
@@ -616,13 +940,16 @@ const valueChecks = (
             type: any;
             name: any;
             marker: { size: number, color: string };
+            
           };
         },
         item: [any, any, any, any]
       ) => {
         const [PC1, PC2, sampleId, sampleLocation] = item;
-
+        const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result?.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
+     
         // Inicializa el objeto para esta locación si aún no existe
+        
         if (!acc[sampleLocation]) {
           acc[sampleLocation] = {
               x: [],
@@ -631,11 +958,16 @@ const valueChecks = (
               type: "scatter",
               name: sampleLocation,
               text: [],
-              marker: { size: 11, color: colorOrder[colorIndex % colorOrder.length] }
+              marker: { size: 11, color: getColorForValue(
+                colorValue,
+                theRealColorByVariable,
+                scatterColors,
+                colorOrder
+            ) || "#000000", }
           };
           const key = sampleLocation;
-          newScatterColors[key] = colorOrder[colorIndex % colorOrder.length];
-          colorIndex++;
+          // newScatterColors[key] = colorOrder[colorIndex % colorOrder.length];
+          // colorIndex++;
       }
       
 
@@ -648,7 +980,13 @@ const valueChecks = (
       },
       {} // Asegura que el valor inicial del acumulador es un objeto
     );
-    setScatterColors(newScatterColors);
+    // setScatterColors(newScatterColors);
+
+      const mergedColumnsOrder = mergeOrders(order, result?.order);
+      scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData || {}), theRealColorByVariable, mergedColumnsOrder);
+
+      
+
     setScatterData(Object.values(scatterPlotData || {}));
     const plotData = Object.keys(groupedData || {})
       .filter((location: string) => selectedLocation.includes(location))
@@ -671,11 +1009,12 @@ const valueChecks = (
     setIsLoaded(true);
 
   }
+
   const fetchProjectIdsFiltercolor = async (result: any, color: any) => {
     try {
-        const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+        let scatterPlotData = result?.data.data.reduce((acc: { [x: string]: any }, item: any) => {
             const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-            const colorValue = color !== 'samplelocation' ? item[result.data.columns.indexOf(color)] : sampleLocation;
+            const colorValue = color !== 'samplelocation' ? item[result?.data.columns.indexOf(color)] : sampleLocation;
 
             let key = colorValue; // Ahora se usa colorValue como clave
             let name = `${colorValue}`; // Nombre para la leyenda
@@ -694,8 +1033,13 @@ const valueChecks = (
                     type: "scatter",
                     name: name,
                     text: [],
-                    marker: { size: 11, color: scatterColors[key] } // Usa el color asignado
-                };
+                    marker: { size: 11, color: getColorForValue(
+                      colorValue, // Valor de colorByVariable
+                      color, // Variable actual
+                      scatterColors, // Mapa de colores existente
+                      colorOrder // Orden de colores
+                  ) || '#000000' // Default color if undefined} // Usa el color asignado
+                }}
             }
 
             acc[key].x.push(PC1);
@@ -703,6 +1047,11 @@ const valueChecks = (
             acc[key].text.push(`Sample ID: ${sampleId}, ${color === "samplelocation" ? "location" : color}: ${colorValue}`);
             return acc;
         }, {});
+
+        if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
+          scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData), color, columnsOrder);
+  
+          }
 
         setScatterData(Object.values(scatterPlotData));
         setIsLoaded(true);
@@ -713,9 +1062,9 @@ const valueChecks = (
 
 const fetchProjectIdsFilter = async (result: any) => {
   try {
-      const scatterPlotData = result.data.data.reduce((acc: { [x: string]: any }, item: any) => {
+      let scatterPlotData = result?.data.data.reduce((acc: { [x: string]: any }, item: any) => {
           const [PC1, PC2, sampleId, sampleLocation, ...rest] = item;
-          const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
+          const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result?.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
 
           let key = colorValue; 
           let name = `${colorValue}`;
@@ -734,8 +1083,13 @@ const fetchProjectIdsFilter = async (result: any) => {
                   type: "scatter",
                   name: name,
                   text: [],
-                  marker: { size: 11, color: scatterColors[key] } // Usa el color asignado
-              };
+                  marker: { size: 11, color:  getColorForValue(
+                    colorValue, // Valor de colorByVariable
+                    theRealColorByVariable, // Variable actual
+                    scatterColors, // Mapa de colores existente
+                    colorOrder // Orden de colores
+                ) || '#000000' // Default color if undefined} // Usa el color asignado } // Usa el color asignado
+              }};
           }
 
           acc[key].x.push(PC1);
@@ -743,6 +1097,11 @@ const fetchProjectIdsFilter = async (result: any) => {
           acc[key].text.push(`Sample ID: ${sampleId}, ${theRealColorByVariable === "samplelocation" ? "location" : theRealColorByVariable}: ${colorValue}`);
           return acc;
       }, {});
+
+      if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
+        scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData), theRealColorByVariable, columnsOrder);
+   
+        }
 
       setScatterData(Object.values(scatterPlotData));
       setIsLoaded(true);
@@ -864,61 +1223,115 @@ const findTextInCommunityMakeupNested = (
 
 
 
+useEffect(() => {
+  const scatter = sortByCustomOrder(Object.values(scatterData), theRealColorByVariable, columnsOrder);
+  setScatterData(scatter as any[]);
+}, [columnsOrder]);
+
 
 useEffect(() => {
-  const location = selectedLocations.length > 1 ? "All" : selectedLocations[0];
+  const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
   console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
-  console.log("Selected locations:", selectedLocations);
-  
+  console.log("selected locations:", selectedLocations);
   if (location && theRealColorByVariable) {
-    const formattedColumn = String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1);
-    console.log("Formatted column and location:", { formattedColumn, location });
+      const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+      console.log("Formatted column and location:", { formattedColumn, location });
 
-    const allValuesSelected = Array.from(initialValueOptions)?.every(option => selectedValues.has(option));
+      const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
 
-    if (allValuesSelected) {
-      const textForConfig = findTextInCommunityMakeup(
-        configFile,
-        location,
-        tempSelectedColorBy === "samplelocation" ? "Self" : formattedColumn
-      );
-      console.log("Text for all values selected:", textForConfig);
-      setTextForConfigKey(textForConfig || "");
-    } else if (
-      String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) !== "SampleLocation" &&
-      selectedValues.size > 0
-    ) {
-      const tempValuesArray = Array.from(tempSelectedValues)
-        .map(value => String(value).replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, ""));
+      if (allValuesSelected) {
+          const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
+          console.log("Text for all values selected:", textForConfig);
+          setTextForConfigKey(textForConfig || "");
+      } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
+          // Limpia cada valor en valuesArray para eliminar caracteres especiales
+          const valuesArray = Array.from(selectedValues)
+              .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
 
-      const formedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.join("+")}`;
-      const normalizedFormedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.sort().join("+")}`;
+          const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
+          const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
 
-      console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+          console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
 
-      let textForConfig = findTextInCommunityMakeupNested(
-        configFile,
-        location,
-        formedKey,
-        theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
-      );
+          // Intentar buscar con formedKey primero y luego con normalizedFormedKey
+          let textForConfig = findTextInCommunityMakeupNested(
+              configFile,
+              location,
+              formedKey,
+              theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+          );
+          if (!textForConfig) {
+              textForConfig = findTextInCommunityMakeupNested(
+                  configFile,
+                  location,
+                  normalizedFormedKey,
+                  theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+              );
+          }
 
-      if (!textForConfig) {
-        textForConfig = findTextInCommunityMakeupNested(
-          configFile,
-          location,
-          normalizedFormedKey,
-          theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
-        );
+          console.log("Text for specific filter:", textForConfig);
+          setTextForConfigKey(textForConfig || "");
+      } else {
+          setTextForConfigKey("");
       }
-
-      console.log("Text for specific filter:", textForConfig);
-      setTextForConfigKey(textForConfig || "");
-    } else {
-      setTextForConfigKey("");
-    }
   }
-}, [selectedLocations, tempSelectedColorBy, theRealColorByVariable, tempSelectedValues, configFile]);
+}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
+
+
+// useEffect(() => {
+//   const location = selectedLocations.length > 1 ? "All" : selectedLocations[0];
+//   console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
+//   console.log("Selected locations:", selectedLocations);
+  
+//   if (location && theRealColorByVariable) {
+//     const formattedColumn = String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1);
+//     console.log("Formatted column and location:", { formattedColumn, location });
+
+//     const allValuesSelected = Array.from(initialValueOptions)?.every(option => selectedValues.has(option));
+
+//     if (allValuesSelected) {
+//       const textForConfig = findTextInCommunityMakeup(
+//         configFile,
+//         location,
+//         tempSelectedColorBy === "samplelocation" ? "Self" : formattedColumn
+//       );
+//       console.log("Text for all values selected:", textForConfig);
+//       setTextForConfigKey(textForConfig || "");
+//     } else if (
+//       String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) !== "SampleLocation" &&
+//       selectedValues.size > 0
+//     ) {
+//       const tempValuesArray = Array.from(tempSelectedValues)
+//         .map(value => String(value).replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, ""));
+
+//       const formedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.join("+")}`;
+//       const normalizedFormedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.sort().join("+")}`;
+
+//       console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+
+//       let textForConfig = findTextInCommunityMakeupNested(
+//         configFile,
+//         location,
+//         formedKey,
+//         theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
+//       );
+
+//       if (!textForConfig) {
+//         textForConfig = findTextInCommunityMakeupNested(
+//           configFile,
+//           location,
+//           normalizedFormedKey,
+//           theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
+//         );
+//       }
+
+//       console.log("Text for specific filter:", textForConfig);
+//       setTextForConfigKey(textForConfig || "");
+//     } else {
+//       setTextForConfigKey("");
+//     }
+//   }
+// }, [selectedLocations, tempSelectedColorBy, theRealColorByVariable, tempSelectedValues, configFile]);
 
 
   useEffect(() => {
@@ -934,10 +1347,42 @@ useEffect(() => {
   useEffect(() => {
 
       fetchConfigFile(accessToken);
-      fetchData(accessToken).then((result) => { console.log(result); fetchProjectIds(result) })
+      fetchData(accessToken).then((result) => {  fetchProjectIds(result) })
     
   }
     , [params.slug, accessToken]);
+
+    useEffect(() => {
+      fetchProjectIds(dataResult);}, [persistentColors]);
+
+
+    useEffect(() => {
+      if (filterPeticion && colorBy && selectedValues.size > 0) {
+          const fetchDataAndUpdate = async () => {
+            const result = await fetchBetaDiversityData(accessToken);
+            fetchProjectIdsFilter(result);
+              const columnIndex = otus?.data?.columns?.indexOf(colorBy);
+              const filteredData = dataResult?.data?.data.filter((item: any[]) => selectedLocations.includes(item[1]));
+      
+              // Mantener colores ya asignados
+              
+              const updatedScatterColors = { ...scatterColors };
+              filteredData.forEach((item: any[]) => {
+                  const value = item[columnIndex];
+                  if (value && !updatedScatterColors[value]) {
+                      updatedScatterColors[value] = colorOrder[Object.keys(updatedScatterColors).length % colorOrder.length];
+                  }
+              });
+              console.log("Updated scatter colors:", updatedScatterColors);
+
+              setScatterColors(updatedScatterColors);
+           
+          };
+
+          fetchDataAndUpdate();  // Ejecutar la función asíncrona
+      }
+  }, [colorBy, selectedValues, filterPeticion, dataUnique]);  // Se ejecuta cuando cambian selectedColumn, selectedValues o filterPeticion
+
     const [activeIndexes, setActiveIndexes] = useState([0,1]);
 
     const onTabChange = (e : any) => {
@@ -945,8 +1390,7 @@ useEffect(() => {
     };
 
     const dropdownOptionsColorby = (() => {
-      console.log("columnOptions", columnOptions);
-      console.log("colorByOptions", colorByOptions);
+    
   
       if (!columnOptions || !colorByOptions) {
           console.warn("columnOptions o colorByOptions están indefinidos.");
@@ -988,53 +1432,6 @@ useEffect(() => {
     }
 }, [selectedValues]);
 
-  useEffect(() => {
-    const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
-    console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
-    console.log("selected locations:", selectedLocations);
-    if (location && theRealColorByVariable) {
-        const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
-        console.log("Formatted column and location:", { formattedColumn, location });
-
-        const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
-
-        if (allValuesSelected) {
-            const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
-            console.log("Text for all values selected:", textForConfig);
-            setTextForConfigKey(textForConfig || "");
-        } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
-            // Limpia cada valor en valuesArray para eliminar caracteres especiales
-            const valuesArray = Array.from(selectedValues)
-                .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
-
-            const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
-            const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
-
-            console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
-
-            // Intentar buscar con formedKey primero y luego con normalizedFormedKey
-            let textForConfig = findTextInCommunityMakeupNested(
-                configFile,
-                location,
-                formedKey,
-                theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
-            );
-            if (!textForConfig) {
-                textForConfig = findTextInCommunityMakeupNested(
-                    configFile,
-                    location,
-                    normalizedFormedKey,
-                    theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
-                );
-            }
-
-            console.log("Text for specific filter:", textForConfig);
-            setTextForConfigKey(textForConfig || "");
-        } else {
-            setTextForConfigKey("");
-        }
-    }
-}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
 
 
     const dropdownOptions = [
@@ -1050,10 +1447,10 @@ useEffect(() => {
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
           <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
             
-            <AccordionTab className="colorby-acordeon" header="Group by">
+            <AccordionTab className="colorby-acordeon" header="Group by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="flex flex-col items-start m-2">
-                <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center">
-                  Select a Sample Location:
+                <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center"  style={{ fontSize: '1.05rem' }}>
+                  Select a sample location:
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
@@ -1077,7 +1474,7 @@ useEffect(() => {
       
               <div className="flex flex-col items-start mt-2 m-2">
                 <div className="flex items-center mb-2">
-                  <h3 className="text-base font-medium text-gray-700 dark:text-white">
+                  <h3 className="text-base font-medium text-gray-700 dark:text-white" style={{ fontSize: '1.05rem' }}>
                     Select a variable to color:
                   </h3>
                   <span className="ml-2">
@@ -1097,16 +1494,16 @@ useEffect(() => {
                   optionLabel="label"
                   className="w-full text-sm filtercolorby"
                   id="colorby"
-
+                  disabled={selectedLocations.length > 1}
                   placeholder="Select a color category"
                 />
               </div>
             </AccordionTab>
       
-            <AccordionTab className="filter-acordeon" header="Filter by">
+            <AccordionTab className="filter-acordeon" header="Filter by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="mt-2 ml-2 mb-4">
                 <div className="flex items-center">
-                  <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center">
+                  <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center" style={{ fontSize: '1.1rem' }}>
                     Filtering options:
                     <AiOutlineInfoCircle
                       className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
@@ -1197,12 +1594,10 @@ useEffect(() => {
   );
 
   useEffect(() => {
-    console.log(Location)
-    console.log(selectedLocations)
+
     
     setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
 }, [params.slug, scatterData]);
-
 
 
 useEffect(() => {
@@ -1249,52 +1644,10 @@ useEffect(() => {
       <Plot
         data={scatterData}
         config={config}
-        layout={{
-          width: plotWidth || undefined, // Utiliza plotWidth o cae a 'undefined' si es 0
-          height: 600,
-          font: { family: 'Roboto, sans-serif' },
-          title: {
-            font: { 
-              family: 'Roboto, sans-serif',
-              size: 26,
-            }
-          },          
-          xaxis: {
-            title: {
-              text: `PCoA 1 (${dataResult.proportions_explained.PC1}%)`,
-              font: { 
-                family: 'Roboto, sans-serif',
-                size: 18,
-              },
-              standoff: 15,
-             
-            }
-          },
-          yaxis: {
-            title: {
-              text: `PCoA 2 (${dataResult.proportions_explained.PC2}%)`,
-              font: {
-                family: 'Roboto, sans-serif',
-                size: 18, // Aumenta el tamaño para mayor énfasis
-              },
-              standoff: 15,
-            }
-          },
-          showlegend: true,  // Activa la visualización de la leyenda
-          legend: {
-              orientation: "h", // Horizontal
-              x: 0.5, // Centrado respecto al ancho del gráfico
-              xanchor: "center", // Ancla en el centro
-              y: 1.1, // Posición en y un poco por encima del gráfico
-              yanchor: "top", // Ancla la leyenda en la parte superior
-              font: {
-                size: legendFontSize,
-              },
-          },
-          dragmode: false ,
-                    margin: { l: 60, r: 10, t: 0, b: 60 } 
-
-        }}
+        divId="plot"
+        layout={layout}
+      
+        
       />
                             </div>
         </>
@@ -1315,7 +1668,7 @@ useEffect(() => {
   return (
     <div className="w-full h-full">
       <SidebarProvider>
-      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
+      <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-bread"/>}>
         {isLoaded ? (
 <div className="flex flex-col w-11/12 mx-auto">
 <div className="flex flex-row w-full text-center justify-center items-center">
@@ -1325,15 +1678,21 @@ useEffect(() => {
       <div className="px-6 py-8">
 
       <div className={`prose single-column`}>
-      <p className="text-gray-700 m-3 text-justify text-xl">
-  {`For exploring the composition of the microbiome in different groups, we use methods that evaluate an ecological diversity measure called Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
+      <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
+      {`For exploring the composition of the microbiome in different groups, we use methods that evaluate an ecological diversity measure called Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
 </p>
 
 </div>
 
 
     </div>
-  <div className="flex">
+ 
+  <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: loaded ? 1 : 0 }} 
+          transition={{ duration: 0.5 }}
+          className="flex"
+        >
     <GraphicCard legend={""} text={"Each axis represents a combination of features (the sequences in the samples) that account for high amounts of variation between samples. Each axis shows the proportion of variability that is accounted for by this combination of features (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability."} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <div className="w-full flex flex-col">
@@ -1357,7 +1716,7 @@ useEffect(() => {
         <SkeletonCard width={"500px"} height={"270px"} />
       )}
     </GraphicCard>
-  </div>
+  </motion.div>
 
 
 </div>
@@ -1371,3 +1730,5 @@ useEffect(() => {
     </div>
   );
 }
+
+

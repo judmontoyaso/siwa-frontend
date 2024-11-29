@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import PopupComponent from './popUpContent';
 import { IoCloseOutline, IoFilterOutline } from "react-icons/io5";
 import { Card } from 'primereact/card';
-import { usePopup } from './context/popupContext';
+import { PopupProvider, usePopup } from './context/popupContext';
 import { usePathname } from 'next/navigation';
 import HelpText from './helpTextDropdown';
 
@@ -29,15 +29,19 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, ori
   };
 
   useEffect(() => {
+    console.log("iswindowvisible", isWindowVisible);}, [isWindowVisible]);
+
+  useEffect(() => {
     router === `/projects/${slug}/taxonomy/composition` ? setIsTaxo(true) : setIsTaxo(false);
   }, [router, slug]);
 
   return (
+    <PopupProvider>
     <div className={`flex pb-12 flex-row items-start mt-6 mb-6 bg-white w-full`}>
       <motion.div
         initial={{ scale: 1, opacity: 1 }}
         animate={{ scale: isWindowVisible ? 1 : 0, opacity: isWindowVisible ? 1 : 0 }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
+        transition={{ duration: 0.5, ease: "circOut" }}
         className={`flex pb-12 xl:w-1/4 md:w-1/4 relative h-auto filter-panel`}
         style={{ display: isWindowVisible ? 'block' : 'none' }}
       >
@@ -84,6 +88,8 @@ const GraphicCard: React.FC<CardProps> = ({ children, title, filter, legend, ori
         </Card>
       </motion.div>
     </div>
+
+    </PopupProvider>
   );
 };
 

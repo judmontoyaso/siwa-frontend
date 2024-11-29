@@ -26,6 +26,6 @@ export const colorPalettes = {
 };
 
 export const order = {
-    "SampleLocation": { "Ileum": 1, "Cecum": 2, "Feces": 3 },
+    "SampleLocation": { "Ileum": 2, "Cecum": 1, "Feces": 3 },
     // "Age": { "21": 1, "14": 2 }
 };

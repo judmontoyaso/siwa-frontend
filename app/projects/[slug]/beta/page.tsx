@@ -102,141 +102,149 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
 
-useEffect(() => {
-  console.log("columnsorder", columnsOrder)}, [columnsOrder]);
-
-
-// useEffect(() => {
-//   if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
-//       setColorOrder(prevOrder => {
-//           // Solo actualiza si el colorOrder no está ya asignado correctamente
-//           if (prevOrder.length === 0 || prevOrder[0] !== colorPalettes[theRealColorByVariable as keyof typeof colorPalettes][0]) {
-//               return [...colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]];
-//           }
-//           return prevOrder;
-//       });
-//   }
-// }, [theRealColorByVariable]);
-
-const downloadCombinedSVG = async () => {
-  const plotContainer = plotRef.current as any;
-
-  if (!plotContainer) {
-    console.error("Contenedor del gráfico no encontrado");
-    return;
-  }
-
-  // Encuentra todos los SVGs dentro del contenedor
-  const svgElements = Array.from(plotContainer.querySelectorAll('svg'));
-  if (svgElements.length === 0) {
-    console.error("No se encontraron SVGs en el contenedor");
-    return;
-  }
-
-  // Crear un SVG maestro
-  const combinedSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-
-  let totalHeight = 0;
-  const maxWidth = Math.max(...svgElements.map((svg:any) => parseInt(svg.getAttribute("width") || '0', 10)));
-
-  svgElements.forEach((svg:any) => {
-    totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
-  });
-
-  combinedSVG.setAttribute("width", String(maxWidth));
-  combinedSVG.setAttribute("height", String(totalHeight));
-
-  // Combina los SVGs en orden correcto con un desplazamiento acumulado
-  let yOffset = 0;
-  svgElements.forEach((svg:any) => {
-    // Corrige los textos si es necesario
-    const textElements = svg.querySelectorAll('text');
-    textElements.forEach((text:any) => {
-      if (text.textContent) {
-        console.log("Texto encontrado:", text.textContent);
-        // Reemplazar guiones largos y otros caracteres especiales por un guion normal
-        text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-'); // Reemplazar guion largo y guion em dash
-        text.textContent = text.textContent.replace(/−/g, '-'); // Reemplazar guion en lugar del símbolo de menos
-        text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
-      }
-    });
-
-    const clonedSVG = svg.cloneNode(true);
-
-    // Ajustar el eje Y para evitar superposiciones
-    const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
-    yOffset += parseInt(svg.getAttribute("height") || '0', 10);
-    if (clonedSVG instanceof Element) {
-      const defs = clonedSVG.querySelector('defs');
-      if (defs) {
-        // Copiar <defs> para garantizar estilos y gradientes
-        const clonedDefs = defs.cloneNode(true);
-        const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        masterDefs.innerHTML += defs.innerHTML;
-        if (!combinedSVG.querySelector('defs')) {
-          combinedSVG.appendChild(masterDefs);
-        }
-      }
+  const downloadCombinedSVG = async () => {
+    const plotContainer = plotRef.current as any;
+  
+    if (!plotContainer) {
+      console.error("Contenedor del gráfico no encontrado");
+      return;
     }
   
-
-    wrapper.appendChild(clonedSVG);
-    combinedSVG.appendChild(wrapper);
-  });
-
-  // Serializar y verificar el SVG combinado
-  const svgData = new XMLSerializer().serializeToString(combinedSVG);
-  console.log("SVG combinado:", svgData); // Depuración para verificar los valores negativos en el SVG
-
-  // Convertir SVG a PDF
-  // const svgWidth = parseInt(combinedSVG.getAttribute("width") || "0", 10);
-  // const svgHeight = parseInt(combinedSVG.getAttribute("height") || "0", 10);
-  const svgWidth = 1000;
-  const svgHeight = 700;
-  const textElements = combinedSVG.querySelectorAll('text');
-  textElements.forEach(text => {
-    if (text.textContent) {
-      console.log("Texto encontrado:", text.textContent);
-      // Reemplazar guiones largos y otros caracteres especiales por un guion normal
-      text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
-      text.textContent = text.textContent.replace(/−/g, '-'); // Asegurarse de que el símbolo de menos sea reemplazado
-      text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
+    // Encuentra todos los SVGs dentro del contenedor
+    const svgElements = Array.from(plotContainer.querySelectorAll('svg'));
+    console.log(`Se encontraron ${svgElements.length} SVGs en el contenedor`);
+  
+    if (svgElements.length === 0) {
+      console.error("No se encontraron SVGs en el contenedor");
+      return;
     }
-  });
-
-  console.log("svgData", svgData);
-
-  const pdf = new jsPDF({
-    orientation: "landscape",
-    unit: "pt",
-    format: [svgWidth, svgHeight],
-  });
-
-  try {
-    await svg2pdf(combinedSVG, pdf, {
-      x: 0,
-      y: 0,
-      width: svgWidth,
-      height: svgHeight,
+  
+    // Crear un SVG maestro
+    const combinedSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  
+    let totalHeight = 0;
+    const maxWidth = Math.max(...svgElements.map((svg: any) => parseInt(svg.getAttribute("width") || '0', 10)));
+  
+    svgElements.forEach((svg: any) => {
+      totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
     });
-
-    // Descargar el PDF
-    pdf.save("Community-makeup-plot.pdf");
-
-    // Descargar el SVG combinado
-    const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "combined_plot.svg";
-    link.click();
-  } catch (error) {
-    console.error("Error al convertir SVG a PDF:", error);
-  }
-};
-
+  
+    combinedSVG.setAttribute("width", String(maxWidth));
+    combinedSVG.setAttribute("height", String(totalHeight));
+  
+    console.log(`Tamaño combinado del SVG: ${maxWidth} x ${totalHeight}`);
+  
+    // Combina los SVGs en orden correcto con un desplazamiento acumulado
+    let yOffset = 0;
+    svgElements.forEach((svg: any, index: number) => {
+      console.log(`Procesando SVG ${index + 1}...`);
+  
+      // Corrige los textos si es necesario
+      const textElements = svg.querySelectorAll('text');
+      console.log(`Se encontraron ${textElements.length} elementos de texto en el SVG ${index + 1}`);
+  
+      textElements.forEach((text: any) => {
+        if (text.textContent) {
+          console.log("Texto encontrado en el SVG:", text.textContent);
+          // Reemplazar guiones largos y otros caracteres especiales por un guion normal
+          text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
+          text.textContent = text.textContent.replace(/−/g, '-');
+          text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
+          text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+          console.log("Texto corregido:", text.textContent);
+        }
+      });
+  
+      const clonedSVG = svg.cloneNode(true);
+  
+      // Ajustar el eje Y para evitar superposiciones
+      const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
+      yOffset += parseInt(svg.getAttribute("height") || '0', 10);
+  
+      if (clonedSVG instanceof Element) {
+        const defs = clonedSVG.querySelector('defs');
+        if (defs) {
+          console.log("Copiando <defs>...");
+          // Copiar <defs> para garantizar estilos y gradientes
+          const clonedDefs = defs.cloneNode(true);
+          const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
+          masterDefs.innerHTML += defs.innerHTML;
+          if (!combinedSVG.querySelector('defs')) {
+            combinedSVG.appendChild(masterDefs);
+          }
+        }
+      }
+  
+      // Mantener la misma transformación en los textos de los SVGs clonados
+      const textElementsCloned = clonedSVG.querySelectorAll('text');
+      console.log(`Se encontraron ${textElementsCloned.length} elementos de texto en el SVG clonado`);
+      textElementsCloned.forEach((text: any) => {
+        text.setAttribute("font-family", "Arial, sans-serif");
+        text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+        console.log("Texto clonado:", text.textContent);
+      });
+  
+      wrapper.appendChild(clonedSVG);
+      combinedSVG.appendChild(wrapper);
+    });
+  
+    // Serializar y verificar el SVG combinado
+    const svgData = new XMLSerializer().serializeToString(combinedSVG);
+    console.log("SVG combinado serializado:", svgData);
+  
+    const svgWidth = 1000;
+    const svgHeight = 700;
+  
+    // Ajustar el texto en el SVG combinado
+    const textElements = combinedSVG.querySelectorAll('text');
+    console.log(`Ajustando texto en el SVG combinado. Se encontraron ${textElements.length} elementos de texto.`);
+    textElements.forEach(text => {
+      if (text.textContent) {
+        console.log("Texto encontrado en el SVG combinado:", text.textContent);
+        // Reemplazar guiones largos y otros caracteres especiales por un guion normal
+        text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
+        text.textContent = text.textContent.replace(/−/g, '-'); // Asegurarse de que el símbolo de menos sea reemplazado
+        text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
+        text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+        console.log("Texto ajustado:", text.textContent);
+      }
+    });
+  
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: [svgWidth, svgHeight],
+    });
+  
+    try {
+      console.log("Convirtiendo SVG a PDF...");
+      await svg2pdf(combinedSVG, pdf, {
+        x: 0,
+        y: 0,
+        width: svgWidth,
+        height: svgHeight,
+      });
+  
+      console.log("PDF generado correctamente.");
+      
+      // Descargar el PDF
+      pdf.save("Community-makeup-plot.pdf");
+  
+      // Descargar el SVG combinado
+      const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "combined_plot.svg";
+      link.click();
+    } catch (error) {
+      console.error("Error al convertir SVG a PDF:", error);
+    }
+  };
+  
+  
 let screenWidth = window.innerWidth;
 const fontSize = plotWidth ? Math.max(plotWidth * 0.02, 12) : 13;
 const titleFontSize = fontSize + 8;
@@ -249,8 +257,7 @@ const legendFontSize = fontSize;
       
       if (plotContainerRef.current) {
         setPlotWidth((plotContainerRef.current as HTMLElement).offsetWidth - 75);
-        console.log(plotWidth)
-        console.log(plotContainerRef.current)
+    
         
       };
     };
@@ -267,7 +274,6 @@ const legendFontSize = fontSize;
     
       useEffect(() => {
         const plofatherElement = document.getElementById('plofather');
-        console.log('Ancho inicial de plofather:', plofatherElement?.offsetWidth);
     
         // Realiza la actualización inicial al montar el componente
         updatePlotWidth();
@@ -289,44 +295,19 @@ const legendFontSize = fontSize;
         colorMap: { [key: string]: string },
         colorOrder: string[]
     ) => {
-        console.log(`Obteniendo color para valor: ${value}, columna: ${column}`);
     
         const colorsForVariable = persistentColors[column];
-        console.log("persistentColors", persistentColors);
-        console.log("colorsForVariable", colorsForVariable);
-        console.log("value",value)
+     
     if (colorsForVariable && colorsForVariable[value]) {
         return colorsForVariable[value];
         }
     
-        // // Inicializar el índice de color para la columna si no existe
-        // if (!(column in colorIndices.current)) {
-        //     colorIndices.current[column] = 0;
-        // }
-    
-        // // Obtener la paleta correspondiente a la columna seleccionada
-        // const palette = colorPalettes[column as keyof typeof colorPalettes] || colorOrder;
-        // console.log("column", column);
-        // console.log("tof?", colorPalettes[column as keyof typeof colorPalettes]);
-        // console.log("here colororder", colorOrder);
-        // console.log(`Paleta utilizada para ${column}:`, palette);
-    
-        // // Asignar el siguiente color disponible de la paleta
-        // const colorIndex = colorIndices.current[column];
-        // const nextColor = palette[colorIndex % palette.length];
-        // colorMap[value] = nextColor;
-    
-        // // Incrementar el índice de color para la columna
-        // colorIndices.current[column] += 1;
-    
-        // console.log(`Nuevo color asignado para ${value}: ${nextColor}`);
-        // return nextColor;
+      
     };
 
       useEffect(() => {
         if (theRealColorByVariable && colorPalettes[theRealColorByVariable as keyof typeof colorPalettes]) {
             const   palette = colorPalettes[theRealColorByVariable as keyof typeof colorPalettes];
-            console.log("palette",palette)
             if (Array.isArray(palette)) {
                 setColorOrder(palette);
             } else if (palette && 'colors' in palette) {
@@ -334,17 +315,9 @@ const legendFontSize = fontSize;
             }
         }
 
-        console.log("colororder",colorOrder)
 
     }, [theRealColorByVariable, selectedLocations, dataUnique]);
 
-
-
-    useEffect(() => {console.log("colororder",colorOrder)}, [colorOrder])
-
-    useEffect(() => {
-        console.log("colorpalettes", colorPalettes)
-    }, [colorPalettes])
 
 
    
@@ -468,14 +441,12 @@ const legendFontSize = fontSize;
       if (dataUnique) {
         const columns = dataUnique?.data?.columns;
         const data = dataUnique?.data?.data;
-        console.log("data", data);
         const newPersistentColors: { [column: string]: { [value: string]: string } } = {};
     
         columns?.forEach((column: string) => {
           const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)])));
           const colorPalette = colorPalettes[column as keyof typeof colorPalettes];
-          console.log("colorPalette", colorPalette);
-          console.log("uniqueValues", uniqueValues);
+         
           const colorsForColumn: { [value: string]: string } = {};
     
           if (colorPalette) {
@@ -538,44 +509,18 @@ const legendFontSize = fontSize;
     
           newPersistentColors[column] = colorsForColumn;
         });
-        console.log("newPersistentColors", newPersistentColors);
+
         setPersistentColors(newPersistentColors);
       }
     }, [dataUnique]);
     
   
 
-    // useEffect(() => {
-    //   const element = document.getElementById(observedElementId);
-    //   if (element) {
-    //     // Función para actualizar el ancho del elemento observado
-    //     const updatePlotWidth = () => {
-    //       const newWidth = element.offsetWidth;
-    //       setPlotWidth(newWidth);
-    //       console.log('Actualizado plotWidth:', newWidth);
-    //       setLoaded(true);
-    //     };
     
-    //     // Configura el ResizeObserver solo una vez
-    //     const resizeObserver = new ResizeObserver(entries => {
-    //       for (let entry of entries) {
-    //         updatePlotWidth();
-    //       }
-    //     });
-    
-    //     resizeObserver.observe(element);
-    
-    //     // Limpieza cuando el componente se desmonte o cambien las dependencias
-    //     return () => {
-    //       resizeObserver.disconnect(); // Desconecta el observer
-    //     };
-    //   }
-    // }, [observedElementId]); // Solo dependemos de observedElementId ahora
     
     
     useEffect(() => {
         updatePlotWidth(); // Establece el ancho inicial
-        console.log('plotWidth:', plotWidth);
 
     }, [dataResult]);
 
@@ -592,7 +537,7 @@ const legendFontSize = fontSize;
         throw new Error("Network response was not ok");
       }
       const configfile = await response.json(); // Asume que las opciones vienen en un campo llamado 'configfile'
-      console.log(configfile);
+  
       setconfigFile(configfile?.configFile);
       setBetaText(configfile?.configFile?.betadiversity);
       setColorByOptions(configfile?.configFile?.columns); // Actualiza el estado con las nuevas opciones
@@ -604,12 +549,12 @@ const legendFontSize = fontSize;
   
 
   const handleLocationChange = (event: any) => {
-    console.log("Location Change Event:", event);
-    console.log("Current colorBy:", colorBy);
+  
   
     if (event === 'all') {
       setSelectedLocations(["Cecum", "Feces", "Ileum"]);
       setIsColorByDisabled(true);
+      setTheRealColorByVariable("samplelocation");
     } else {
       setSelectedLocations([event]);
       setIsColorByDisabled(false);
@@ -629,9 +574,7 @@ const legendFontSize = fontSize;
       // fetchProjectIdsFiltercolor(dataResult, event.target.value);
     
 
-    console.log(event.target.value)
-console.log(selectedLocations)
-console.log(colorBy)
+
   };
 
   const mergeOrders = (
@@ -693,7 +636,6 @@ console.log(colorBy)
         }
   
         const result = await response.json();
-        console.log(result);
         setDataResult(result);
         setColumnOptions(result?.data?.columns);
         setDataUnique(result);
@@ -743,7 +685,6 @@ console.log(colorBy)
       }
 
       const result = await response.json();
-      console.log(result);
       setDataResult(result);
       return result; // Devolver los datos obtenidos
 
@@ -755,8 +696,7 @@ console.log(colorBy)
 
   const applyFilters = async () => {
     try {
-      const result = await fetchBetaDiversityData(accessToken);
-      fetchProjectIdsFilter(result);
+
       isColorByDisabled || colorBy === "samplelocation"
         ? SetTittleVariable('location')
         : SetTittleVariable(colorBy.replace('_', ' '));
@@ -772,6 +712,8 @@ console.log(colorBy)
     }
   };
 
+  
+
 
 
 
@@ -782,7 +724,7 @@ console.log(colorBy)
         // Filtrar los valores únicos de la columna seleccionada
         const columnIndex = columnOptions?.indexOf(String(tempSelectedColorBy).toLowerCase());
         const uniqueValues: Set<string> = new Set(dataUnique?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
-        const uniqueValuesCheck: Set<string> = new Set(dataResult?.data?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
+        const uniqueValuesCheck: Set<string> = new Set(otus?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
         console.log(uniqueValuesCheck)
         console.log(uniqueValues)
 
@@ -791,7 +733,7 @@ console.log(colorBy)
         // Inicializa 'selectedValues' con todos los valores únicos
         setTempSelectedValues(new Set<string>(uniqueValuesCheck));
     }
-}, [tempSelectedColorBy, dataResult]);
+}, [tempSelectedColorBy, otus]);
 
 // Estado para manejar los valores seleccionados en los checks
 const handleValueChange = (value: string) => {
@@ -907,7 +849,6 @@ const sortByCustomOrder = (
     }
   }
 
-  console.log("Custom order:", order);
 
   // Check if order is empty
   if (Object.keys(order).length === 0) {
@@ -948,8 +889,6 @@ const sortByCustomOrder = (
 
 
   const fetchProjectIds = async (result: any) => {
-    console.log(newScatterColors)
-    console.log(scatterColors)
 
     const locations = new Set(
       result?.data?.data?.map((item: any[]) => item[3])
@@ -1008,10 +947,7 @@ const sortByCustomOrder = (
       ) => {
         const [PC1, PC2, sampleId, sampleLocation] = item;
         const colorValue = theRealColorByVariable !== 'samplelocation' ? item[result?.data.columns.indexOf(theRealColorByVariable)] : sampleLocation;
-        console.log("colorValue", colorValue);  
-        console.log("theRealColorByVariable", theRealColorByVariable);
-        console.log("scatterColors", scatterColors);
-        console.log("colorOrder", colorOrder);
+     
         // Inicializa el objeto para esta locación si aún no existe
         
         if (!acc[sampleLocation]) {
@@ -1048,10 +984,7 @@ const sortByCustomOrder = (
 
       const mergedColumnsOrder = mergeOrders(order, result?.order);
       scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData || {}), theRealColorByVariable, mergedColumnsOrder);
-      
-      console.log("scatterPlotData", scatterPlotData);
-      console.log("Orden personalizado:", mergedColumnsOrder);
-      console.log("Datos de Shannon ordenados:", theRealColorByVariable);
+
       
 
     setScatterData(Object.values(scatterPlotData || {}));
@@ -1117,9 +1050,7 @@ const sortByCustomOrder = (
 
         if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
           scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData), color, columnsOrder);
-          console.log("scatterPlotData", scatterPlotData);
-          console.log("Orden personalizado:", columnsOrder);
-          console.log("Datos de Shannon ordenados:", theRealColorByVariable);
+  
           }
 
         setScatterData(Object.values(scatterPlotData));
@@ -1169,9 +1100,7 @@ const fetchProjectIdsFilter = async (result: any) => {
 
       if (columnsOrder && columnsOrder !== undefined && Object.keys(columnsOrder).length > 0) {
         scatterPlotData = sortByCustomOrder(Object.values(scatterPlotData), theRealColorByVariable, columnsOrder);
-        console.log("scatterPlotData", scatterPlotData);
-        console.log("Orden personalizado:", columnsOrder);
-        console.log("Datos de Shannon ordenados:", theRealColorByVariable);
+   
         }
 
       setScatterData(Object.values(scatterPlotData));
@@ -1299,60 +1228,110 @@ useEffect(() => {
   setScatterData(scatter as any[]);
 }, [columnsOrder]);
 
+
 useEffect(() => {
-  const location = selectedLocations.length > 1 ? "All" : selectedLocations[0];
+  const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
   console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
-  console.log("Selected locations:", selectedLocations);
-  
+  console.log("selected locations:", selectedLocations);
   if (location && theRealColorByVariable) {
-    const formattedColumn = String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1);
-    console.log("Formatted column and location:", { formattedColumn, location });
+      const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+      console.log("Formatted column and location:", { formattedColumn, location });
 
-    const allValuesSelected = Array.from(initialValueOptions)?.every(option => selectedValues.has(option));
+      const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
 
-    if (allValuesSelected) {
-      const textForConfig = findTextInCommunityMakeup(
-        configFile,
-        location,
-        tempSelectedColorBy === "samplelocation" ? "Self" : formattedColumn
-      );
-      console.log("Text for all values selected:", textForConfig);
-      setTextForConfigKey(textForConfig || "");
-    } else if (
-      String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) !== "SampleLocation" &&
-      selectedValues.size > 0
-    ) {
-      const tempValuesArray = Array.from(tempSelectedValues)
-        .map(value => String(value).replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, ""));
+      if (allValuesSelected) {
+          const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
+          console.log("Text for all values selected:", textForConfig);
+          setTextForConfigKey(textForConfig || "");
+      } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
+          // Limpia cada valor en valuesArray para eliminar caracteres especiales
+          const valuesArray = Array.from(selectedValues)
+              .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
 
-      const formedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.join("+")}`;
-      const normalizedFormedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.sort().join("+")}`;
+          const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
+          const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
 
-      console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+          console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
 
-      let textForConfig = findTextInCommunityMakeupNested(
-        configFile,
-        location,
-        formedKey,
-        theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
-      );
+          // Intentar buscar con formedKey primero y luego con normalizedFormedKey
+          let textForConfig = findTextInCommunityMakeupNested(
+              configFile,
+              location,
+              formedKey,
+              theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+          );
+          if (!textForConfig) {
+              textForConfig = findTextInCommunityMakeupNested(
+                  configFile,
+                  location,
+                  normalizedFormedKey,
+                  theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+              );
+          }
 
-      if (!textForConfig) {
-        textForConfig = findTextInCommunityMakeupNested(
-          configFile,
-          location,
-          normalizedFormedKey,
-          theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
-        );
+          console.log("Text for specific filter:", textForConfig);
+          setTextForConfigKey(textForConfig || "");
+      } else {
+          setTextForConfigKey("");
       }
-
-      console.log("Text for specific filter:", textForConfig);
-      setTextForConfigKey(textForConfig || "");
-    } else {
-      setTextForConfigKey("");
-    }
   }
-}, [selectedLocations, tempSelectedColorBy, theRealColorByVariable, tempSelectedValues, configFile]);
+}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
+
+
+// useEffect(() => {
+//   const location = selectedLocations.length > 1 ? "All" : selectedLocations[0];
+//   console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
+//   console.log("Selected locations:", selectedLocations);
+  
+//   if (location && theRealColorByVariable) {
+//     const formattedColumn = String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1);
+//     console.log("Formatted column and location:", { formattedColumn, location });
+
+//     const allValuesSelected = Array.from(initialValueOptions)?.every(option => selectedValues.has(option));
+
+//     if (allValuesSelected) {
+//       const textForConfig = findTextInCommunityMakeup(
+//         configFile,
+//         location,
+//         tempSelectedColorBy === "samplelocation" ? "Self" : formattedColumn
+//       );
+//       console.log("Text for all values selected:", textForConfig);
+//       setTextForConfigKey(textForConfig || "");
+//     } else if (
+//       String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) !== "SampleLocation" &&
+//       selectedValues.size > 0
+//     ) {
+//       const tempValuesArray = Array.from(tempSelectedValues)
+//         .map(value => String(value).replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, ""));
+
+//       const formedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.join("+")}`;
+//       const normalizedFormedKey = `${String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1)}_${tempValuesArray.sort().join("+")}`;
+
+//       console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+
+//       let textForConfig = findTextInCommunityMakeupNested(
+//         configFile,
+//         location,
+//         formedKey,
+//         theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
+//       );
+
+//       if (!textForConfig) {
+//         textForConfig = findTextInCommunityMakeupNested(
+//           configFile,
+//           location,
+//           normalizedFormedKey,
+//           theRealColorByVariable === String(tempSelectedColorBy).charAt(0).toUpperCase() + String(tempSelectedColorBy).slice(1) ? "Self" : formattedColumn
+//         );
+//       }
+
+//       console.log("Text for specific filter:", textForConfig);
+//       setTextForConfigKey(textForConfig || "");
+//     } else {
+//       setTextForConfigKey("");
+//     }
+//   }
+// }, [selectedLocations, tempSelectedColorBy, theRealColorByVariable, tempSelectedValues, configFile]);
 
 
   useEffect(() => {
@@ -1368,7 +1347,7 @@ useEffect(() => {
   useEffect(() => {
 
       fetchConfigFile(accessToken);
-      fetchData(accessToken).then((result) => { console.log(result); fetchProjectIds(result) })
+      fetchData(accessToken).then((result) => {  fetchProjectIds(result) })
     
   }
     , [params.slug, accessToken]);
@@ -1378,11 +1357,13 @@ useEffect(() => {
 
 
     useEffect(() => {
-      if (colorBy && selectedValues.size > 0) {
+      if (filterPeticion && colorBy && selectedValues.size > 0) {
           const fetchDataAndUpdate = async () => {
+            const result = await fetchBetaDiversityData(accessToken);
+            fetchProjectIdsFilter(result);
               const columnIndex = otus?.data?.columns?.indexOf(colorBy);
               const filteredData = dataResult?.data?.data.filter((item: any[]) => selectedLocations.includes(item[1]));
-              console.log("fetchDataAndUpdate")
+      
               // Mantener colores ya asignados
               
               const updatedScatterColors = { ...scatterColors };
@@ -1409,8 +1390,7 @@ useEffect(() => {
     };
 
     const dropdownOptionsColorby = (() => {
-      console.log("columnOptions", columnOptions);
-      console.log("colorByOptions", colorByOptions);
+    
   
       if (!columnOptions || !colorByOptions) {
           console.warn("columnOptions o colorByOptions están indefinidos.");
@@ -1452,53 +1432,6 @@ useEffect(() => {
     }
 }, [selectedValues]);
 
-  useEffect(() => {
-    const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
-    console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
-    console.log("selected locations:", selectedLocations);
-    if (location && theRealColorByVariable) {
-        const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
-        console.log("Formatted column and location:", { formattedColumn, location });
-
-        const allValuesSelected = Array.from(initialValueOptions).every(option => selectedValues.has(option));
-
-        if (allValuesSelected) {
-            const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
-            console.log("Text for all values selected:", textForConfig);
-            setTextForConfigKey(textForConfig || "");
-        } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
-            // Limpia cada valor en valuesArray para eliminar caracteres especiales
-            const valuesArray = Array.from(selectedValues)
-                .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
-
-            const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
-            const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
-
-            console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
-
-            // Intentar buscar con formedKey primero y luego con normalizedFormedKey
-            let textForConfig = findTextInCommunityMakeupNested(
-                configFile,
-                location,
-                formedKey,
-                theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
-            );
-            if (!textForConfig) {
-                textForConfig = findTextInCommunityMakeupNested(
-                    configFile,
-                    location,
-                    normalizedFormedKey,
-                    theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
-                );
-            }
-
-            console.log("Text for specific filter:", textForConfig);
-            setTextForConfigKey(textForConfig || "");
-        } else {
-            setTextForConfigKey("");
-        }
-    }
-}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
 
 
     const dropdownOptions = [
@@ -1561,7 +1494,7 @@ useEffect(() => {
                   optionLabel="label"
                   className="w-full text-sm filtercolorby"
                   id="colorby"
-
+                  disabled={selectedLocations.length > 1}
                   placeholder="Select a color category"
                 />
               </div>
@@ -1661,8 +1594,7 @@ useEffect(() => {
   );
 
   useEffect(() => {
-    console.log(Location)
-    console.log(selectedLocations)
+
     
     setLocation(availableLocations.length > 1 ? selectedLocations : [availableLocations[0]]);
 }, [params.slug, scatterData]);

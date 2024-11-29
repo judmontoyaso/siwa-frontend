@@ -10,6 +10,7 @@ interface PopupContextType {
 // Creamos el contexto con un valor predeterminado (undefined) para manejar la desestructuración segura
 const PopupContext = createContext<PopupContextType | undefined>(undefined);
 
+
 // Hook para consumir el contexto
 export const usePopup = (): PopupContextType => {
   const context = useContext(PopupContext);
@@ -29,7 +30,7 @@ interface PopupProviderProps {
 }
 
 export const PopupProvider: React.FC<PopupProviderProps> = ({ children }) => {
-  const [isWindowVisible, setIsWindowVisible] = useState(false);
+  const [isWindowVisible, setIsWindowVisible] = useState(true);
 
   return (
     <PopupContext.Provider value={{ isWindowVisible, setIsWindowVisible }}>

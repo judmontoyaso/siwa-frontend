@@ -57,7 +57,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [selectedGroup, setSelectedGroup] = useState("samplelocation");
     const [selectedRank, setSelectedRank] = useState("genus");
-    const [observedData, setObservedData] = useState({});
+    const [observedData, setObservedData] = useState([]);
     const [colorByOptions, setColorByOptions] = useState<string[]>(['treatment']);
     const [colorBy, setColorBy] = useState<string>('samplelocation');
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
@@ -378,8 +378,42 @@ useEffect(() => {
             setDataResult(result);
             setColumnOptions(result?.meta?.columns);
             setDataUnique(result);
-setObservedData(result?.Krona)
-            setValueOptions(result?.meta?.data);
+       
+  //           const sunburstData = result?.Krona?.data?.map((item: any[]) => {
+  //             const [id, parent, label, value] = item;  // Desestructuramos los valores de cada fila de datos
+      
+  //             return {
+  //               id,
+  //               parent,
+  //               label,
+  //               value
+  //             };
+  //           });
+  //           const rootNode = {
+  //             id: "root",
+  //             parent: "",
+  //             label: "root",
+  //             value: 0,  // El valor de la raíz puede ser 0 o cualquier valor que prefieras
+  //           };
+        
+  //           // Actualizar los datos para que todos los elementos de nivel superior tengan el parent "root"
+  //           const updatedData = sunburstData?.map(item => {
+  //             if (item.parent === "") {
+  //               return { ...item, parent: "root" };  // Cambiar el parent vacío a "root"
+  //             }
+
+  //               // Verifica que cada parent exista en los ids
+  // if (!observedData.some(d => d.id === item.parent) && item.parent !== "root") {
+  //   console.warn(`Falta el parent: ${item.parent} para el id: ${item.id}`);
+  // }
+
+  //             return item;
+  //           });
+        
+  //           // Agregar el nodo raíz a la lista de datos
+  //           const finalData = [rootNode, ...updatedData];
+        
+            setObservedData(result?.Krona)
             setIsLoaded(true);
             return result;
         } catch (error) {
@@ -532,7 +566,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
     useEffect(() => {
 
         if (otus && otus.data) {
-            console.log("OTUS:", otus);
+            console.log("OTUS:", observedData);
             const traces: SetStateAction<any[]> = [];
             const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
 
@@ -644,11 +678,32 @@ setFilterPeticion(true);
     </div>
 </div>)
 
+
+
+// Configuración del layout
+const layout = {
+  margin: { t: 0, l: 0, r: 0, b: 0 },  // Eliminar márgenes
+  sunburstcolorway: ['#FF6347', '#FFD700', '#ADFF2F', '#00FA9A', '#1E90FF'],  // Colores de las ramas
+  hovermode: 'closest', // Modo de hover para mejor interacción
+};
+
+// const sunburstData = {
+//   type: 'sunburst',
+//   ids: observedData?.map(item => item.id),
+//   parents: observedData?.map(item => item.parent),
+//   labels: observedData?.map(item => item.label),
+//   values: observedData?.map(item => item.value),
+//   branchvalues: 'total',  // Opcional, 'total' o 'max' dependiendo de lo que prefieras
+//   textinfo: 'label+value',  // Muestra el nombre y la abundancia
+//   hovertemplate: '%{label}: %{value}',  // Muestra la abundancia al pasar el ratón
+// };
+
+// console.log("Sunburst data:", sunburstData);
+
     const MyPlotComponent = ({ plotData, scatterColors }: { plotData: any[]; scatterColors: any }) => (
         <div className="flex flex-row w-full items-start">
             <div className="w-full flex " ref={plotContainerRef}>
-                {loaded && (
-                    <Plot
+                {loaded && (<>   <Plot
                     data={plotData}
                     config={config}
                     layout={{
@@ -703,6 +758,10 @@ setFilterPeticion(true);
                         margin: { l: 50, r: 50, t: 20, b: 50 }
                     }}
                 />
+                
+                </>
+                 
+                
                 )}
             </div>
 
@@ -1143,8 +1202,16 @@ data-pr-my="left center-2"/>
                
                    
                     </div>
-                    <div className="w-full lg:w-3/5 mt-5 mb-5 flex justify-center">
-                    <iframe 
+                    <div className="w-full lg:w-3/5 mt-5 mb-5  justify-center">
+                    <Plot
+        data={observedData}  // Pasa los datos al gráfico
+        layout={{
+          margin: { t: 0, l: 0, r: 0, b: 0 },  // Eliminar márgenes
+          // sunburstcolorway: ['#FF6347', '#FFD700', '#ADFF2F', '#00FA9A', '#1E90FF'],  // Colores de las ramas
+          hovermode: 'closest', // Modo de hover para mejor interacción
+        }}         // Configura el layout del gráfico
+      /> 
+                    {/* <iframe 
                         src="/api/components/innerHtml" 
                         frameBorder="0" 
 
@@ -1153,7 +1220,7 @@ data-pr-my="left center-2"/>
                     
                         allowFullScreen
                         title="Taxonomy Composition Sunburst Chart">
-                    </iframe>
+                    </iframe> */}
                         </div>
 
                 

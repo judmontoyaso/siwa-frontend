@@ -1202,7 +1202,7 @@ data-pr-my="left center-2"/>
                
                    
                     </div>
-                    <div className="w-full lg:w-3/5 mt-5 mb-5 flex justify-center">
+                    <div className="w-full lg:w-3/5 mt-5 mb-5 justify-center">
                     {observedData && (           <Plot
   data={[observedData]}  // Pasa los datos al gráfico
   layout={{

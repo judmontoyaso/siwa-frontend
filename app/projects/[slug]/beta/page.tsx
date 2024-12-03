@@ -102,6 +102,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
 
+
   const downloadCombinedSVG = async () => {
     const plotContainer = plotRef.current as any;
   
@@ -127,6 +128,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     let totalHeight = 0;
     const maxWidth = Math.max(...svgElements.map((svg: any) => parseInt(svg.getAttribute("width") || '0', 10)));
   
+    // Calcular la altura total sumando las alturas de todos los SVGs
     svgElements.forEach((svg: any) => {
       totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
     });
@@ -136,13 +138,17 @@ export default function Page({ params }: { params: { slug: string } }) {
   
     console.log(`Tamaño combinado del SVG: ${maxWidth} x ${totalHeight}`);
   
-    // Combina los SVGs en orden correcto con un desplazamiento acumulado
     let yOffset = 0;
+  
+    // Procesar cada SVG
     svgElements.forEach((svg: any, index: number) => {
       console.log(`Procesando SVG ${index + 1}...`);
   
-      // Corrige los textos si es necesario
-      const textElements = svg.querySelectorAll('text');
+      // Clonamos el SVG original para preservarlo
+      const clonedSVG = svg.cloneNode(true);
+  
+      // Ajustamos todos los elementos de texto para que estén bien posicionados
+      const textElements = clonedSVG.querySelectorAll('text, tspan, path, textPath, [fill], [stroke]');
       console.log(`Se encontraron ${textElements.length} elementos de texto en el SVG ${index + 1}`);
   
       textElements.forEach((text: any) => {
@@ -153,96 +159,69 @@ export default function Page({ params }: { params: { slug: string } }) {
           text.textContent = text.textContent.replace(/−/g, '-');
           text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
           text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
+          text.setAttribute('font-size', '16'); // Ajustar tamaño de fuente si es necesario
+          text.setAttribute('visibility', 'visible'); // Asegurarse de que el texto esté visible
+          text.setAttribute('opacity', '1'); // Asegurarse de que el texto no sea transparente
           console.log("Texto corregido:", text.textContent);
         }
       });
   
-      const clonedSVG = svg.cloneNode(true);
-  
-      // Ajustar el eje Y para evitar superposiciones
-      const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
-      yOffset += parseInt(svg.getAttribute("height") || '0', 10);
-  
-      if (clonedSVG instanceof Element) {
-        const defs = clonedSVG.querySelector('defs');
-        if (defs) {
-          console.log("Copiando <defs>...");
-          // Copiar <defs> para garantizar estilos y gradientes
-          const clonedDefs = defs.cloneNode(true);
-          const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
-          masterDefs.innerHTML += defs.innerHTML;
-          if (!combinedSVG.querySelector('defs')) {
-            combinedSVG.appendChild(masterDefs);
-          }
-        }
+      // Aseguramos que las transformaciones de los títulos se mantengan
+      const xtitle = clonedSVG.querySelector('.g-xtitle');
+      if (xtitle) {
+        xtitle.setAttribute('transform', 'translate(0, -6.806)');
       }
   
-      // Mantener la misma transformación en los textos de los SVGs clonados
-      const textElementsCloned = clonedSVG.querySelectorAll('text');
-      console.log(`Se encontraron ${textElementsCloned.length} elementos de texto en el SVG clonado`);
-      textElementsCloned.forEach((text: any) => {
-        text.setAttribute("font-family", "Arial, sans-serif");
-        text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
-        console.log("Texto clonado:", text.textContent);
-      });
+      // const ytitle = clonedSVG.querySelector('.g-ytitle');
+      // if (ytitle) {
+      //   ytitle.setAttribute('transform', 'rotate(-90, -6.713, 294.5)');
+      // }
   
-      wrapper.appendChild(clonedSVG);
-      combinedSVG.appendChild(wrapper);
+      // Ajustamos la posición Y de todo el SVG combinado para asegurarnos de que se alinee correctamente
+      clonedSVG.setAttribute('y', String(yOffset));
+  
+      // Añadimos el SVG clonado al SVG maestro
+      combinedSVG.appendChild(clonedSVG);
+  
+      // Aumentamos el offset Y para el siguiente SVG
+      // yOffset += parseInt(svg.getAttribute("height") || '0', 10);
     });
   
-    // Serializar y verificar el SVG combinado
-    const svgData = new XMLSerializer().serializeToString(combinedSVG);
-    console.log("SVG combinado serializado:", svgData);
-  
-    const svgWidth = 1000;
-    const svgHeight = 700;
-  
-    // Ajustar el texto en el SVG combinado
-    const textElements = combinedSVG.querySelectorAll('text');
-    console.log(`Ajustando texto en el SVG combinado. Se encontraron ${textElements.length} elementos de texto.`);
-    textElements.forEach(text => {
-      if (text.textContent) {
-        console.log("Texto encontrado en el SVG combinado:", text.textContent);
-        // Reemplazar guiones largos y otros caracteres especiales por un guion normal
-        text.textContent = text.textContent.replace(/[\u2013\u2014]/g, '-');
-        text.textContent = text.textContent.replace(/−/g, '-'); // Asegurarse de que el símbolo de menos sea reemplazado
-        text.setAttribute("font-family", "Arial, sans-serif"); // Forzar una fuente estándar
-        text.setAttribute('fill', '#000');  // Asegurarse de que el texto sea visible
-        console.log("Texto ajustado:", text.textContent);
-      }
-    });
-  
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: [svgWidth, svgHeight],
-    });
-  
-    try {
-      console.log("Convirtiendo SVG a PDF...");
-      await svg2pdf(combinedSVG, pdf, {
-        x: 0,
-        y: 0,
-        width: svgWidth,
-        height: svgHeight,
-      });
-  
-      console.log("PDF generado correctamente.");
-      
-      // Descargar el PDF
-      pdf.save("Community-makeup-plot.pdf");
-  
-      // Descargar el SVG combinado
-      const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "combined_plot.svg";
-      link.click();
-    } catch (error) {
-      console.error("Error al convertir SVG a PDF:", error);
-    }
+    const svgWidth = parseInt(combinedSVG.getAttribute("width") || "0", 10);
+        const svgHeight = 700
+        const pdf = new jsPDF({
+            orientation: "landscape",
+            unit: "pt",
+            format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
+        });
+        
+   
+        // Ajustar el tamaño inicial
+        const pageWidth = pdf.internal.pageSize.getWidth();
+         // Convertir SVG a PDF
+         await svg2pdf(combinedSVG, pdf, {
+            x: 20,
+            y: yOffset,
+            width: svgWidth     ,
+            height: svgHeight 
+        });
+
+        // Incrementar el desplazamiento
+        yOffset += svgHeight  + 20;
+
+   
+
+         // Descargar el PDF
+         pdf.save("community-make-up-plot.pdf");
+         // Serializar el SVG combinado y descargarlo
+         const svgData = new XMLSerializer().serializeToString(combinedSVG);
+         const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+         const link = document.createElement("a");
+         link.href = URL.createObjectURL(blob);
+         link.download = "combined_plot.svg";
+         link.click();
   };
+  
   
   
 let screenWidth = window.innerWidth;

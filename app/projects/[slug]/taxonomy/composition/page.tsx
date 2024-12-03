@@ -57,7 +57,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [selectedGroup, setSelectedGroup] = useState("samplelocation");
     const [selectedRank, setSelectedRank] = useState("genus");
-    const [observedData, setObservedData] = useState([]);
+    const [observedData, setObservedData] = useState<any>([]);
     const [colorByOptions, setColorByOptions] = useState<string[]>(['treatment']);
     const [colorBy, setColorBy] = useState<string>('samplelocation');
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
@@ -683,7 +683,7 @@ setFilterPeticion(true);
 // Configuración del layout
 const layout = {
   margin: { t: 0, l: 0, r: 0, b: 0 },  // Eliminar márgenes
-  sunburstcolorway: ['#FF6347', '#FFD700', '#ADFF2F', '#00FA9A', '#1E90FF'],  // Colores de las ramas
+  // sunburstcolorway: ['#FF6347', '#FFD700', '#ADFF2F', '#00FA9A', '#1E90FF'],  // Colores de las ramas
   hovermode: 'closest', // Modo de hover para mejor interacción
 };
 
@@ -1202,15 +1202,21 @@ data-pr-my="left center-2"/>
                
                    
                     </div>
-                    <div className="w-full lg:w-3/5 mt-5 mb-5  justify-center">
-                    <Plot
-        data={observedData}  // Pasa los datos al gráfico
-        layout={{
-          margin: { t: 0, l: 0, r: 0, b: 0 },  // Eliminar márgenes
-          // sunburstcolorway: ['#FF6347', '#FFD700', '#ADFF2F', '#00FA9A', '#1E90FF'],  // Colores de las ramas
-          hovermode: 'closest', // Modo de hover para mejor interacción
-        }}         // Configura el layout del gráfico
-      /> 
+                    <div className="w-full lg:w-3/5 mt-5 mb-5 flex justify-center">
+                    {observedData && (           <Plot
+  data={[observedData]}  // Pasa los datos al gráfico
+  layout={{
+    margin: { t: 0, l: 0, r: 0, b: 0 },  // Eliminar márgenes
+    hovermode: 'closest', // Modo de hover para mejor interacción
+    sunburstcolorway: [
+      "#636efa", "#EF553B", "#00cc96", "#ab63fa", "#19d3f3",
+      "#e763fa", "#FECB52", "#FFA15A", "#FF6692", "#B6E880"
+    ],
+    extendSunburstColorway: true  // Propiedad corregida
+  }as any} // Configura el layout del gráfico
+/>)}
+         
+
                     {/* <iframe 
                         src="/api/components/innerHtml" 
                         frameBorder="0" 

@@ -21,6 +21,13 @@ export default function HelpText( { text }: { text: string } ) {
     setIsHovered(false);
   };
 
+
+  const formattedText = text.split("<br/>").map((line, index) => (
+    <span key={index}>
+      {line}
+      <br />
+    </span>
+  ));
   return (
 text  && (
     <div className="relative w-full">
@@ -53,7 +60,7 @@ text  && (
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.3 }}    
           className="w-full p-4 bg-custom-green-50 border border-custom-green-200 rounded-md text-left"
         >
           <button
@@ -67,7 +74,7 @@ text  && (
           </button>
           <div>
             {}
-            {text}
+            {formattedText}
           </div>
         </motion.div>
       )}

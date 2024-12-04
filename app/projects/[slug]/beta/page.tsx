@@ -1581,10 +1581,13 @@ useEffect(() => {
 
 useEffect(() => {
   if (Location[0] && Location.length > 0) {
-      const newTitle = `Compositional differences (bray curtis) ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (selectedColorBy === "samplelocation" ? "" : " by " + selectedColorBy.charAt(0).toUpperCase() + (selectedColorBy as string).replace('_', ' ').slice(1))}`;
+    const formattedColorByVariable = labelReplacements[String(theRealColorByVariable).toLowerCase()]
+                ? labelReplacements[String(theRealColorByVariable).toLowerCase()]
+                : String(theRealColorByVariable).charAt(0).toUpperCase() + String(theRealColorByVariable).replace('_', ' ').slice(1);
+      const newTitle = `Compositional differences (Bray-Curtis) ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable)}`;
       setTitle(newTitle);
   }
-}, [Location, selectedColorBy]);
+}, [Location, theRealColorByVariable]);
 
   const MyPlotComponent = ({ scatterData, scatterColors }: { scatterData: any[]; scatterColors: any }) => (
     <div className="flex flex-row w-full items-center">
@@ -1658,7 +1661,7 @@ useEffect(() => {
 
       <div className={`prose single-column`}>
       <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
-      {`For exploring the composition of the microbiome in different groups, we use methods that evaluate an ecological diversity measure called Beta diversity by assessing the "compositional" distance between samples. These distances (in our case, Bray-Curtis dissimilarities) are often visualized with a method called principal coordinates analysis (PCoA).`}
+      To explore how microbiome composition varies across groups, we analyze an ecological diversity measure called<span className="text-gray-700 font-semibold">Beta Diversity</span> . <span className="text-gray-700 font-semibold">Beta Diversity</span> is a way to measure and compare how different two groups are from each other in terms of their species or other characteristics.    In this dashboard, we use  <span className="text-gray-700 font-semibold">Bray-Curtis dissimilarities </span>to quantify these differences and visualize them through Principal <span className="text-gray-700 font-semibold">Coordinates Analysis (PCoA)</span>. PCoA is machine learning tool that helps us simplify this complex data, identifying a few key features of microbiome composition that explain the most differences between samples.
 </p>
 
 </div>
@@ -1672,7 +1675,7 @@ useEffect(() => {
           transition={{ duration: 0.5 }}
           className="flex"
         >
-    <GraphicCard legend={""} text={"Each axis represents a combination of features (the sequences in the samples) that account for high amounts of variation between samples. Each axis shows the proportion of variability that is accounted for by this combination of features (PC: Principal Component). Each dot in the figure represents a sample, and samples that are on opposite ends of an axis that accounts for a high percentage of variability are likely to be more different from each other than samples on opposite ends of an axis that only accounts for a low percentage of the total variability."} filter={filter} title={title}>
+    <GraphicCard legend={""} text={"PCoA simplifies high-dimensional data into a smaller number of new dimensions that highlight the most important patterns. Each axis in the PCoA plot represents a combination of microbiome features (the sequences in the samples) that explain a significant portion of the variation between samples. The percentage displayed on each axis indicates how much of the total variation is captured by that combination. <br/>Each dot in the plot corresponds to a sample. If one axis is strongly impacted by levels of Bacteroides and Prevotella, samples that have similar amounts of these bacteria might cluster close together."} filter={filter} title={title}>
       {scatterData.length > 0 ? (
         <div className="w-full flex flex-col">
 

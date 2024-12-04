@@ -22,6 +22,41 @@ export const colorPalettes = {
         colors: ["#8FADD5", "#295B46", "#D89B67", "#1F5566", "#98B6A1", "#705C91", "#D9B19C", "#217172"],
     },
     calciumlevel: ["#E6D5AF", "#883D58", "#C8C6B3", "#705C91", "#A3AAA1", "#B5B4A9", "#CCB954", "#334742", "#D9B19C", "#5F8168", "#00263A", "#40679E", "#017319", "#8FADD5", "#D89B67"],
+    name: [
+        "#D9B19C", // Claro
+        "#334742", // Oscuro
+        "#E6D5AF", // Claro
+        "#217172", // Oscuro
+        "#D89B67", // Claro
+        "#883D58", // Oscuro
+        "#C8C6B3", // Claro
+        "#705C91", // Oscuro
+        "#CCB954", // Claro
+        "#40679E", // Oscuro
+        "#B5B4A9", // Claro
+        "#00263A", // Oscuro
+        "#898989", // Claro
+        "#5F8168", // Oscuro
+        "#1F5566", // Claro
+    ],
+    
+    identifier: [
+        "#295B46", // Oscuro
+        "#D9B19C", // Claro
+        "#98B6A1", // Oscuro
+        "#883D58", // Claro
+        "#705C91", // Oscuro
+        "#E6D5AF", // Claro
+        "#334742", // Oscuro
+        "#8FADD5", // Claro
+        "#005F87", // Oscuro
+        "#B5B4A9", // Claro
+        "#C8C6B3", // Oscuro
+        "#40679E", // Claro
+        "#217172", // Oscuro
+        "#D89B67", // Claro
+        "#A3AAA1", // Oscuro
+    ],
     default: ["#D9B19C", "#334742", "#E6D5AF", "#883D58", "#705C91", "#A3AAA1", "#C8C6B3", "#217172", "#295B46", "#8FADD5", "#D89B67", "#5F8168", "#00263A", "#40679E", "#898989"], // Combinación predeterminada alternada
 };
 

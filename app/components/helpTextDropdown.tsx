@@ -11,7 +11,7 @@ export default function HelpText( { text }: { text: string } ) {
     if (isOpen) {
       timer = setTimeout(() => {
         setIsOpen(false);
-      }, 10000);
+      }, 30000);
     }
     return () => clearTimeout(timer);
   }, [isOpen]);

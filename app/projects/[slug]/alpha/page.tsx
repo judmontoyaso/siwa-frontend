@@ -568,7 +568,11 @@ type ColorPalette = ColorPaletteArray | ColorPaletteMap;
           const newPersistentColors: { [column: string]: { [value: string]: string } } = {};
       
           columns?.forEach((column: string) => {
-            const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)])));
+            const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)]))).sort((a: any, b: any) => {
+                const strA = String(a).toLowerCase();
+                const strB = String(b).toLowerCase();
+                return strA.localeCompare(strB);
+              });
             const colorPalette = colorPalettes[column as keyof typeof colorPalettes];
       
             const colorsForColumn: { [value: string]: string } = {};
@@ -602,8 +606,11 @@ type ColorPalette = ColorPaletteArray | ColorPaletteMap;
                         // Verifica que el color no sea un array antes de asignarlo
                         if (typeof resolvedColor === "string") {
                           colorsForColumn[value] = resolvedColor;
+                          console.log(`Color asignado para ${value}: ${resolvedColor}`);
+
                         } else if (Array.isArray(resolvedColor) && resolvedColor.length > 0) {
                           colorsForColumn[value] = resolvedColor[0]; // Asignar el primer color del array si es necesario
+                          console.log(`Color asignado para ${value}: ${resolvedColor[0]}`);
                         } else {
                           colorsForColumn[value] = "#000000"; // Color por defecto
                         }
@@ -613,6 +620,10 @@ type ColorPalette = ColorPaletteArray | ColorPaletteMap;
                       ) {
                         colorsForColumn[value] =
                           additionalColors[colorIndex % additionalColors.length];
+
+
+                          console.log(`Color asignado para ${value}: ${additionalColors[colorIndex % additionalColors.length]}`);
+
                         colorIndex++;
                       } else {
                         colorsForColumn[value] = "#000000"; // Color por defecto
@@ -1384,7 +1395,7 @@ useEffect(() => {
 
             const newTitle = `Shannon Diversity ${Location.length === 3
                 ? "in All Locations"
-                : "in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) +
+                : "in the " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) +
                 (theRealColorByVariable !== "samplelocation"
                     ? (" by " + formattedColorByVariable)
                     : "")

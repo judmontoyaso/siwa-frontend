@@ -188,7 +188,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     });
   
     const svgWidth = parseInt(combinedSVG.getAttribute("width") || "0", 10);
-        const svgHeight = 700
+        const svgHeight = 730
         const pdf = new jsPDF({
             orientation: "landscape",
             unit: "pt",
@@ -275,7 +275,12 @@ const legendFontSize = fontSize;
         colorOrder: string[]
     ) => {
     
-        const colorsForVariable = persistentColors[column];
+      console.log(`Obteniendo color para valor: ${value}, columna: ${column}`);
+    
+      const colorsForVariable = persistentColors[column];
+      console.log("persistentColors", persistentColors);
+      console.log("colorsForVariable", colorsForVariable);
+      console.log("value",value)
      
     if (colorsForVariable && colorsForVariable[value]) {
         return colorsForVariable[value];
@@ -423,7 +428,11 @@ const legendFontSize = fontSize;
         const newPersistentColors: { [column: string]: { [value: string]: string } } = {};
     
         columns?.forEach((column: string) => {
-          const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)])));
+          const uniqueValues = Array.from(new Set(data?.map((item: { [x: string]: any; }) => item[columns?.indexOf(column)]))).sort((a: any, b: any) => {
+            const strA = String(a).toLowerCase();
+            const strB = String(b).toLowerCase();
+            return strA.localeCompare(strB);
+          });
           const colorPalette = colorPalettes[column as keyof typeof colorPalettes];
          
           const colorsForColumn: { [value: string]: string } = {};
@@ -442,12 +451,18 @@ const legendFontSize = fontSize;
               // If the palette is an object, assign colors based on mappings
               let colorIndex = 0;
               const additionalColors = colorPalette.colors || []; // For unmapped values
-              uniqueValues?.forEach((rawValue) => {
+              uniqueValues?.sort((a: any, b: any) => {
+                const strA = String(a); // Asegura que a sea una cadena
+                const strB = String(b); // Asegura que b sea una cadena
+              
+                return strA.localeCompare(strB, undefined, { sensitivity: 'base' });
+              }).forEach((rawValue) => {
                   // Convertimos el valor a string de manera segura
                   const value = String(rawValue);
                 
                   if (value !== "null" && value !== "undefined") {
                     // Verifica si el colorPalette es un objeto y si la clave existe
+
                     if (
                       typeof colorPalette === "object" &&
                       !Array.isArray(colorPalette) &&
@@ -457,8 +472,10 @@ const legendFontSize = fontSize;
                       // Verifica que el color no sea un array antes de asignarlo
                       if (typeof resolvedColor === "string") {
                         colorsForColumn[value] = resolvedColor;
+                        console.log(`Color asignado para ${value}: ${resolvedColor}`);
                       } else if (Array.isArray(resolvedColor) && resolvedColor.length > 0) {
                         colorsForColumn[value] = resolvedColor[0]; // Asignar el primer color del array si es necesario
+                        console.log(`Color asignado para ${value}: ${resolvedColor[0]}`);
                       } else {
                         colorsForColumn[value] = "#000000"; // Color por defecto
                       }
@@ -468,6 +485,7 @@ const legendFontSize = fontSize;
                     ) {
                       colorsForColumn[value] =
                         additionalColors[colorIndex % additionalColors.length];
+                        console.log(`Color asignado para ${value}: ${additionalColors[colorIndex % additionalColors.length]}`);
                       colorIndex++;
                     } else {
                       colorsForColumn[value] = "#000000"; // Color por defecto
@@ -1584,7 +1602,7 @@ useEffect(() => {
     const formattedColorByVariable = labelReplacements[String(theRealColorByVariable).toLowerCase()]
                 ? labelReplacements[String(theRealColorByVariable).toLowerCase()]
                 : String(theRealColorByVariable).charAt(0).toUpperCase() + String(theRealColorByVariable).replace('_', ' ').slice(1);
-      const newTitle = `Compositional differences (Bray-Curtis) ${Location.length === 3  ? " in All Locations" : " in " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable)}`;
+      const newTitle = `Compositional differences (Bray-Curtis) ${Location.length === 3  ? " in All Locations" : " in the " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable)}`;
       setTitle(newTitle);
   }
 }, [Location, theRealColorByVariable]);
@@ -1631,6 +1649,12 @@ useEffect(() => {
       
         
       />
+                <div className="flex flex-row p-3 mx-3 mb-5">
+                                    <div className="mr-1 font-bold">*</div>
+                                    <div className="text-gray text-justify" style={{ fontSize: '1rem' }}>
+                                    Beta diversity is recalculated each time a filter is applied.                                    </div>
+                                </div>
+
                             </div>
         </>
       
@@ -1661,7 +1685,7 @@ useEffect(() => {
 
       <div className={`prose single-column`}>
       <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
-      To explore how microbiome composition varies across groups, we analyze an ecological diversity measure called<span className="text-gray-700 font-semibold">Beta Diversity</span> . <span className="text-gray-700 font-semibold">Beta Diversity</span> is a way to measure and compare how different two groups are from each other in terms of their species or other characteristics.    In this dashboard, we use  <span className="text-gray-700 font-semibold">Bray-Curtis dissimilarities </span>to quantify these differences and visualize them through Principal <span className="text-gray-700 font-semibold">Coordinates Analysis (PCoA)</span>. PCoA is machine learning tool that helps us simplify this complex data, identifying a few key features of microbiome composition that explain the most differences between samples.
+      To explore how microbiome composition varies across groups, we analyze an ecological diversity measure called <span className="text-gray-700 font-semibold">Beta Diversity</span>. <span className="text-gray-700 font-semibold">Beta Diversity</span> is a way to measure and compare how different two groups are from each other in terms of their species or other characteristics.    In this dashboard, we use <span className="text-gray-700 font-semibold">Bray-Curtis dissimilarities </span>to quantify these differences and visualize them through <span className="text-gray-700 font-semibold">Principal Coordinates Analysis (PCoA)</span>. PCoA is machine learning tool that helps us simplify this complex data, identifying a few key features of microbiome composition that explain the most differences between samples.
 </p>
 
 </div>

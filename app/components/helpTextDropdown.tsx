@@ -11,7 +11,7 @@ export default function HelpText( { text }: { text: string } ) {
     if (isOpen) {
       timer = setTimeout(() => {
         setIsOpen(false);
-      }, 30000);
+      }, 20000);
     }
     return () => clearTimeout(timer);
   }, [isOpen]);
@@ -22,7 +22,7 @@ export default function HelpText( { text }: { text: string } ) {
   };
 
 
-  const formattedText = text.split("<br/>").map((line, index) => (
+  const formattedText = String(text)?.split("<br/>").map((line, index) => (
     <span key={index}>
       {line}
       <br />
@@ -60,7 +60,7 @@ text  && (
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}    
+          transition={{ duration: 0.3 }}
           className="w-full p-4 bg-custom-green-50 border border-custom-green-200 rounded-md text-left"
         >
           <button

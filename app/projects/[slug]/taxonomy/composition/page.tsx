@@ -28,6 +28,7 @@ import { MenuItem } from "primereact/menuitem";
 import { Config } from "plotly.js";
 import RequireAuth from "@/app/components/requireAtuh";
 import { Skeleton } from "primereact/skeleton";
+import { labelReplacements, order } from "@/config/dictionaries";
 
 
 
@@ -52,13 +53,14 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [selectedLocation, setSelectedLocation] = useState<string>('');
     const newScatterColors: { [key: string]: string } = {};
     const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
+    const [columnsOrder, setColumnsOrder] = useState<{ [key: string]: { [key: string]: number } }>({});
 
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
-    const [selectedGroup, setSelectedGroup] = useState("samplelocation");
+    const [ selectedGroup, setSelectedGroup] = useState("samplelocation");
     const [selectedRank, setSelectedRank] = useState("genus");
     const [observedData, setObservedData] = useState<any>([]);
-    const [colorByOptions, setColorByOptions] = useState<string[]>(['treatment']);
+    const [colorByOptions, setColorByOptions] = useState<string[]>([]);
     const [colorBy, setColorBy] = useState<string>('samplelocation');
     const [isColorByDisabled, setIsColorByDisabled] = useState(true);
     const [scatterColors, setScatterColors] = useState<{ [key: string]: string }>({});
@@ -143,7 +145,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
  
 
         if (otus && otus.data) {
-          const traces: SetStateAction<any[]> = [];
+          let traces: SetStateAction<any[]> = [];
           const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
   
           labels.forEach(label => {
@@ -169,7 +171,10 @@ const [actualRank, setActualRank] = useState<any>('genus');
           const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
           return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
       });
-  
+
+          traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
+
+
           setPlotData(traces);
           console.log("Traces:", plotData);
           setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
@@ -184,8 +189,8 @@ const [actualRank, setActualRank] = useState<any>('genus');
 const router = useRouter();
 
 const items = [
-    { label: 'Projects', template: (item:any, option:any) => <Link href={`/`} className="pointer-events-none text-gray-500" aria-disabled={true}>Projects</Link>  },
-    { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
+
+  { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
   { label: 'Taxonomic abundance', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) =>   <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
 ];
 
@@ -194,7 +199,7 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
 
 useEffect(() => {
     if (otus && otus.data) {
-        const traces: SetStateAction<any[]> = [];
+        let traces: SetStateAction<any[]> = [];
         const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
 
         labels.forEach((label: any, index: number) => {
@@ -217,6 +222,8 @@ useEffect(() => {
                 marker: { color: scatterColors[label],  width: 1  },
             });
         });
+        traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
+
 
         setPlotData(traces);
     }
@@ -317,7 +324,9 @@ useEffect(() => {
             setconfigFile(configfile.configFile);
 
             const combinedOptions = Array.from(new Set([...colorByOptions, ...configfile.configFile.columns]));
+            console.log(combinedOptions);
             setColorByOptions(combinedOptions);
+
         } catch (error) {
             console.error("Error al cargar las opciones del dropdown:", error);
             // window.location.href = `${process.env.NEXT_PUBLIC_AUTH0_BASE_URL}/api/auth/logout`;
@@ -325,7 +334,31 @@ useEffect(() => {
     };
 
 
-
+    const mergeOrders = (
+      defaultOrder: { [key: string]: { [key: string]: number } },
+      resultOrder: { [key: string]: { [key: string]: number } } | undefined
+  ) => {
+      const mergedOrder: { [key: string]: { [key: string]: number } } = {};
+  
+      // Combina las claves de defaultOrder y resultOrder
+      const allKeys = new Set([
+          ...Object.keys(defaultOrder),
+          ...(resultOrder ? Object.keys(resultOrder) : []),
+      ]);
+  
+      // Itera por todas las claves
+      allKeys.forEach((key) => {
+          if (resultOrder?.[key]) {
+              // Si resultOrder tiene una clave, usa el valor completo de resultOrder para esa clave
+              mergedOrder[key] = resultOrder[key];
+          } else {
+              // Si no, usa el valor de defaultOrder
+              mergedOrder[key] = defaultOrder[key];
+          }
+      });
+  
+      return mergedOrder;
+  };
    
     const fetchData = async (token: any) => {
 
@@ -412,7 +445,9 @@ useEffect(() => {
         
   //           // Agregar el nodo raíz a la lista de datos
   //           const finalData = [rootNode, ...updatedData];
-        
+            const mergedColumnsOrder = mergeOrders(order, result?.order);
+            setColumnsOrder(mergedColumnsOrder);
+            console.log("Columnas ordenadas:", mergedColumnsOrder);
             setObservedData(result?.Krona)
             setIsLoaded(true);
             return result;
@@ -421,6 +456,67 @@ useEffect(() => {
         }
     };
 
+
+    const sortByCustomOrder = (
+      data: any[],
+      column: string,
+      orderDict: { [key: string]: { [key: string]: number } }
+    ) => {
+      let order: { [key: string]: number } = {};
+      if (columnsOrder && Object.keys(columnsOrder).length > 0) {
+        for (let key in columnsOrder) {
+          if (key.toLowerCase() === column.toLowerCase()) {
+            order = orderDict[key];
+            break; // Found the matching column, no need to continue
+          }
+        }
+      }
+    
+    console.log("Orden personalizado:", order);
+      // Check if order is empty
+      if (Object.keys(order).length === 0) {
+        // No custom order, define default sorting
+        // Extract unique values from data
+        const uniqueValues = Array.from(
+          new Set(
+            data.map((item: { [x: string]: any; name: any }) => String(item.name || item[column]))
+          )
+        );
+
+        console.log("Valores únicos:", uniqueValues);
+    
+        // Determine if values are numeric
+        const areValuesNumeric = uniqueValues.every(value => !isNaN(Number(value)));
+        
+        // Sort uniqueValues accordingly
+        if (areValuesNumeric) {
+          uniqueValues.sort((a, b) => Number(a) - Number(b));
+        } else {
+          uniqueValues.sort(); // Lexicographical sort
+        }
+    
+        console.log("uniqueValues:", uniqueValues);
+        // Create default order mapping
+        uniqueValues.forEach((value, index) => {
+          order[value] = index;
+        });
+      }
+
+      console.log("data antes:", data);
+      return data.sort(
+        (a: { [x: string]: any; name: any }, b: { [x: string]: any; name: any }) => {
+          console.log("Comparando:", a, b);
+          const valueA = String(a.name || a[column] || a);
+          const valueB = String(b.name || b[column] || b);
+          const orderA = order[valueA];
+          const orderB = order[valueB];
+          console.log("Comparando:", valueA, valueB, orderA, orderB);
+          return (orderA !== undefined ? orderA : Infinity) - (orderB !== undefined ? orderB : Infinity);
+        }
+      );
+    };
+    
+    
 
     const fetchDataFilter = async (token: any) => {
 
@@ -567,12 +663,15 @@ fetchConfigFile(accessToken); fetchData(accessToken);
 
         if (otus && otus.data) {
             console.log("OTUS:", observedData);
-            const traces: SetStateAction<any[]> = [];
+            let traces: SetStateAction<any[]> = [];
             const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
-
+            console.log("Labels:", labels);
             labels.forEach(label => {
                 const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
-                const xValues = filteredData.map((item: any[]) => item[1]);
+                let xValues = filteredData.map((item: any[]) => item[1]);
+                console.log("XValues:", xValues);
+                xValues = sortByCustomOrder(xValues, theRealColorByVariable, columnsOrder);
+                console.log("XValues ordenados:", xValues);
                 const yValues = filteredData.map((item: any[]) => item[3]);
                 const color = colors[traces.length % colors.length];
 
@@ -593,6 +692,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
             const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
             return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
         });
+        traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
 
             setPlotData(traces);
             console.log("Traces:", plotData);
@@ -774,6 +874,7 @@ const layout = {
     useEffect(() => {
         if (otus && selectedGroup) {
             // Filtrar los valores únicos de la columna seleccionada
+            console.log("Selected group:", selectedGroup);
             const columnIndex = otus?.meta?.columns?.indexOf(selectedGroup);
             console.log("Column index:", columnIndex);
             const uniqueValues: Set<string> = new Set(dataUnique?.meta?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
@@ -910,15 +1011,53 @@ const layout = {
         setActiveIndexes(e.index);  // Actualiza el estado con los índices activos
     };
 
-    const dropdownOptionsColorby = [
-        { label: 'Sample Location', value: 'samplelocation' }, // Opción predeterminada
-        ...colorByOptions 
-          ?.filter(option => (columnOptions as string[])?.includes(option)) // Filtra y mapea según tus criterios
-          .map(option => ({
-              label: option.charAt(0).toUpperCase() + option.replace('_', ' ').slice(1),
-              value: option
-          }))
-      ];
+    // const dropdownOptionsColorby = [
+    //     { label: 'Sample Location', value: 'samplelocation' }, // Opción predeterminada
+    //     ...colorByOptions 
+    //       ?.filter(option => (columnOptions as string[])?.includes(option)) // Filtra y mapea según tus criterios
+    //       .map(option => ({
+    //           label: option.charAt(0).toUpperCase() + option.replace('_', ' ').slice(1),
+    //           value: option
+    //       }))
+    //   ];
+
+
+      const dropdownOptionsColorby = (() => {
+    
+  
+        if (!columnOptions || !colorByOptions) {
+            console.warn("columnOptions o colorByOptions están indefinidos.");
+            return [{ label: 'Sample Location', value: 'samplelocation' }]; // Agregar el predeterminado si las listas no están definidas
+        }
+    
+        const filteredOptions = colorByOptions
+            .filter(option =>
+                columnOptions.map(col => String(col).toLowerCase())
+                    .includes(String(option).toLowerCase())
+            ) // Asegúrate de que ambas listas se tratan como cadenas
+            .map(option => {
+                if (!option) {
+                    console.warn("Se encontró un valor undefined o null en colorByOptions.");
+                    return null; // Filtrar después valores nulos
+                }
+    
+                const label = labelReplacements[String(option).toLowerCase()]
+                    ? labelReplacements[String(option).toLowerCase()]
+                    : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1);
+    
+                return {
+                    label,
+                    value: String(option).toLowerCase()
+                };
+            })
+            .filter(option => option !== null); // Filtrar cualquier entrada nula que haya pasado
+             console.log("filteredOptions", filteredOptions);
+             console.log("colorByOptions", colorByOptions);
+             console.log("columnOptions", columnOptions);
+        // Agregar la opción predeterminada al inicio de la lista
+        return [{ label: 'Sample Location', value: 'samplelocation' }, ...filteredOptions];
+    })();
+    
 
       const filter = (
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
@@ -1063,7 +1202,7 @@ const layout = {
       
                 <ul className="w-full flex flex-wrap items-center content-center justify-around">
                   {colorByOptions?.map((option:any, index) => {
-                    if (columnOptions?.includes(option)) {
+                  if (columnOptions?.includes(option.toLocaleLowerCase())) {
                       return (
                         <li className="w-48 mb-1 p-1" key={index}>
                           <input
@@ -1073,7 +1212,7 @@ const layout = {
                             className="hidden peer"
                             value={option}
                             checked={selectedGroup === option}
-                            onChange={(e) => setSelectedGroup(e.target.value)}
+                            onChange={(e) => setSelectedGroup(String(e.target.value).toLocaleLowerCase())}
                           />
                           <label
                             htmlFor={option}
@@ -1082,7 +1221,9 @@ const layout = {
                             } dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
                           >
                             <div className="block">
-                              <div className="w-full">{option.charAt(0).toUpperCase() + option.replace('_', ' ').slice(1)}</div>
+                              <div className="w-full">{labelReplacements[String(option).toLowerCase()]
+                                                    ? labelReplacements[String(option).toLowerCase()]
+                                                    : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1)}</div>
                             </div>
                           </label>
                         </li>

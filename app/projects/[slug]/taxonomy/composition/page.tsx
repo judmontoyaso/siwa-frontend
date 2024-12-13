@@ -1103,10 +1103,10 @@ const textScale = screenWidth < 600
         ...data,
         marker: {
           color: [
-            '#FF5733', '#FFC300', '#C70039', '#DAF7A6', '#900C3F',
-            '#A1F0E0', '#581845', '#AEDFF7', '#1D3557', '#F4A261',
-            '#2A9D8F', '#FFDFD3', '#264653', '#E9C46A', '#6A0572'
-        ][index % 15], // Cicla los colores si hay más barras
+            "#D9B19C", "#334742", "#E6D5AF", "#883D58", "#705C91",
+            "#A3AAA1", "#C8C6B3", "#217172", "#295B46", "#8FADD5",
+            "#D89B67", "#5F8168", "#00263A", "#40679E", "#898989"
+        ][index % 15],// Cicla los colores si hay más barras
         }
     }))}
                     config={config}

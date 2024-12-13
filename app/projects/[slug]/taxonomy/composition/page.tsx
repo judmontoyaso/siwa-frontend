@@ -29,6 +29,7 @@ import { Config } from "plotly.js";
 import RequireAuth from "@/app/components/requireAtuh";
 import { Skeleton } from "primereact/skeleton";
 import { labelReplacements, order } from "@/config/dictionaries";
+import { Checkbox } from "primereact/checkbox";
 
 
 
@@ -131,6 +132,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
     const [htmlContent, setHtmlContent] = useState('');
     const containerRef = useRef<HTMLDivElement>(null); // Update the type of containerRef to HTMLDivElement
     const [activeIndex, setActiveIndex] = useState(0); 
+    const [textForConfigKey, setTextForConfigKey] = useState("");
 
     useEffect(() => {
         fetch('/api/components/innerHtml')
@@ -779,6 +781,164 @@ setFilterPeticion(true);
 </div>)
 
 
+// Función para buscar texto en Community_Makeup
+const findTextInCommunityMakeup = (
+  config: { Taxonomic_Abundance: { Analysis: any } },
+  location: string,
+  column: string
+) => {
+  console.log("Searching in Community_Makeup:", { location, column });
+  const analysis = config?.Taxonomic_Abundance?.Analysis;
+  if (!analysis) return null;
+
+  const locationKey = `SampleLocation_${location}`;
+  const locationData = analysis[locationKey];
+  console.log("Location data:", locationData);
+
+  if (locationData && typeof locationData[column] === "string") {
+    console.log("Text found:", locationData[column]);
+    return locationData[column];
+  }
+
+  return null;
+};
+
+    // Función para normalizar `formedKey` ordenando los valores después del prefijo
+    const normalizeFormedKey = (formedKey: string) => {
+      const [prefix, values] = formedKey.split('_');
+      const sortedValues = values.split('+').sort().join('+');
+      return `${prefix}_${sortedValues}`;
+  };
+
+    // Función para obtener propiedades anidadas de forma insensible a mayúsculas/minúsculas
+    const getNestedProperty = (obj: any, keys: any[]) => {
+      let currentObj = obj;
+      console.log("Starting getNestedProperty with keys:", keys);
+
+      for (const key of keys) {
+          if (currentObj && typeof currentObj === 'object') {
+              console.log("Current object for key:", key, currentObj);
+              const foundKey = Object.keys(currentObj).find(k => k.toLowerCase() === key.toLowerCase());
+              if (foundKey) {
+                  console.log(`Key "${foundKey}" found for "${key}", proceeding to next level.`);
+                  currentObj = currentObj[foundKey];
+              } else {
+                  console.log(`Key "${key}" not found in current level.`);
+                  return null;
+              }
+          } else {
+              console.log("Current object is not valid for further key lookup:", currentObj);
+              return null;
+          }
+      }
+
+      console.log("Final value found in getNestedProperty:", currentObj);
+      return currentObj;
+  };
+// Función para buscar texto con claves insensibles a mayúsculas/minúsculas
+const findTextInCommunityMakeupNested = (
+  config: { Taxonomic_Abundance: { Analysis: any } },
+  location: string,
+  formedKey: string,
+  column: string
+) => {
+  const analysis = config?.Taxonomic_Abundance?.Analysis;
+  if (!analysis) {
+    console.log("Analysis not found in config.");
+    return null;
+  }
+
+  const locationKey = `SampleLocation_${location}`;
+  console.log("Searching in locationKey:", locationKey);
+
+  const locationData = getNestedProperty(analysis, [locationKey]);
+  if (!locationData) {
+    console.log(`Location data for key "${locationKey}" not found.`);
+    return null;
+  }
+
+  console.log("Location data found:", locationData);
+  console.log("Attempting to find formedKey:", formedKey);
+
+  // Busca el valor directamente
+  let value = getNestedProperty(locationData, [formedKey]);
+  console.log("Value found for formedKey:", value);
+
+  // Busca usando una clave normalizada si no se encuentra
+  if (!value) {
+    const normalizedFormedKey = normalizeFormedKey(formedKey);
+    console.log("Attempting to find normalized formedKey:", normalizedFormedKey);
+
+    value = getNestedProperty(locationData, [normalizedFormedKey]);
+    console.log("Value found for normalized formedKey:", value);
+  }
+
+  // Si el valor encontrado es un objeto, busca en la columna
+  if (value && typeof value === "object") {
+    console.log(`formedKey "${formedKey}" contains an object, checking for column "${column}"`);
+    value = value[column] || null;
+    console.log("Value for column in formedKey object:", value);
+  }
+
+  if (typeof value === "string") {
+    console.log("Text found in nested:", value);
+    return value;
+  }
+
+  console.log("No matching text found for the given keys.");
+  return null;
+};
+
+
+
+useEffect(() => {
+  const location = selectedLocations.length > 1 ? 'All' : selectedLocations[0];
+  console.log("Location and theRealColorByVariable:", { location, theRealColorByVariable });
+  console.log("selected locations:", selectedLocations);
+  if (location && theRealColorByVariable) {
+      const formattedColumn = theRealColorByVariable.charAt(0).toUpperCase() + theRealColorByVariable.slice(1);
+      console.log("Formatted column and location:", { formattedColumn, location });
+
+      const allValuesSelected = Array.from(valueOptions).every(option => selectedValues.has(option));
+
+      if (allValuesSelected) {
+          const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
+          console.log("Text for all values selected:", textForConfig);
+          setTextForConfigKey(textForConfig || "");
+      } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
+          // Limpia cada valor en valuesArray para eliminar caracteres especiales
+          const valuesArray = Array.from(selectedValues)
+              .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
+
+          const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
+          const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
+
+          console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
+
+          // Intentar buscar con formedKey primero y luego con normalizedFormedKey
+          let textForConfig = findTextInCommunityMakeupNested(
+              configFile,
+              location,
+              formedKey,
+              theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+          );
+          if (!textForConfig) {
+              textForConfig = findTextInCommunityMakeupNested(
+                  configFile,
+                  location,
+                  normalizedFormedKey,
+                  theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+              );
+          }
+
+          console.log("Text for specific filter:", textForConfig);
+          setTextForConfigKey(textForConfig || "");
+      } else {
+          setTextForConfigKey("");
+      }
+  }
+}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
+
 
 // Configuración del layout
 const layout = {
@@ -945,34 +1105,62 @@ const layout = {
 //       }, [observedData]); // Asegúrate de que las dependencias de useEffect sean correctas
       
     // Componente de checks para los valores de la columna seleccionada
-    const valueChecks = (
-        <div className="flex flex-col w-full overflow-x-scroll mt-5">
-            <div className="flex w-full flex-row flex-wrap items-center justify-center">
-                {valueOptions?.map((value, index) => {
-                    const stringValue = String(value);
     
-                    return (
-                        <div key={index} className="flex items-center mb-2 mr-2 ml-2">
-                            <input
-                                id={`value-${index}`}
-                                type="checkbox"
-                                value={value}
-                                checked={selectedValues.has(value)}
-                                onChange={() => handleValueChange(value)}
-                                className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                            />
-                            <label
-                                htmlFor={`value-${index}`}
-                                className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                                {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
-                            </label>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
+    // const valueChecks = (
+    //     <div className="flex flex-col w-full overflow-x-scroll mt-5">
+    //         <div className="flex w-full flex-row flex-wrap items-center justify-center">
+    //             {valueOptions?.map((value, index) => {
+    //                 const stringValue = String(value);
     
+    //                 return (
+    //                     <div key={index} className="flex items-center mb-2 mr-2 ml-2">
+    //                         <input
+    //                             id={`value-${index}`}
+    //                             type="checkbox"
+    //                             value={value}
+    //                             checked={selectedValues.has(value)}
+    //                             onChange={() => handleValueChange(value)}
+    //                             className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+    //                         />
+    //                         <label
+    //                             htmlFor={`value-${index}`}
+    //                             className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+    //                             {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
+    //                         </label>
+    //                     </div>
+    //                 );
+    //             })}
+    //         </div>
+    //     </div>
+    // );
+    
+
+
+const valueChecks = (
+  <div className="flex flex-col w-full mb-5 mt-5">
+    <div className="flex w-full flex-row flex-wrap items-start justify-start">
+      {valueOptions?.filter(value => value !== null && selectedGroup !== "samplelocation").sort((a, b) => String(a).localeCompare(String(b))) // Ordenar alfabéticamente
+  .map((value, index) => {
+        const stringValue = String(value);
+        return (
+          <div key={index} className="flex items-center mb-2 mr-2 ml-2">
+            <Checkbox
+              inputId={`value-${index}`}
+              value={value}
+              checked={selectedValues.has(value)}
+              onChange={() => handleValueChange(value)}
+              className="text-blue-600"
+            />
+            <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+              {stringValue.charAt(0).toUpperCase() + stringValue.slice(1)}
+            </label>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+  
+  );
     
 
     const config: Partial<Config> = {
@@ -1058,24 +1246,28 @@ const layout = {
         return [{ label: 'Sample Location', value: 'samplelocation' }, ...filteredOptions];
     })();
     
+    const fixedActiveIndexes = [0, 1];
 
+    const fixedAccordionTabChange = () => {
+    };
       const filter = (
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
-          <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
+            <Accordion multiple activeIndex={fixedActiveIndexes} onTabChange={fixedAccordionTabChange} className="filter">
             
             {/* Group by Acordeón */}
-            <AccordionTab header="Group by" className="colorby-acordeon">
+            <AccordionTab className="colorby-acordeon" header="Group by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="flex flex-col items-start m-2">
-                <h3 className="mb-2 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
-                  Select a Sample Location: 
+              <h3 className="mb-2 text-base font-medium text-gray-700 dark:text-white flex items-center"  style={{ fontSize: '1.05rem' }}>
+                  Select a sample location:
                   <span className="ml-2">
                     <i
                       className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Please select a sample location prior to selecting a grouping variable."
                       data-pr-position="top"
                       id="sampleLocationTooltip"
                     />
-                    <PTooltip target="#sampleLocationTooltip" />
+                  
+                    <PTooltip target="#sampleLocationTooltip"  style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                ><span>View all sample locations together, or focus on a single one. <b>Note: </b>some analyses are only available for individual locations.</span></PTooltip>
                   </span>
                 </h3>
                 <Dropdown
@@ -1091,18 +1283,24 @@ const layout = {
       
               {/* Selección de variable */}
               <div className="flex flex-col items-start mt-2 m-2">
-                <h3 className="text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
-                  Select a variable to group:
-                  <span className="ml-2">
-                    <i
-                      className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Select a grouping variable within a sample location."
-                      data-pr-position="top"
-                      id="groupByTooltip"
-                    />
-                    <PTooltip target="#groupByTooltip" />
-                  </span>
-                </h3>
+
+              <div className="flex items-center mb-2">
+                                <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.05rem' }}>
+                                    Select a variable to group:
+                                </h3>
+                                <span className="ml-2">
+                                    <i
+                                        className="pi pi-info-circle text-siwa-blue"
+                                        data-pr-tooltip="Adjusts how samples are grouped and colored in the analysis. To use, select a sample location above, then choose a grouping variable."
+                                        data-pr-position="top"
+                                        id="groupByTooltip"
+                                    />
+                                    <PTooltip
+                                        target="#groupByTooltip"
+                                        style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                    />
+                                </span>
+                            </div>
                 <Dropdown
                   value={theRealColorByVariable}
                   options={dropdownOptionsColorby}
@@ -1116,18 +1314,24 @@ const layout = {
       
               {/* Selección del rank taxonómico */}
               <div className="items-start flex flex-col m-2">
-                <h3 className="mb-2 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
-                  Select a taxonomic rank:
-                  <span className="ml-2">
-                    <i
-                      className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Select a taxonomic rank for grouping."
-                      data-pr-position="top"
-                      id="rankTooltip"
-                    />
-                    <PTooltip target="#rankTooltip" />
-                  </span>
-                </h3>
+              <div className="flex items-center mb-2">
+                                <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.05rem' }}>
+                                Select a taxonomic rank:
+                                </h3>
+                                <span className="ml-2">
+                                    <i
+                                        className="pi pi-info-circle text-siwa-blue"
+                                        data-pr-tooltip="Select a taxonomic rank for grouping bacteria. Phylum: most general, Species: most specific."
+                                        data-pr-position="top"
+                                        id="rankTooltip"
+                                    />
+                                    <PTooltip
+                                        target="#rankTooltip"
+                                        style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                    />
+                                </span>
+                            </div>
+               
                 <Dropdown
                   value={selectedRank}
                   options={dropdownOptions}
@@ -1140,18 +1344,24 @@ const layout = {
               {/* Selección de Top */}
               <div className="max-w-xs flex m-2 flex-col items-start mt-5 mb-5">
                 <PrimeToolTip target=".topInputText" />
-                <h3 className="mb-5 text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
-                  Top:
-                  <span className="ml-2">
-                    <AiOutlineInfoCircle
-                      className="topInputText text-siwa-blue"
-                      data-pr-tooltip="This graph displays the most abundant taxa for each rank."
-                      data-pr-position="top"
-                      id="topTooltip"
-                    />
-                    <PTooltip target="#topTooltip" />
-                  </span>
-                </h3>
+                <div className="flex items-center mb-2">
+                                <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.05rem' }}>
+                                Number of taxa to display:
+                                </h3>
+                                <span className="ml-2">
+                                    <i
+                                        className="pi pi-info-circle text-siwa-blue"
+                                        data-pr-tooltip="Select the number of taxa, ranked by relative abundance, that you wish to include in the figure."
+                                        data-pr-position="top"
+                                        id="topTooltip"
+                                    />
+                                    <PTooltip
+                                        target="#topTooltip"
+                                        style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                    />
+                                </span>
+                            </div>
+              
                 <div className="relative justify-center w-full flex flex-col items-center">
                 <div className=" flex items-center max-w-[8rem]">
 
@@ -1177,7 +1387,7 @@ const layout = {
   <GoPlus />
 </button>
 </div>
-<p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p>
+{/* <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Number of taxa to display</p> */}
 
                 </div>
                
@@ -1185,73 +1395,69 @@ const layout = {
             </AccordionTab>
       
             {/* Filter by Acordeón */}
-            <AccordionTab header="Filter by" className="filter-acordeon">
+            <AccordionTab className="filter-acordeon" header="Filter by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="mt-4 ml-2 mb-4">
-                <h3 className="text-base font-medium text-left text-gray-700 dark:text-white flex items-center">
-                  Filtering options:
-                  <span className="ml-2">
+              <div className="flex items-center">
+                  <h3 className="text-base font-medium text-gray-700 dark:text-white flex items-center" style={{ fontSize: '1.1rem' }}>
+                    Filtering options:
                     <AiOutlineInfoCircle
-                      className="text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
+                      className="ml-2 text-siwa-blue xl:text-lg text-lg mb-1 cursor-pointer"
                       id="filteringTip"
                     />
-                    <PTooltip target="#filteringTip" position="top">
-                      Select options to include in the plot.
-                    </PTooltip>
-                  </span>
-                </h3>
+                    <PTooltip target="#filteringTip" position="top" style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                ><span>Select specific subsets of samples for analysis. Choose a variable, then pick the groups within that variable to include. <b>Note: </b>only one variable can be filtered at a time.</span></PTooltip>
+                  </h3>
+                </div>
+                <ul className="w-full flex flex-wrap items-center content-center justify-start mt-2">
       
-                <ul className="w-full flex flex-wrap items-center content-center justify-around">
-                  {colorByOptions?.map((option:any, index) => {
-                  if (columnOptions?.includes(option.toLocaleLowerCase())) {
-                      return (
-                        <li className="w-48 mb-1 p-1" key={index}>
-                          <input
-                            type="radio"
-                            id={option}
-                            name={option}
-                            className="hidden peer"
-                            value={option}
-                            checked={selectedGroup === option}
-                            onChange={(e) => setSelectedGroup(String(e.target.value).toLocaleLowerCase())}
-                          />
-                          <label
-                            htmlFor={option}
-                            className={`flex items-center justify-center w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${
-                              selectedGroup === actualGroup ? 'peer-checked:bg-navy-600' : 'peer-checked:bg-navy-500'
-                            } dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
-                          >
-                            <div className="block">
-                              <div className="w-full">{labelReplacements[String(option).toLowerCase()]
-                                                    ? labelReplacements[String(option).toLowerCase()]
-                                                    : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1)}</div>
-                            </div>
-                          </label>
-                        </li>
-                      );
-                    } else {
-                      return null;
-                    }
-                  })}
-                </ul>
+      {colorByOptions?.map((option:any, index) => (
+        option = String(option).toLowerCase(),
+        <li key={index} className="p-1 w-full md:w-full lg:w-full xl:w-48 2xl:w-1/2">
+          <input
+            type="radio"
+            id={option}
+            name={option}
+            className="hidden peer"
+            value={option}
+            checked={selectedGroup === option}
+            onChange={(e) => setSelectedGroup(String(e.target.value).toLocaleLowerCase())}
+          />
+          <label
+            htmlFor={option}
+            className={`flex items-center justify-center cursor-pointer hover:text-gray-600 hover:bg-gray-100
+              w-full p-2 text-gray-500 bg-white border border-gray-200 rounded-xl dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-custom-green-400 peer-checked:border-siwa-blue peer-checked:text-white ${selectedGroup === actualGroup ? "peer-checked:bg-navy-600" : "peer-checked:bg-navy-500"} dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700`}
+          >
+            <div className="block">
+            <div className="w-full text-base">
+                                    {labelReplacements[String(option).toLowerCase()]
+                                        ? labelReplacements[String(option).toLowerCase()]
+                                        : String(option).charAt(0).toUpperCase() + String(option).replace('_', ' ').slice(1)}
+                                </div>
+            </div>
+          </label>
+        </li>
+      ))}
+    </ul>
+      
+          
               </div>
-      
-              {selectedGroup !== 'samplelocation' && (
+              <div className="mt-4">
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg shadow-inner flex flex-col items-start">
                   {valueChecks}
                 </div>
-              )}
+              </div>
+              <div className="flex w-full items-center justify-center my-4">
+                <Button
+                  onClick={applyFilters}
+                  loading={filterPeticion}
+                  iconPos="right"
+                  icon="pi pi-check-square"
+                  loadingIcon="pi pi-spin pi-spinner"
+                  className="max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none"
+                  label="Apply Filters"
+                />
+              </div>
 
-<div className="flex w-full items-center justify-center my-4">
-            <Button
-              onClick={applyFilters}
-              loading={filterPeticion}
-              iconPos="right"
-              icon="pi pi-check-square"
-              loadingIcon="pi pi-spin pi-spinner"
-              className="max-w-56 justify-center filter-apply p-button-raised bg-siwa-green-1 hover:bg-siwa-green-3 text-white font-bold py-2 px-10 rounded-xl border-none mt-3"
-              label="Update"
-            />
-          </div>
             </AccordionTab>
           </Accordion>
       
@@ -1290,46 +1496,29 @@ useEffect(() => {
         <RequireAuth>
         <div className="w-full h-full">
             <SidebarProvider>
-            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-sm"/>}>
+            <Layout slug={params.slug} filter={""} breadcrumbs={<BreadCrumb model={items as MenuItem[]} home={home}  className="text-bread"/>}>
                 {isLoaded ? (
                     <div className="flex flex-col w-11/12 mx-auto">
 
                         <div className="flex flex-row w-full text-center justify-center items-center">
-                            <h1 className="text-3xl my-5 mx-2">{configFile?.taxonomic_composition?.title ?? "Taxonomy diversity"}</h1>
-                            {configFile?.taxonomy?.interpretation && (
-                                <AiOutlineInfoCircle className="text-xl cursor-pointer text-blue-300" data-tip data-for="interpreteTip" id="interpreteTip" />
-                            )}
-                            <Tooltip
-                            style={{ backgroundColor: "#e2e6ea", color: "#000000", zIndex: 50, borderRadius: "12px", padding: "20px", textAlign: "center", fontSize: "16px", fontWeight: "normal", fontFamily: "Roboto, sans-serif", lineHeight: "1.5", boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}
-                            anchorSelect="#interpreteTip">
-                            <div className={`prose single-column w-96 z-50`}>
-                                {configFile?.taxonomic_composition?.interpretation ? (
-                                  <p className="text-gray-700 text-justify text-xl m-3">
-                                  {configFile.taxonomic_composition?.interpretation}
-                              </p>
-                                ) : (""
-                                )}
-                            </div>
-                        </Tooltip>
+                        <h1 className="text-3xl my-5 mx-2">Taxonomy diversity</h1>
                         </div>
-
-
-
                         <div className="px-6 py-8">
                             <div className={`prose column-text}`}>
-    <p className="text-gray-700 text-justify text-xl">
-    The taxonomic composition of the microbiome can be assessed at different levels, from the kingdom to the species level. In this study, we are focusing on the phylum and genus levels.
+                            <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
+                            The taxonomic composition of the microbiome can be assessed at different levels, from the kingdom to the species level.  Most studies in the microbiome focus on the genus level; this gives us clear indications of changes in membership and function (versus higher-level groupings like Family or Phylum), but avoids some of the noise and uncertainty of trying to identify so many bacteria at the species level.   Many bacteria are not currently identifiable at the species level using this methodology.
     </p>
 </div>
 
 <div className="mt-8">
             <Accordion activeIndex={activeIndex}>
-              
-                <AccordionTab header={<>     <PrimeToolTip target=".hierarchical" />                        
+
+
+                <AccordionTab className=""   headerStyle={{ fontSize: '1.2rem' }}header={<>     <PrimeToolTip target=".hierarchical" />                        
 
 <h3  className="text-lg font-semibold text-gray-700 ">
-    <div className="flex flex-row mt-2">
-    Hierarchical visualization  <AiOutlineInfoCircle className="hierarchical ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" data-pr-tooltip="The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. We can use this method to discover and analyze patterns of biodiversity or the impact of study variables on taxonomic distributions."
+    <div className="flex flex-row mt-2 ">
+  <span className="text-xl">  Hierarchical visualization </span> <AiOutlineInfoCircle className="hierarchical ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" data-pr-tooltip="The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. We can use this method to discover and analyze patterns of biodiversity or the impact of study variables on taxonomic distributions."
 data-pr-position="right"
 data-pr-at="right+5 top"
 data-pr-my="left center-2"/>
@@ -1380,7 +1569,7 @@ data-pr-my="left center-2"/>
                             </div>
 
                         <div className="flex flex-row">
-                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}  text={undefined}>
+                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}  text={"As with other assessments, you can group, subset, and filter the samples in a variety of ways.  You can also choose how many taxonomic groups to include in the figure, ranked based on relative abundance in the study.  At each taxonomic level, you will see the percentage of total bacteria that belong to each group.  Most figures will include an “other” category.  This is the remainder of all sequences that are not above the threshold set for inclusion in the figure."}>
                                 {plotData.length > 0 ? (
 
                                     <div className="w-full ml-4">

@@ -1440,9 +1440,13 @@ useEffect(() => {
       }))
     ]
       
+    const fixedActiveIndexes = [0, 1];
+
+    const fixedAccordionTabChange = () => {
+    };
       const filter = (
         <div className="flex flex-col w-full rounded-lg dark:bg-gray-800">
-          <Accordion multiple activeIndex={activeIndexes} onTabChange={onTabChange} className="filter">
+            <Accordion multiple activeIndex={fixedActiveIndexes} onTabChange={fixedAccordionTabChange} className="filter">
             
             <AccordionTab className="colorby-acordeon" header="Group by"  headerStyle={{ fontSize: '1.15rem' }}>
               <div className="flex flex-col items-start m-2">
@@ -1470,20 +1474,23 @@ useEffect(() => {
               </div>
       
               <div className="flex flex-col items-start mt-2 m-2">
-                <div className="flex items-center mb-2">
-                  <h3 className="text-base font-medium text-gray-700 dark:text-white" style={{ fontSize: '1.05rem' }}>
-                    Select a variable to color:
-                  </h3>
-                  <span className="ml-2">
-                    <i
-                      className="pi pi-info-circle text-siwa-blue"
-                      data-pr-tooltip="Adjusts how samples are grouped and colored in the analysis. To use, select a sample location above, then choose a grouping variable."
-                      data-pr-position="top"
-                      id="groupByTooltip"
-                    />
-                    <PTooltip target="#groupByTooltip" />
-                  </span>
-                </div>
+              <div className="flex items-center mb-2">
+                                <h3 className="font-medium text-gray-700 flex dark:text-white" style={{ fontSize: '1.05rem' }}>
+                                    Select a variable to color:
+                                </h3>
+                                <span className="ml-2">
+                                    <i
+                                        className="pi pi-info-circle text-siwa-blue"
+                                        data-pr-tooltip="Adjusts how samples are grouped and colored in the analysis. To use, select a sample location above, then choose a grouping variable."
+                                        data-pr-position="top"
+                                        id="groupByTooltip"
+                                    />
+                                    <PTooltip
+                                        target="#groupByTooltip"
+                                        style={{ maxWidth: "350px", width: "350px", whiteSpace: "normal" }}
+                                    />
+                                </span>
+                            </div>
                 <Dropdown
                   value={theRealColorByVariable}
                   options={dropdownOptionsColorby}

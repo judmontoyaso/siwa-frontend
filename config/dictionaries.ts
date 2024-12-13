@@ -82,4 +82,5 @@ export const colorPalettes = {
 export const order = {
     "SampleLocation": { "Ileum": 2, "Cecum": 1, "Feces": 3 },
     // "Age": { "21": 1, "14": 2 }
+    "Alphad3Level": { "0 VitD": 1, "otherexp": 2, "VitD": 3 },
 };

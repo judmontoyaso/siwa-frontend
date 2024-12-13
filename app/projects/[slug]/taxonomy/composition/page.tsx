@@ -1099,7 +1099,16 @@ const textScale = screenWidth < 600
                         </div> 
                         <div id="plot" ref={plotRef}>
                         <Plot
-                    data={plotData}
+                    data={plotData.map((data, index) => ({
+        ...data,
+        marker: {
+          color: [
+            '#FF5733', '#FFC300', '#C70039', '#DAF7A6', '#900C3F',
+            '#A1F0E0', '#581845', '#AEDFF7', '#1D3557', '#F4A261',
+            '#2A9D8F', '#FFDFD3', '#264653', '#E9C46A', '#6A0572'
+        ][index % 15], // Cicla los colores si hay más barras
+        }
+    }))}
                     config={config}
                     layout={{
                         barmode: 'stack', // Modo de barras apiladas

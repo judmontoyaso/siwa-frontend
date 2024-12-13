@@ -30,6 +30,11 @@ import RequireAuth from "@/app/components/requireAtuh";
 import { Skeleton } from "primereact/skeleton";
 import { labelReplacements, order } from "@/config/dictionaries";
 import { Checkbox } from "primereact/checkbox";
+import { jsPDF } from "jspdf";
+import { svg2pdf } from "svg2pdf.js";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { FaFilePdf } from "react-icons/fa";
+import { Toast as PToast } from 'primereact/toast';
 
 
 
@@ -44,7 +49,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const { user, error, isLoading } = useUser();
     const [isLoaded, setIsLoaded] = useState(false);
     const [plotData, setPlotData] = useState<any[]>([]);
-
+    const toast = useRef<PToast>(null);
     const [plotDataObserved, setPlotDataObserved] = useState<
         { type: string; y: any; name: string }[]
     >([]);
@@ -55,6 +60,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const newScatterColors: { [key: string]: string } = {};
     const [title, setTitle] = useState<ReactNode>(<div className="w-full flex items-center justify-center"><Skeleton width="50%" height="1.5rem" /></div>);
     const [columnsOrder, setColumnsOrder] = useState<{ [key: string]: { [key: string]: number } }>({});
+    const [isLoadingPDF, setIsLoadingPDF] = useState(false);
 
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
@@ -75,6 +81,9 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [Location, setLocation] = useState<string[]>([
 
     ]);
+
+
+    const configTextRef = useRef(null);
     const taxonomyOptions = [
         "phylum",
         "class",
@@ -133,6 +142,92 @@ const [actualRank, setActualRank] = useState<any>('genus');
     const containerRef = useRef<HTMLDivElement>(null); // Update the type of containerRef to HTMLDivElement
     const [activeIndex, setActiveIndex] = useState(0); 
     const [textForConfigKey, setTextForConfigKey] = useState("");
+    const plotRef = useRef(null);
+    const downloadCombinedSVG = async () => {
+      const plotContainer = plotRef.current as unknown as HTMLElement; // Tu contenedor principal
+
+      if (!plotContainer) {
+          console.error("Contenedor del gráfico no encontrado");
+          return;
+      }
+  
+      // Encuentra todos los SVGs dentro del contenedor
+      const svgElements = plotContainer ? Array.from(plotContainer.querySelectorAll('svg')) : [];
+      if (!svgElements.length) {
+          console.error("No se encontraron SVGs en el contenedor");
+          return;
+      }
+  
+      // Crear un SVG maestro
+      const combinedSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      combinedSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  
+      // Ajustar el ancho y alto dinámicamente
+      let totalHeight = 0;
+      const maxWidth = Math.max(...svgElements.map(svg => parseInt(svg.getAttribute("width") || '0', 10)));
+      svgElements.forEach(svg => {
+          totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
+      });
+      combinedSVG.setAttribute("width", String(maxWidth));
+      combinedSVG.setAttribute("height", "500");
+  
+      // Combina los SVGs en orden inverso
+      let yOffset = 0; // Desplazamiento para evitar solapamiento
+      svgElements.reverse().forEach((svg) => {
+          const clonedSVG = svg.cloneNode(true);
+  
+          // Mover el SVG en el eje Y
+          const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          wrapper.setAttribute("transform", `translate(0, ${yOffset})`);
+          yOffset =  15// Incrementa el desplazamiento
+  
+          // Asegura que <defs> se copie al SVG maestro
+          const defs = (clonedSVG as Element).querySelector('defs');
+          if (defs) {
+              const masterDefs = combinedSVG.querySelector('defs') || document.createElementNS("http://www.w3.org/2000/svg", "defs");
+              masterDefs.innerHTML += defs.innerHTML;
+              combinedSVG.appendChild(masterDefs);
+          }
+  
+          wrapper.appendChild(clonedSVG);
+          combinedSVG.appendChild(wrapper);
+      });
+      const svgWidth = parseInt(combinedSVG.getAttribute("width") || "0", 10);
+      const svgHeight = 730
+      const pdf = new jsPDF({
+          orientation: "landscape",
+          unit: "pt",
+          format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
+      });
+      
+ 
+      // Ajustar el tamaño inicial
+      const pageWidth = pdf.internal.pageSize.getWidth();
+       // Convertir SVG a PDF
+       await svg2pdf(combinedSVG, pdf, {
+          x: 20,
+          y: yOffset,
+          width: svgWidth     ,
+          height: svgHeight 
+      });
+
+      // Incrementar el desplazamiento
+      yOffset += svgHeight  + 20;
+
+ 
+
+       // Descargar el PDF
+       pdf.save("Taxonomy-plot.pdf");
+       // Serializar el SVG combinado y descargarlo
+       const svgData = new XMLSerializer().serializeToString(combinedSVG);
+       const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+       const link = document.createElement("a");
+       link.href = URL.createObjectURL(blob);
+       link.download = "combined_plot.svg";
+       link.click();
+  }
+
 
     useEffect(() => {
         fetch('/api/components/innerHtml')
@@ -147,7 +242,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
  
 
         if (otus && otus.data) {
-          let traces: SetStateAction<any[]> = [];
+          let traces: any[] = [];
           const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
   
           labels.forEach(label => {
@@ -201,7 +296,7 @@ const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link hre
 
 useEffect(() => {
     if (otus && otus.data) {
-        let traces: SetStateAction<any[]> = [];
+        let traces:any[] = [];
         const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
 
         labels.forEach((label: any, index: number) => {
@@ -665,7 +760,7 @@ fetchConfigFile(accessToken); fetchData(accessToken);
 
         if (otus && otus.data) {
             console.log("OTUS:", observedData);
-            let traces: SetStateAction<any[]> = [];
+            let traces: any[] = [];
             const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
             console.log("Labels:", labels);
             labels.forEach(label => {
@@ -959,11 +1054,51 @@ const layout = {
 // };
 
 // console.log("Sunburst data:", sunburstData);
+const screenWidth = window.innerWidth;
+const textScale = screenWidth < 600
+? 0.6                   // Para pantallas pequeñas (móviles)
+: screenWidth < 1024
+    ? 0.8                 // Para pantallas medianas (tabletas o pantallas pequeñas)
+    : screenWidth < 1440
+        ? 1                 // Para pantallas de tamaño estándar (portátiles o monitores)
+        : screenWidth < 1920
+            ? 1.2             // Para pantallas grandes (monitores de mayor resolución)
+            : 1.4;            // Para pantallas muy grandes (monitores UltraWide o 4K)
+
 
     const MyPlotComponent = ({ plotData, scatterColors }: { plotData: any[]; scatterColors: any }) => (
-        <div className="flex flex-row w-full items-start">
-            <div className="w-full flex " ref={plotContainerRef}>
-                {loaded && (<>   <Plot
+        <div className="flex flex-row w-full items-center">
+            <div className="w-full" ref={plotContainerRef}>
+                {loaded && (<>    <div className="flex flex-row w-full justify-end items-end mb-2">
+                            {/* <div className="flex items-center">
+                                <Button
+                                    className="p-button-rounded p-button-outlined p-button-sm"
+                                    onClick={() => setGraphType(graphType === "boxplot" ? "violin" : "boxplot")}
+                                    tooltip={`Change to ${graphType === "boxplot" ? "violin" : "boxplot"} view`}
+                                >
+                                    <RiExchangeFundsLine className="text-lg" />
+
+                                </Button>
+                            </div> */}
+
+                            <PToast ref={toast} position="top-right" />
+                            <div className="flex items-center mx-2">
+                                <Button
+                                    className="p-button-rounded p-button-outlined p-button-sm"
+                                    onClick={downloadCombinedSVG}
+                                    tooltip="Download PDF"
+                                >
+                                    {isLoadingPDF ? (
+                                        <ProgressSpinner style={{ width: '19px', height: '19px' }} />
+                                    ) : (
+                                        <FaFilePdf className="text-lg" />
+                                    )}
+                                </Button>
+
+                            </div>
+                        </div> 
+                        <div id="plot" ref={plotRef}>
+                        <Plot
                     data={plotData}
                     config={config}
                     layout={{
@@ -975,7 +1110,8 @@ const layout = {
                                 text: 'Relative Abundance (%)',
                                 font: { 
                                     family: 'Roboto, sans-serif',
-                                    size: 18,
+                                    size: 14 * textScale,
+                                    
                                 }
                             }
                         },
@@ -984,7 +1120,7 @@ const layout = {
                                 text: '', // Título para el eje X si es necesario
                                 font: { 
                                     family: 'Roboto, sans-serif',
-                                    size: 18,
+                                    size: 14 * textScale,
                                 }
                             }
                         },
@@ -1001,24 +1137,34 @@ const layout = {
                             showarrow: false,
                             font: {
                                 family: 'Roboto, sans-serif',
-                                size: 17, // Tamaño de la fuente
+                                size: 14 * textScale,
                                 color: 'black'
                             }
                         }],
                         showlegend: true,
                         legend: {
+                          itemclick: false,  // Desactiva el comportamiento de clic en la leyenda
+                          itemdoubleclick: false,
                             orientation: "v", // Orientación vertical
                             x: 1.1, // Posición a la derecha del gráfico
                             xanchor: "left",
                             yanchor:"top",
                             y: 0.75, // Centrado verticalmente
-                        
+                            font: {
+                              size: 12 * textScale, // Escala la leyenda
+                          },
                         },
+                        font: {
+                          family: 'Roboto, sans-serif',
+                          size: 12 * textScale, // Ajusta el tamaño del texto general
+                          color: 'black'
+                      },
+                     
                         dragmode: false ,
-                        margin: { l: 50, r: 50, t: 20, b: 50 }
+                        margin: { l: 50, r: 50, t: 50, b: 50 }
                     }}
                 />
-                
+                </div>
                 </>
                  
                 
@@ -1163,18 +1309,24 @@ const valueChecks = (
   );
     
 
-    const config: Partial<Config> = {
-        displaylogo: false,
-        responsive: true,
-        modeBarButtonsToRemove: [
-          'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d', 
-          'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d', 
-          'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie', 
-          'toggleHover', 'toggleSpikelines', 'resetViewMapbox'
-        ],
-        scrollZoom: false,
-        modeBarButtonsToAdd: [],
-      };
+    
+
+  const config: Partial<Config> = {
+    displaylogo: false,
+    responsive: true,
+    staticPlot: false,
+    displayModeBar: true,
+    modeBarButtonsToRemove: [
+        'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'autoScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'zoom3d',
+        'pan3d', 'orbitRotation', 'tableRotation', 'resetCameraDefault3d', 'resetCameraLastSave3d',
+        'hoverClosest3d', 'zoomInGeo', 'zoomOutGeo', 'resetGeo', 'hoverClosestGeo', 'sendDataToCloud', 'hoverClosestGl2d', 'hoverClosestPie',
+        'toggleHover', 'toggleSpikelines', 'resetViewMapbox', 'toImage', 'zoomIn2d', 'zoomOut2d', 'resetViews', 'resetScale2d'
+    ],
+    scrollZoom: false,
+
+    modeBarButtonsToAdd: [],
+};
+
     const dropdownOptions = taxonomyOptions.map((option, index) => ({
         label: option.charAt(0).toUpperCase() + option.slice(1),
         value: option
@@ -1220,7 +1372,7 @@ const valueChecks = (
     
         const filteredOptions = colorByOptions
             .filter(option =>
-                columnOptions.map(col => String(col).toLowerCase())
+                columnOptions.map((col: any) => String(col).toLowerCase())
                     .includes(String(option).toLowerCase())
             ) // Asegúrate de que ambas listas se tratan como cadenas
             .map(option => {
@@ -1527,7 +1679,7 @@ data-pr-my="left center-2"/>
 </h3>  </>}>
 
                 <div className="flex flex-row flex-wrap ">
-                    <div className="w-full lg:w-2/5">          <p className="text-gray-700 text-justify text-lg mt-2 mb-2 font-light">
+                    <div className="w-full lg:w-2/5">          <p className="text-gray-700 text-justify mt-2 mb-2 font-light"style={{ fontSize: '1.25rem' }}>
                     This sunburst chart representing the taxonomic composition of this dataset allows us to visualize the nested hierarchical structure of taxonomic classifications, and how changes at each taxonomic level relate to one another. By hovering over any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total dataset it represents, and its relationship to adjacent segments.                    </p>
                
                    
@@ -1542,8 +1694,12 @@ data-pr-my="left center-2"/>
       "#636efa", "#EF553B", "#00cc96", "#ab63fa", "#19d3f3",
       "#e763fa", "#FECB52", "#FFA15A", "#FF6692", "#B6E880"
     ],
-    extendSunburstColorway: true  // Propiedad corregida
-  }as any} // Configura el layout del gráfico
+    
+      width: plotWidth*0.8 || undefined,
+      height: plotWidth*0.6 || undefined,
+    extendSunburstColorway: true,  // Propiedad corregida
+  }as any}// Configura el layout del gráfico
+  config= {config}
 />)}
          
 
@@ -1577,33 +1733,17 @@ data-pr-my="left center-2"/>
  <div className="w-full flex flex-row ">
               
                                 <div className="px-6 py-8 w-full" >
-                                    <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
-                                        if (key === "samplelocation" && actualGroup==="samplelocation"  && typeof value === 'string') {
-                                        
-                                            return (
-                                              <div key={key} className="col-span-2">
-                                                <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                              </div>
-                                            );
-                                          }
-                                            return null;  // No renderizar nada si no se cumplen las condiciones
-                                        })}
-                                    </div>
-                                    <div className="prose flex flex-row flex-wrap">
-                                        {Object.entries(configFile?.taxonomic_composition?.graph || {}).map(([key, value]) => {
-                                            if (key === actualGroup && key !== "samplelocation") {
-                                                if (typeof value === 'string' && value !== null) {
-                                                 
+                              
+                                <div className="grid gap-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
 
-                                                    return (  <div key={key} className="col-span-2">
-                                                    <p className="text-gray-700 m-3 text-justify text-xl">{value}</p>
-                                                  </div>);
-                                                } 
-                                            }
-                                            return null;
-                                        })}
-                                    </div>
+
+{/* Mostrar el texto correspondiente a la columna y location */}
+{textForConfigKey && (
+    <div className="col-span-2" ref={configTextRef} >
+        <p className="text-gray-700 m-3 text-justify font-light" style={{ fontSize: '1.3rem' }}>{textForConfigKey}</p>
+    </div>
+)}
+</div>
                                 </div>
                             </div>
                                     </div>

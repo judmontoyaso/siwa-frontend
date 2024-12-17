@@ -1,5 +1,5 @@
 "use client";
-import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, useEffect, useRef, useState } from "react";
+import { JSXElementConstructor, PromiseLikeOfReactNode, ReactElement, ReactNode, ReactPortal, SetStateAction, use, useEffect, useRef, useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Layout from "@/app/components/Layout";
 import Plot from "react-plotly.js";
@@ -65,6 +65,7 @@ export default function Page({ params }: { params: { slug: string } }) {
     const [availableLocations, setAvailableLocations] = useState<string[]>([]);
     const [selectedColumn, setSelectedColumn] = useState("samplelocation");
     const [ selectedGroup, setSelectedGroup] = useState("samplelocation");
+    const [tempSelectedGroup, setTempSelectedGroup] = useState("samplelocation");
     const [selectedRank, setSelectedRank] = useState("genus");
     const [observedData, setObservedData] = useState<any>([]);
     const [colorByOptions, setColorByOptions] = useState<string[]>([]);
@@ -93,46 +94,17 @@ export default function Page({ params }: { params: { slug: string } }) {
         "species"
     ];
     const colors = [
-        "#092538", // Azul oscuro principal
-  "#2E4057", // Azul petróleo oscuro
-  "#415a55", // Verde azulado oscuro (color adicional que querías incluir)
-  "#34675C", // Verde azulado más claro
-
-  // Amarillos y naranjas
-  "#FEF282", // Amarillo claro principal
-  "#F6C324", // Amarillo mostaza
-  "#FFA726", // Naranja
-  "#FF7043", // Naranja rojizo
-
-  // Grises y neutrales
-  "#BFBFBF", // Gris claro
-  "#8C8C8C", // Gris medio
-  "#616161", // Gris oscuro
-  "#424242", // Gris muy oscuro
-
-  // Rojos y púrpuras
-  "#E53935", // Rojo
-  "#D81B60", // Fucsia
-  "#8E24AA", // Púrpura
-
-  // Verdes y azules
-  "#43A047", // Verde
-  "#00ACC1", // Cian
-  "#1E88E5", // Azul
-
-  // Colores adicionales para diversidad
-  "#6D4C41", // Marrón
-  "#FDD835", // Amarillo dorado
-  "#26A69A", // Verde azulado claro
-  "#7E57C2", // Lavanda oscuro
-  "#EC407A", // Rosa
-    ];
+      "#D9B19C", "#334742", "#E6D5AF", "#883D58", "#705C91",
+      "#A3AAA1", "#C8C6B3", "#217172", "#295B46", "#8FADD5",
+      "#D89B67", "#5F8168", "#00263A", "#40679E", "#898989"
+  ]
     const [number, setNumber] = useState(12);
     const [plotWidth, setPlotWidth] = useState(0); // Inicializa el ancho como null
     const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
     const [loaded, setLoaded] = useState(false);
     const [configFile, setconfigFile] = useState({} as any);
-    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
+    const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set(['Cecum', 'Feces', 'Ileum']));
+    const [tempSelectedValues, setTempSelectedValues] = useState<Set<string>>(new Set());
     const [dataUnique, setDataUnique] = useState<any>();
     const [dataResult, setDataResult] = useState<any>(null);
     const [actualGroup, setActualGroup] = useState<any>('samplelocation');
@@ -143,6 +115,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
     const [activeIndex, setActiveIndex] = useState(0); 
     const [textForConfigKey, setTextForConfigKey] = useState("");
     const plotRef = useRef(null);
+    const [titlePDF, setTitlePDF] = useState("");
     const downloadCombinedSVG = async () => {
       const plotContainer = plotRef.current as unknown as HTMLElement; // Tu contenedor principal
 
@@ -170,7 +143,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
           totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
       });
       combinedSVG.setAttribute("width", String(maxWidth));
-      combinedSVG.setAttribute("height", "500");
+      combinedSVG.setAttribute("height", "800");
   
       // Combina los SVGs en orden inverso
       let yOffset = 0; // Desplazamiento para evitar solapamiento
@@ -194,7 +167,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
           combinedSVG.appendChild(wrapper);
       });
       const svgWidth = parseInt(combinedSVG.getAttribute("width") || "0", 10);
-      const svgHeight = 730
+      const svgHeight = 800
       const pdf = new jsPDF({
           orientation: "landscape",
           unit: "pt",
@@ -218,7 +191,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
  
 
        // Descargar el PDF
-       pdf.save("Taxonomy-plot.pdf");
+       pdf.save(String(titlePDF) + ".pdf");
        // Serializar el SVG combinado y descargarlo
        const svgData = new XMLSerializer().serializeToString(combinedSVG);
        const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
@@ -238,45 +211,45 @@ const [actualRank, setActualRank] = useState<any>('genus');
       }, []);
 
       
-      const fetchProjectIdsFiltercolor = async (colorByVariable: string) => {
+      // const fetchProjectIdsFiltercolor = async (colorByVariable: string) => {
  
 
-        if (otus && otus.data) {
-          let traces: any[] = [];
-          const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
+      //   if (otus && otus.data) {
+      //     let traces: any[] = [];
+      //     const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
   
-          labels.forEach(label => {
-              const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
-              const xValues = filteredData.map((item: any[]) => item[1]);
-              const yValues = filteredData.map((item: any[]) => item[3]);
-              const color = colors[traces.length % colors.length];
+      //     labels.forEach(label => {
+      //         const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
+      //         const xValues = filteredData.map((item: any[]) => item[1]);
+      //         const yValues = filteredData.map((item: any[]) => item[3]);
+      //         const color = colors[traces.length % colors.length];
   
-              traces.push({
-                  x: xValues,
-                  y: yValues,
-                  type: 'bar',
-                  name: label,
-                  marker: { color: color,  width: 1  },
-              });
+      //         traces.push({
+      //             x: xValues,
+      //             y: yValues,
+      //             type: 'bar',
+      //             name: label,
+      //             marker: { color: color,  width: 1  },
+      //         });
   
-              newScatterColors[label as string] = color;
-          });
+      //         newScatterColors[label as string] = color;
+      //     });
   
-          // Ordenando los traces basados en la suma total de los valores de Y de cada uno, de mayor a menor
-          traces.sort((a, b) => {
-          const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
-          const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
-          return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
-      });
+      //     // Ordenando los traces basados en la suma total de los valores de Y de cada uno, de mayor a menor
+      //     traces.sort((a, b) => {
+      //     const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
+      //     const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
+      //     return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
+      // });
 
-          traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
+      //     // traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
 
 
-          setPlotData(traces);
-          console.log("Traces:", plotData);
-          setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
-      }
-        }
+      //     setPlotData(traces);
+      //     console.log("Traces:", plotData);
+      //     setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
+      // }
+      //   }
   
 
 
@@ -294,37 +267,37 @@ const items = [
 const home = { icon: 'pi pi-home', template: (item:any, option:any) => <Link href={`/`}><i className={home.icon}></i></Link>  };
 
 
-useEffect(() => {
-    if (otus && otus.data) {
-        let traces:any[] = [];
-        const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
+// useEffect(() => {
+//     if (otus && otus.data) {
+//         let traces:any[] = [];
+//         const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
 
-        labels.forEach((label: any, index: number) => {
-            const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
-            const scatterColors: { [key: string]: string } = {};
+//         labels.forEach((label: any, index: number) => {
+//             const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
+//             const scatterColors: { [key: string]: string } = {};
 
-            const xValues = filteredData.map((item: any[]) => item[1]);
-            const yValues = filteredData.map((item: any[]) => item[3]);
+//             const xValues = filteredData.map((item: any[]) => item[1]);
+//             const yValues = filteredData.map((item: any[]) => item[3]);
 
-            // Asignar color o recuperar el color existente
-            if (!scatterColors[label]) {
-                scatterColors[label] = colors[index % colors.length];
-            }
+//             // Asignar color o recuperar el color existente
+//             if (!scatterColors[label]) {
+//                 scatterColors[label] = colors[index % colors.length];
+//             }
 
-            traces.push({
-                x: xValues,
-                y: yValues,
-                type: 'bar',
-                name: label,
-                marker: { color: scatterColors[label],  width: 1  },
-            });
-        });
-        traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
+//             traces.push({
+//                 x: xValues,
+//                 y: yValues,
+//                 type: 'bar',
+//                 name: label,
+//                 marker: { color: scatterColors[label],  width: 1  },
+//             });
+//         });
+//         // traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
 
-
-        setPlotData(traces);
-    }
-}, [otus]);
+//         console.log(traces)
+//         setPlotData(traces);
+//     }
+// }, [otus]);
 
 
 
@@ -545,7 +518,7 @@ useEffect(() => {
             const mergedColumnsOrder = mergeOrders(order, result?.order);
             setColumnsOrder(mergedColumnsOrder);
             console.log("Columnas ordenadas:", mergedColumnsOrder);
-            setObservedData(result?.Krona)
+            // setObservedData(result?.Krona)
             setIsLoaded(true);
             return result;
         } catch (error) {
@@ -553,65 +526,114 @@ useEffect(() => {
         }
     };
 
+    const fetchDataSunburst = async (token: any) => {
 
-    const sortByCustomOrder = (
-      data: any[],
-      column: string,
-      orderDict: { [key: string]: { [key: string]: number } }
-    ) => {
-      let order: { [key: string]: number } = {};
-      if (columnsOrder && Object.keys(columnsOrder).length > 0) {
-        for (let key in columnsOrder) {
-          if (key.toLowerCase() === column.toLowerCase()) {
-            order = orderDict[key];
-            break; // Found the matching column, no need to continue
+      try {
+          const response = await fetch(
+              `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/projects/sunbursttaxo/${params.slug}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                  "selectedColumn": selectedColumn,
+                  "selectedLocation": selectedValue,
+                  "selectedRank": selectedRank,
+                  "selectedGroup": selectedGroup,
+                  "top": number.toString(),
+                  "columnValues": selectedValue,
+                  "nickname": user?.nickname,
+                  "selectedColorGroup": theRealColorByVariable,
+
+              })
           }
-        }
+          );
+          if (response.status === 404) {
+              // toast.warn('The data needs to be loaded again!', {
+              //     position: "top-center",
+              //     autoClose: 5000,
+              //     hideProgressBar: false,
+              //     closeOnClick: true,
+              //     pauseOnHover: true,
+              //     draggable: true,
+              //     progress: undefined,
+              //     theme: "light",
+              //     transition: Bounce,
+              // });
+              // setTimeout(() => { window.location.href = "/"; }, 5000);
+              throw new Error("Respuesta no válida desde el servidor");
+          }
+          const result = await response.json();
+          
+          setObservedData(result?.Krona)
+      } catch (error) {
+          console.error("Error al obtener projectIds:", error);
       }
-    
-    console.log("Orden personalizado:", order);
-      // Check if order is empty
-      if (Object.keys(order).length === 0) {
-        // No custom order, define default sorting
-        // Extract unique values from data
-        const uniqueValues = Array.from(
-          new Set(
-            data.map((item: { [x: string]: any; name: any }) => String(item.name || item[column]))
-          )
-        );
+  };
 
-        console.log("Valores únicos:", uniqueValues);
+
+  useEffect(() => {fetchDataSunburst(accessToken)}, [accessToken])
+
+
+    // const sortByCustomOrder = (
+    //   data: any[],
+    //   column: string,
+    //   orderDict: { [key: string]: { [key: string]: number } }
+    // ) => {
+    //   let order: { [key: string]: number } = {};
+    //   if (columnsOrder && Object.keys(columnsOrder).length > 0) {
+    //     for (let key in columnsOrder) {
+    //       if (key.toLowerCase() === column.toLowerCase()) {
+    //         order = orderDict[key];
+    //         break; // Found the matching column, no need to continue
+    //       }
+    //     }
+    //   }
     
-        // Determine if values are numeric
-        const areValuesNumeric = uniqueValues.every(value => !isNaN(Number(value)));
+    // console.log("Orden personalizado:", order);
+    //   // Check if order is empty
+    //   if (Object.keys(order).length === 0) {
+    //     // No custom order, define default sorting
+    //     // Extract unique values from data
+    //     const uniqueValues = Array.from(
+    //       new Set(
+    //         data.map((item: { [x: string]: any; name: any }) => String(item.name || item[column]))
+    //       )
+    //     );
+
+    //     console.log("Valores únicos:", uniqueValues);
+    
+    //     // Determine if values are numeric
+    //     const areValuesNumeric = uniqueValues.every(value => !isNaN(Number(value)));
         
-        // Sort uniqueValues accordingly
-        if (areValuesNumeric) {
-          uniqueValues.sort((a, b) => Number(a) - Number(b));
-        } else {
-          uniqueValues.sort(); // Lexicographical sort
-        }
+    //     // Sort uniqueValues accordingly
+    //     if (areValuesNumeric) {
+    //       uniqueValues.sort((a, b) => Number(a) - Number(b));
+    //     } else {
+    //       uniqueValues.sort(); // Lexicographical sort
+    //     }
     
-        console.log("uniqueValues:", uniqueValues);
-        // Create default order mapping
-        uniqueValues.forEach((value, index) => {
-          order[value] = index;
-        });
-      }
+    //     console.log("uniqueValues:", uniqueValues);
+    //     // Create default order mapping
+    //     uniqueValues.forEach((value, index) => {
+    //       order[value] = index;
+    //     });
+    //   }
 
-      console.log("data antes:", data);
-      return data.sort(
-        (a: { [x: string]: any; name: any }, b: { [x: string]: any; name: any }) => {
-          console.log("Comparando:", a, b);
-          const valueA = String(a.name || a[column] || a);
-          const valueB = String(b.name || b[column] || b);
-          const orderA = order[valueA];
-          const orderB = order[valueB];
-          console.log("Comparando:", valueA, valueB, orderA, orderB);
-          return (orderA !== undefined ? orderA : Infinity) - (orderB !== undefined ? orderB : Infinity);
-        }
-      );
-    };
+    //   console.log("data antes:", data);
+    //   return data.sort(
+    //     (a: { [x: string]: any; name: any }, b: { [x: string]: any; name: any }) => {
+    //       console.log("Comparando:", a, b);
+    //       const valueA = String(a.name || a[column] || a);
+    //       const valueB = String(b.name || b[column] || b);
+    //       const orderA = order[valueA];
+    //       const orderB = order[valueB];
+    //       console.log("Comparando:", valueA, valueB, orderA, orderB);
+    //       return (orderA !== undefined ? orderA : Infinity) - (orderB !== undefined ? orderB : Infinity);
+    //     }
+    //   );
+    // };
     
     
 
@@ -629,9 +651,9 @@ useEffect(() => {
                     "selectedColumn": selectedColumn,
                     "selectedLocation": selectedLocations,
                     "selectedRank": selectedRank,
-                    "selectedGroup": selectedGroup,
+                    "selectedGroup": tempSelectedGroup,
                     "selectedColorGroup": theRealColorByVariable,
-                    "columnValues": [...selectedValues],
+                    "columnValues": [...tempSelectedValues],
                     "top": number.toString(),
                     "nickname": user?.nickname,
                 })
@@ -756,46 +778,56 @@ fetchConfigFile(accessToken); fetchData(accessToken);
         3: number; // Para el valor de Y
      
     }
-    useEffect(() => {
 
+
+    const colorMapRef = useRef<{ [key: string]: string }>({}); // Persistencia con useRef
+   
+   
+    let colorIndex = useRef(0); // Para recorrer colores
+
+    useEffect(() => {
         if (otus && otus.data) {
-            console.log("OTUS:", observedData);
-            let traces: any[] = [];
             const labels = Array.from(new Set(otus.data.data.map((item: any[]) => item[0])));
-            console.log("Labels:", labels);
-            labels.forEach(label => {
-                const filteredData = otus.data.data.filter((item: unknown[]) => item[0] === label);
-                let xValues = filteredData.map((item: any[]) => item[1]);
-                console.log("XValues:", xValues);
-                xValues = sortByCustomOrder(xValues, theRealColorByVariable, columnsOrder);
-                console.log("XValues ordenados:", xValues);
+            let traces: any[] = [];
+
+            // Asignar colores a labels si no existen en colorMapRef
+            labels.forEach((label:any) => {
+                if (!colorMapRef.current[label]) {
+                    colorMapRef.current[label] = colors[colorIndex.current % colors.length];
+                    colorIndex.current++;
+                }
+            });
+
+            console.log("Updated Color Map:", colorMapRef.current);
+
+            // Generar datos para la gráfica
+            labels.forEach((label:any) => {
+                const filteredData = otus.data.data.filter((item: any[]) => item[0] === label);
+
+                const xValues = filteredData.map((item: any[]) => item[1]);
                 const yValues = filteredData.map((item: any[]) => item[3]);
-                const color = colors[traces.length % colors.length];
 
                 traces.push({
                     x: xValues,
                     y: yValues,
-                    type: 'bar',
+                    type: "bar",
                     name: label,
-                    marker: { color: color, width: 1  },
+                    marker: { color: colorMapRef.current[label], width: 1 }
                 });
-
-                newScatterColors[label as string] = color;
             });
 
-            // Ordenando los traces basados en la suma total de los valores de Y de cada uno, de mayor a menor
+            // Ordenar los traces
             traces.sort((a, b) => {
-            const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
-            const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
-            return sumB - sumA; // Cambia a `sumA - sumB` si prefieres orden ascendente
-        });
-        traces = sortByCustomOrder(Object.values(traces || {}), theRealColorByVariable, columnsOrder);
+                const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
+                const sumB = b.y.reduce((acc: any, curr: any) => acc + curr, 0);
+                return sumA - sumB;
+            });
 
             setPlotData(traces);
-            console.log("Traces:", plotData);
-            setScatterColors(newScatterColors); // Asegúrate de que esto sea un estado de React
         }
-    }, [otus]);
+    }, [otus]); // Dependencias del useEffect
+  
+  
 
     // useEffect(() => {
     //     setPlotData( plotData.map(trace => ({
@@ -821,6 +853,8 @@ fetchConfigFile(accessToken); fetchData(accessToken);
    
 setActualGroup(selectedGroup);
 setActualRank(selectedRank);
+setSelectedGroup(tempSelectedGroup);
+setSelectedValues(tempSelectedValues);
 setFilterPeticion(true);
 
     };
@@ -1101,13 +1135,7 @@ const textScale = screenWidth < 600
                         <Plot
                     data={plotData.map((data, index) => ({
         ...data,
-        marker: {
-          color: [
-            "#D9B19C", "#334742", "#E6D5AF", "#883D58", "#705C91",
-            "#A3AAA1", "#C8C6B3", "#217172", "#295B46", "#8FADD5",
-            "#D89B67", "#5F8168", "#00263A", "#40679E", "#898989"
-        ][index % 15],// Cicla los colores si hay más barras
-        }
+    
     }))}
                     config={config}
                     layout={{
@@ -1121,8 +1149,11 @@ const textScale = screenWidth < 600
                                     family: 'Roboto, sans-serif',
                                     size: 14 * textScale,
                                     
-                                }
-                            }
+                                },
+                                
+                            },
+                            
+
                         },
                         xaxis: {
                             title: {
@@ -1130,15 +1161,19 @@ const textScale = screenWidth < 600
                                 font: { 
                                     family: 'Roboto, sans-serif',
                                     size: 14 * textScale,
-                                }
-                            }
+                                },
+                              },
+                              automargin: true,
+                              autotick: false,
+
+                            
                         },
                         width: plotWidth || undefined,
-                        height: 700,
+                        height: 800,
                         annotations: [{
                             xref: 'paper',
                             yref: 'paper',
-                            x: 1.29, 
+                            x: 1.107, 
                             xanchor: 'left',
                             y: 0.8, // En la parte superior
                             yanchor: 'top',
@@ -1166,7 +1201,7 @@ const textScale = screenWidth < 600
                         font: {
                           family: 'Roboto, sans-serif',
                           size: 12 * textScale, // Ajusta el tamaño del texto general
-                          color: 'black'
+                          color: 'black',
                       },
                      
                         dragmode: false ,
@@ -1187,20 +1222,20 @@ const textScale = screenWidth < 600
 
 
     useEffect(() => {
-        if (otus && selectedGroup) {
+        if (otus && tempSelectedGroup) {
             // Filtrar los valores únicos de la columna seleccionada
-            console.log("Selected group:", selectedGroup);
-            const columnIndex = otus?.meta?.columns?.indexOf(selectedGroup);
+            const columnIndex = otus?.meta?.columns?.indexOf(tempSelectedGroup);
             console.log("Column index:", columnIndex);
             const uniqueValues: Set<string> = new Set(dataUnique?.meta?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
             const uniqueValuesCheck: Set<string> = new Set(otus?.meta?.data.map((item: { [x: string]: any; }) => item[columnIndex]));
 
             setValueOptions([...uniqueValues].filter(value => value !== 'null'));
+            setTempSelectedValues(new Set<string>(uniqueValuesCheck));
 
             // Inicializa 'selectedValues' con todos los valores únicos
-            setSelectedValues(new Set<string>(uniqueValuesCheck));
+            // setSelectedValues(new Set<string>(uniqueValuesCheck));
         }
-    }, [selectedGroup, otus]);
+    }, [tempSelectedGroup, otus]);
 
     // Estado para manejar los valores seleccionados en los checks
     const handleValueChange = (value: string) => {
@@ -1220,6 +1255,30 @@ const textScale = screenWidth < 600
             return newSelectedValues;
         });
     };
+
+    const handleValueChangeTemp = (value: string) => {
+      setTempSelectedValues(prevTempSelectedValues => {
+        const newTempSelectedValues = new Set(prevTempSelectedValues);
+    
+        // Si intentamos deseleccionar el último valor seleccionado, no hacemos nada
+        if (newTempSelectedValues.size === 1 && newTempSelectedValues.has(value)) {
+            return prevTempSelectedValues;
+        }
+    
+        // Si el valor está presente, lo eliminamos
+        if (newTempSelectedValues.has(value)) {
+            newTempSelectedValues.delete(value);
+        } else if (value !== null && value !== 'null') { // Verifica que el valor no sea null antes de añadirlo
+            // Si el valor no está presente y no es null, lo añadimos
+            newTempSelectedValues.add(value);
+        }
+    
+        return newTempSelectedValues;
+    });
+    };
+
+    console.log("Selected values:", selectedValues);
+    useEffect(() => {console.log("Selected values:", selectedValues)}, [selectedValues]);
 
 //     useEffect(() => {
 //         const transformDataForSunburst = (columns, values) => {
@@ -1294,7 +1353,7 @@ const textScale = screenWidth < 600
 const valueChecks = (
   <div className="flex flex-col w-full mb-5 mt-5">
     <div className="flex w-full flex-row flex-wrap items-start justify-start">
-      {valueOptions?.filter(value => value !== null && selectedGroup !== "samplelocation").sort((a, b) => String(a).localeCompare(String(b))) // Ordenar alfabéticamente
+      {valueOptions?.filter(value => value !== null && tempSelectedGroup !== "samplelocation").sort((a, b) => String(a).localeCompare(String(b))) // Ordenar alfabéticamente
   .map((value, index) => {
         const stringValue = String(value);
         return (
@@ -1302,8 +1361,8 @@ const valueChecks = (
             <Checkbox
               inputId={`value-${index}`}
               value={value}
-              checked={selectedValues.has(value)}
-              onChange={() => handleValueChange(value)}
+              checked={tempSelectedValues.has(value)}
+              onChange={() => handleValueChangeTemp(value)}
               className="text-blue-600"
             />
             <label htmlFor={`value-${index}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
@@ -1318,7 +1377,13 @@ const valueChecks = (
   );
     
 
-    
+  const handleGroupChangeColorby = (event: any) => {
+    setTempSelectedGroup(String(event.target.value).toLocaleLowerCase());
+    // fetchProjectIdsFiltercolor(dataResult, event.target.value);
+  console.log("Selected group:", event.target.value);
+
+
+};
 
   const config: Partial<Config> = {
     displaylogo: false,
@@ -1580,8 +1645,8 @@ const valueChecks = (
             name={option}
             className="hidden peer"
             value={option}
-            checked={selectedGroup === option}
-            onChange={(e) => setSelectedGroup(String(e.target.value).toLocaleLowerCase())}
+            checked={tempSelectedGroup === option}
+            onChange={handleGroupChangeColorby}
           />
           <label
             htmlFor={option}
@@ -1648,11 +1713,26 @@ useEffect(() => {
 
   useEffect(() => {
     if (Location[0] && Location.length > 0) {
-        const newTitle = <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " by Location" : " in " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (actualGroup === "samplelocation" ? "" : " by " + actualGroup.charAt(0).toUpperCase() + actualGroup.slice(1).replace('_', ' ')))}</div> ;
+      const formattedColorByVariable = labelReplacements[String(theRealColorByVariable).toLowerCase()]
+                ? labelReplacements[String(theRealColorByVariable).toLowerCase()]
+                : String(theRealColorByVariable).charAt(0).toUpperCase() + String(theRealColorByVariable).replace('_', ' ').slice(1);
+        const newTitle = <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " in All Locations" : " in the " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable))}</div> ;
         setTitle(newTitle);
-    }
-  }, [Location, actualGroup]);
+        const titlePDF = "Relative Abundance of " +
+  (actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)) +
+  (Location.length === 3
+    ? " in All Locations"
+    : " in the " +
+      Location[0]?.charAt(0).toUpperCase() +
+      Location[0]?.slice(1) +
+      (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable)
+  );
 
+setTitlePDF(String(titlePDF));
+
+    }
+  }, [Location, actualGroup,theRealColorByVariable, actualRank]);
+  
     return (
         <RequireAuth>
         <div className="w-full h-full">
@@ -1662,12 +1742,12 @@ useEffect(() => {
                     <div className="flex flex-col w-11/12 mx-auto">
 
                         <div className="flex flex-row w-full text-center justify-center items-center">
-                        <h1 className="text-3xl my-5 mx-2">Taxonomy diversity</h1>
+                        <h1 className="text-3xl my-5 mx-2">Taxonomic diversity</h1>
                         </div>
                         <div className="px-6 py-8">
                             <div className={`prose column-text}`}>
                             <p className="text-gray-700 text-justify" style={{ fontSize: '1.3rem' }}>
-                            The taxonomic composition of the microbiome can be assessed at different levels, from the kingdom to the species level.  Most studies in the microbiome focus on the genus level; this gives us clear indications of changes in membership and function (versus higher-level groupings like Family or Phylum), but avoids some of the noise and uncertainty of trying to identify so many bacteria at the species level.   Many bacteria are not currently identifiable at the species level using this methodology.
+                            The taxonomic diversity of the microbiome can be assessed at different levels, from the kingdom to the species level.  Most studies in the microbiome focus on the genus level; this gives us clear indications of changes in membership and function (versus higher-level groupings like Family or Phylum), but avoids some of the noise and uncertainty of trying to identify so many bacteria at the species level.   Many bacteria are not currently identifiable at the species level using this methodology.
     </p>
 </div>
 
@@ -1689,7 +1769,7 @@ data-pr-my="left center-2"/>
 
                 <div className="flex flex-row flex-wrap ">
                     <div className="w-full lg:w-2/5">          <p className="text-gray-700 text-justify mt-2 mb-2 font-light"style={{ fontSize: '1.25rem' }}>
-                    This sunburst chart representing the taxonomic composition of this dataset allows us to visualize the nested hierarchical structure of taxonomic classifications, and how changes at each taxonomic level relate to one another. By hovering over any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total dataset it represents, and its relationship to adjacent segments.                    </p>
+                    This sunburst chart representing the taxonomic composition of this dataset allows us to visualize the nested hierarchical structure of taxonomic classifications, and how changes at each taxonomic level relate to one another. By clicking of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total dataset it represents, and its relationship to adjacent segments.                    </p>
                
                    
                     </div>
@@ -1700,9 +1780,11 @@ data-pr-my="left center-2"/>
     margin: { t: 0, l: 0, r: 0, b: 0 },  // Eliminar márgenes
     hovermode: 'closest', // Modo de hover para mejor interacción
     sunburstcolorway: [
-      "#636efa", "#EF553B", "#00cc96", "#ab63fa", "#19d3f3",
-      "#e763fa", "#FECB52", "#FFA15A", "#FF6692", "#B6E880"
-    ],
+      '#03343A', '#4E8E74', '#F99B35', '#E5C217',
+      '#075B44', '#F9B870', '#F7E76D',
+      '#017FB1', '#5CB08E', '#FCD8B6', '#FCF5CD', '#ABF4D4',
+      '#8CDBF4', '#F7927F', '#BC8808'
+  ],
     
       width: plotWidth*0.8 || undefined,
       height: plotWidth*0.6 || undefined,

@@ -1769,7 +1769,7 @@ data-pr-my="left center-2"/>
 
                 <div className="flex flex-row flex-wrap ">
                     <div className="w-full lg:w-2/5">          <p className="text-gray-700 text-justify mt-2 mb-2 font-light"style={{ fontSize: '1.25rem' }}>
-                    This sunburst chart representing the taxonomic composition of this dataset allows us to visualize the nested hierarchical structure of taxonomic classifications, and how changes at each taxonomic level relate to one another. By clicking of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total dataset it represents, and its relationship to adjacent segments.                    </p>
+                    This sunburst chart representing the taxonomic composition of this dataset allows us to visualize the nested hierarchical structure of taxonomic classifications, and how changes at each taxonomic level relate to one another. By clicking on any section of the chart, you can view detailed information about that taxonomic segment, including its name, the percentage of the total dataset it represents, and its relationship to adjacent segments.                    </p>
                
                    
                     </div>

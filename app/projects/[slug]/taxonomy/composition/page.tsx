@@ -798,24 +798,52 @@ fetchConfigFile(accessToken); fetchData(accessToken);
                 }
             });
 
-            console.log("Updated Color Map:", colorMapRef.current);
+            const normalizedVariable = theRealColorByVariable?.toLowerCase();
+            console.log("Normalized Variable:", normalizedVariable);
+    
+            // Obtener el orden correspondiente
+            const variableOrder = Object.entries(columnsOrder || {}).reduce<Record<string, any>>(
+                (acc, [key, value]) => {
+                    acc[key.toLowerCase()] = value;
+                    return acc;
+                },
+                {}
+            )[normalizedVariable] || {};
 
+            console.log("Updated Color Map:", colorMapRef.current);
+            console.log("filteredData:", otus.data.data);
             // Generar datos para la gráfica
             labels.forEach((label:any) => {
                 const filteredData = otus.data.data.filter((item: any[]) => item[0] === label);
-
-                const xValues = filteredData.map((item: any[]) => item[1]);
-                const yValues = filteredData.map((item: any[]) => item[3]);
-
-                traces.push({
-                    x: xValues,
-                    y: yValues,
-                    type: "bar",
-                    name: label,
-                    marker: { color: colorMapRef.current[label], width: 1 }
+                const combinedValues = filteredData.map((item: any[]) => ({
+                  x: item[1],
+                  y: item[3],
+              }));
+  
+              // Ordenar el array combinado por el orden especificado en variableOrder
+              combinedValues.sort((a: { x: string | number; }, b: { x: string | number; }) => {
+                  const orderA = variableOrder[a.x] ?? Infinity;
+                  const orderB = variableOrder[b.x] ?? Infinity;
+                  return orderA - orderB;
+              });
+  
+              // Separar los valores ordenados en xValues y yValues
+              const xValues = combinedValues.map((item: { x: any; }) => item.x);
+              const yValues = combinedValues.map((item: { y: any; }) => item.y);
+  
+              console.log("XValues ordenados:", xValues);
+              console.log("YValues reordenados:", yValues);
+  
+              
+              traces.push({
+                  x: xValues,
+                  y: yValues,
+                  type: "bar",
+                  name: label,
+                  marker: { color: colorMapRef.current[label], width: 1 }
                 });
-            });
-
+  
+          });
             // Ordenar los traces
             traces.sort((a, b) => {
                 const sumA = a.y.reduce((acc: any, curr: any) => acc + curr, 0);
@@ -1816,7 +1844,7 @@ data-pr-my="left center-2"/>
                             </div>
 
                         <div className="flex flex-row">
-                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}  text={"As with other assessments, you can group, subset, and filter the samples in a variety of ways.  You can also choose how many taxonomic groups to include in the figure, ranked based on relative abundance in the study.  At each taxonomic level, you will see the percentage of total bacteria that belong to each group.  Most figures will include an “other” category.  This is the remainder of all sequences that are not above the threshold set for inclusion in the figure."}>
+                            <GraphicCard filter={filter} legend={""} title={title} orientation="horizontal" slug={params.slug}  text={"As with other assessments, you can group, subset, and filter the samples in a variety of ways.  You can also choose how many taxonomic groups to include in the figure, ranked based on relative abundance in the study.  At each taxonomic level, you will see the percentage of total bacteria that belong to each group.  Most figures will include an “Others” category.  This is the remainder of all sequences that are not above the threshold set for inclusion in the figure."}>
                                 {plotData.length > 0 ? (
 
                                     <div className="w-full ml-4">

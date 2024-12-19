@@ -1062,13 +1062,13 @@ useEffect(() => {
           const textForConfig = findTextInCommunityMakeup(configFile, location, (theRealColorByVariable === "samplelocation" ? "Self" : formattedColumn));
           console.log("Text for all values selected:", textForConfig);
           setTextForConfigKey(textForConfig || "");
-      } else if (colorBy.charAt(0).toUpperCase() + colorBy.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
+      } else if (selectedGroup.charAt(0).toUpperCase() + selectedGroup.slice(1) !== 'SampleLocation' && selectedValues.size > 0) {
           // Limpia cada valor en valuesArray para eliminar caracteres especiales
           const valuesArray = Array.from(selectedValues)
               .map(value => String(value).replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '')); // Elimina caracteres especiales
 
-          const formedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.join('+')}`;
-          const normalizedFormedKey = `${colorBy.charAt(0).toUpperCase() + colorBy.slice(1)}_${valuesArray.sort().join('+')}`;
+          const formedKey = `${selectedGroup.charAt(0).toUpperCase() + selectedGroup.slice(1)}_${valuesArray.join('+')}`;
+          const normalizedFormedKey = `${selectedGroup.charAt(0).toUpperCase() + selectedGroup.slice(1)}_${valuesArray.sort().join('+')}`;
 
           console.log("Formed key and normalized formed key:", { formedKey, normalizedFormedKey });
 
@@ -1077,14 +1077,14 @@ useEffect(() => {
               configFile,
               location,
               formedKey,
-              theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+              theRealColorByVariable === selectedGroup.charAt(0).toUpperCase() + selectedGroup.slice(1) ? "Self" : formattedColumn
           );
           if (!textForConfig) {
               textForConfig = findTextInCommunityMakeupNested(
                   configFile,
                   location,
                   normalizedFormedKey,
-                  theRealColorByVariable === colorBy.charAt(0).toUpperCase() + colorBy.slice(1) ? "Self" : formattedColumn
+                  theRealColorByVariable === selectedGroup.charAt(0).toUpperCase() + selectedGroup.slice(1) ? "Self" : formattedColumn
               );
           }
 
@@ -1094,7 +1094,7 @@ useEffect(() => {
           setTextForConfigKey("");
       }
   }
-}, [selectedLocations, colorBy, theRealColorByVariable, selectedValues, valueOptions, configFile]);
+}, [selectedLocations, selectedGroup, theRealColorByVariable, selectedValues, valueOptions, configFile]);
 
 
 // Configuración del layout
@@ -1744,9 +1744,9 @@ useEffect(() => {
       const formattedColorByVariable = labelReplacements[String(theRealColorByVariable).toLowerCase()]
                 ? labelReplacements[String(theRealColorByVariable).toLowerCase()]
                 : String(theRealColorByVariable).charAt(0).toUpperCase() + String(theRealColorByVariable).replace('_', ' ').slice(1);
-        const newTitle = <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " in All Locations" : " in the " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable))}</div> ;
+        const newTitle = <div> Relative Abundance of {actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)} {Location.length === 3 ? " in all Locations" : " in the " + (Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable))}</div> ;
         setTitle(newTitle);
-        const titlePDF = "Relative Abundance of " +
+        const titlePDF = "Relative abundance of " +
   (actualRank?.charAt(0).toUpperCase() + actualRank.slice(1)) +
   (Location.length === 3
     ? " in All Locations"

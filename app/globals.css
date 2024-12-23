@@ -7209,3 +7209,6 @@ input:checked + .slider:before {
 
 }
 
+.break-word{
+  word-break: break-word;
+}

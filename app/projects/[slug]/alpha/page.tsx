@@ -106,6 +106,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         { label: params.slug, template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) => <Link href={`/projects/${params.slug}`}>{item.label}</Link> },
         { label: 'Richness', template: (item: { label: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | PromiseLikeOfReactNode | null | undefined; }, options: any) => <Link href={`/projects/${params.slug}/alpha`}>{item.label}</Link> },
     ];
+    const [titlePDF, setTitlePDF] = useState("");
 
 
     type ColorPaletteArray = string[];
@@ -1400,7 +1401,10 @@ useEffect(() => {
                     ? (" by " + formattedColorByVariable)
                     : "")
                 }`;
+            const  titlePDF = `Shannon Diversity ${Location.length === 3 ? "in All Locations" : "in the " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable !== "samplelocation" ? (" by " + formattedColorByVariable) : "")}`;
             setTitle(newTitle);
+            setTitlePDF(String(newTitle));
+
         }
     }, [Location, theRealColorByVariable]);
 
@@ -1740,6 +1744,8 @@ useEffect(() => {
         const newLayout = {
             width: plotWidth || undefined,
             height: graphHeight, // Usa el estado para la altura del gráfico
+            font: { family: 'Roboto, sans-serif' },
+
             responsive: true,
             showlegend: true,
             legend: {
@@ -1922,7 +1928,7 @@ useEffect(() => {
         svgElements.forEach(svg => {
             totalHeight += parseInt(svg.getAttribute("height") || '0', 10);
         });
-        combinedSVG.setAttribute("width", "1000");
+        combinedSVG.setAttribute("width", plotWidth.toString());
         combinedSVG.setAttribute("height", "500");
     
         // Combina los SVGs en orden inverso
@@ -1950,8 +1956,9 @@ useEffect(() => {
         const svgHeight = 700
         const pdf = new jsPDF({
             orientation: "landscape",
+            
             unit: "pt",
-            format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
+            format: [(svgWidth + 50), svgHeight], // Ajustar el formato al tamaño del SVG
         });
         
    
@@ -1961,17 +1968,17 @@ useEffect(() => {
          await svg2pdf(combinedSVG, pdf, {
             x: 20,
             y: yOffset,
-            width: svgWidth     ,
+            width: svgWidth  ,
             height: svgHeight 
         });
 
         // Incrementar el desplazamiento
         yOffset += svgHeight  + 20;
-
+      
    
 
          // Descargar el PDF
-         pdf.save("Richness-plot.pdf");
+         pdf.save(String(titlePDF) + ".pdf");
          // Serializar el SVG combinado y descargarlo
          const svgData = new XMLSerializer().serializeToString(combinedSVG);
          const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });

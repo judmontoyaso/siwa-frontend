@@ -341,7 +341,7 @@ const Dashboard = () => {
                           </div>
                         )} */}
                         <div>
-                          <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center justify-between mb-4 hyphens-auto break-words break-word">
                             <span className="text-xl font-semibold text-siwa-blue flex items-center">
                               {id}
                               {getAnimalIcon(specie, loadedProjects[id])}

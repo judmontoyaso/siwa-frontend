@@ -171,7 +171,7 @@ const [actualRank, setActualRank] = useState<any>('genus');
       const pdf = new jsPDF({
           orientation: "landscape",
           unit: "pt",
-          format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
+          format: [(svgWidth + 50), svgHeight], // Ajustar el formato al tamaño del SVG
       });
       
  
@@ -1198,6 +1198,7 @@ const textScale = screenWidth < 600
                         },
                         width: plotWidth || undefined,
                         height: 800,
+
                         annotations: [{
                             xref: 'paper',
                             yref: 'paper',
@@ -1787,10 +1788,13 @@ setTitlePDF(String(titlePDF));
 
 <h3  className="text-lg font-semibold text-gray-700 ">
     <div className="flex flex-row mt-2 ">
-  <span className="text-xl">  Hierarchical visualization </span> <AiOutlineInfoCircle className="hierarchical ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" data-pr-tooltip="The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. We can use this method to discover and analyze patterns of biodiversity or the impact of study variables on taxonomic distributions."
-data-pr-position="right"
-data-pr-at="right+5 top"
-data-pr-my="left center-2"/>
+    <PTooltip target="#sunburst-tooltip"  style={{ maxWidth: "450px", width: "450px", whiteSpace: "normal" }}
+                                >
+
+The Sunburst Chart is particularly useful in ecological and genetic research, where understanding the distribution and diversity of organisms is crucial. We can use this method to discover and analyze patterns of biodiversity or the impact of study variables on taxonomic distributions.
+                                </PTooltip>
+  <span className="text-xl">  Hierarchical visualization </span> <AiOutlineInfoCircle   id="sunburst-tooltip" className="hierarchical ml-2  text-sm mb-1 cursor-pointer text-siwa-blue p-text-secondary p-overlay-badge" 
+/>
     </div>
     
 </h3>  </>}>

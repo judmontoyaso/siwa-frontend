@@ -101,6 +101,7 @@ export default function Page({ params }: { params: { slug: string } }) {
   const plotContainerRef = useRef(null); // Ref para el contenedor del gráfico
   const [loaded, setLoaded] = useState(false);
   const [valueOptions, setValueOptions] = useState<any[]>([]);
+  const [titlePDF, setTitlePDF] = useState("");
 
 
   const downloadCombinedSVG = async () => {
@@ -192,7 +193,7 @@ export default function Page({ params }: { params: { slug: string } }) {
         const pdf = new jsPDF({
             orientation: "landscape",
             unit: "pt",
-            format: [svgWidth, svgHeight], // Ajustar el formato al tamaño del SVG
+            format: [(svgWidth + 50), svgHeight], // Ajustar el formato al tamaño del SVG
         });
         
    
@@ -212,7 +213,7 @@ export default function Page({ params }: { params: { slug: string } }) {
    
 
          // Descargar el PDF
-         pdf.save("community-make-up-plot.pdf");
+         pdf.save(String(titlePDF) + ".pdf");
          // Serializar el SVG combinado y descargarlo
          const svgData = new XMLSerializer().serializeToString(combinedSVG);
          const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
@@ -1611,6 +1612,7 @@ useEffect(() => {
                 : String(theRealColorByVariable).charAt(0).toUpperCase() + String(theRealColorByVariable).replace('_', ' ').slice(1);
       const newTitle = `Compositional differences (Bray-Curtis) ${Location.length === 3  ? " in All Locations" : " in the " + Location[0]?.charAt(0).toUpperCase() + Location[0]?.slice(1) + (theRealColorByVariable === "samplelocation" ? "" : " by " + formattedColorByVariable)}`;
       setTitle(newTitle);
+      setTitlePDF(newTitle);
   }
 }, [Location, theRealColorByVariable]);
 

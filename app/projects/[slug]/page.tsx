@@ -363,7 +363,7 @@ const handleClick = (e: React.MouseEvent<HTMLDivElement>, title: string) => {
           <div className="bg-white w-11/12 rounded-lg overflow-hidden pb-4">
             <div className="w-full flex justify-center text-center">
             {summaryTitle ? (
-  <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-3xl text-siwa-blue leading-[70px]">
+  <h1 className="flex-1 px-6 mb-5 font-poppins font-semibold text-3xl text-siwa-blue leading-normal">
     {summaryTitle}
   </h1>
 ) : (
